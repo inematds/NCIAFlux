@@ -17,15 +17,15 @@
 - [x] Salvar relatório de análise (`docs/market-research-analysis.md`)
 
 ### 1.2 Documentação de Produto
-- [ ] **Criar PRD completo** ← ATUAL
-- [ ] Revisão e aprovação do PRD
-- [ ] Definir especificações de UX/UI (se necessário)
+- [x] Criar PRD completo
+- [x] Criar especificações de UX/UI (`docs/front-end-spec.md`)
+- [ ] **Revisão e aprovação do usuário** ← ATUAL
 
 ### 1.3 Arquitetura
-- [ ] Criar documento de arquitetura
-- [ ] Definir tech stack
-- [ ] Definir coding standards
-- [ ] Definir estrutura do projeto (source tree)
+- [x] Criar documento de arquitetura (`docs/architecture.md`)
+- [x] Definir tech stack (Supabase, React Native, TypeScript, etc.)
+- [x] Definir coding standards
+- [x] Definir estrutura do projeto (source tree)
 
 ### 1.4 Sharding (Fragmentação)
 - [ ] Shard PRD em épicos
@@ -136,11 +136,9 @@
 | Especificação Original | ✅ Completo | `doc/app_tdah_descoberta_plano_e_acompanhamento.md` |
 | Branding | ✅ Completo | `doc/NCIAFlux é um sistema de NeuroFluxo.txt` |
 | Pesquisa de Mercado | ✅ Completo | `docs/market-research-analysis.md` |
-| PRD | 🔄 Em criação | `docs/prd.md` |
-| Arquitetura | ⏳ Pendente | `docs/architecture.md` |
-| Tech Stack | ⏳ Pendente | `docs/architecture/tech-stack.md` |
-| Coding Standards | ⏳ Pendente | `docs/architecture/coding-standards.md` |
-| Source Tree | ⏳ Pendente | `docs/architecture/source-tree.md` |
+| PRD | ✅ Completo | `docs/prd.md` |
+| Especificação UX/UI | ✅ Completo | `docs/front-end-spec.md` |
+| Arquitetura | ✅ Completo | `docs/architecture.md` |
 
 ---
 
@@ -175,7 +173,9 @@
 | 2026-01-23 | Pesquisa de mercado completa | Mary (Analyst) |
 | 2026-01-23 | Análise de concorrentes | Mary (Analyst) |
 | 2026-01-23 | Consolidação de decisões | Mary (Analyst) |
-| 2026-01-23 | Início da criação do PRD | PM |
+| 2026-01-23 | PRD completo criado | PM |
+| 2026-01-23 | Especificação UX/UI criada | Sally (UX Expert) |
+| 2026-01-23 | Arquitetura técnica criada | Architect |
 
 ---
 
