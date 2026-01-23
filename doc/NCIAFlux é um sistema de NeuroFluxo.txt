@@ -1,0 +1,95 @@
+NCIAFlux é um sistema de NeuroFluxo para TDAH que começa com uma Descoberta rápida e isolada, onde a pessoa entende em poucos minutos como seu cérebro funciona e recebe feedback imediato. Se quiser, ela continua usando o app, que cria um plano diário simples e personalizado (uma prioridade, tarefas leves e foco no horário certo) e faz acompanhamento gentil por meio de um painel visual e/ou chat (texto ou voz). O sistema coleta sinais leves de uso, ajusta o plano automaticamente e evolui o perfil ao longo do tempo, sem cobrança, sem métricas punitivas e sem exigir disciplina, ajudando a pessoa a manter organização, foco e energia de forma sustentável.
+
+### Nome do produto
+
+* Nome oficial: NCIAFlux
+* Significado interno:
+
+  * NCIA → grupo de Neurociência
+  * Flux → estado de fluxo, adaptação, movimento
+* Conceito explicado ao usuário: NeuroFluxo
+
+Ou seja:
+
+* Marca curta e forte: NCIAFlux
+* Conceito explicado: NeuroFluxo (o fluxo do cérebro no dia a dia)
+
+---
+
+### Como isso aparece nas explicações
+
+Para o usuário final, a linguagem fica assim:
+
+> “O NCIAFlux é um sistema de NeuroFluxo — ele entende como seu cérebro funciona, cria um plano possível e ajusta o fluxo conforme sua energia e rotina mudam.”
+
+Ou:
+
+> “No NCIAFlux, você não se adapta ao método. O método se adapta ao seu NeuroFluxo.”
+
+---
+
+### Estrutura de comunicação clara
+
+* Marca / App: NCIAFlux
+* Conceito: NeuroFluxo
+* Promessa: ajustar rotina, foco e energia ao fluxo real do cérebro
+
+Isso é ótimo porque:
+
+* não soa clínico
+* não soa produtivista
+* tem base científica
+* é fácil de explicar em 1 frase
+
+
+
+Resumo do Projeto – NCIAFlux (NeuroFluxo)
+
+* Propósito: ajudar pessoas com TDAH a se organizarem e manterem foco respeitando o fluxo real do cérebro
+
+* Nome: NCIAFlux
+
+  * Conceito explicado ao usuário: NeuroFluxo
+
+* Fase 1 – Descoberta (isolada):
+
+  * Dura 5–7 minutos
+  * Perguntas simples
+  * Feedback imediato
+  * Gera perfil inicial
+  * Uso do app é opcional
+
+* Fase 2 – Plano Personalizado:
+
+  * Criado a partir do perfil
+  * 1 prioridade por dia
+  * Poucas tarefas leves
+  * Rotinas condicionais (se/então)
+  * Técnicas simples (brain dump, foco, pausas)
+
+* Fase 3 – Acompanhamento:
+
+  * Painel visual de fácil acesso
+  * Chat opcional (texto ou voz)
+  * Check-ins rápidos
+  * Notificações no ritmo do usuário
+
+* Atualização do Perfil:
+
+  * Coleta sinais leves de uso
+  * Ajustes automáticos pequenos
+  * Redescoberta só quando necessário
+
+* Diferencial:
+
+  * Não é planner tradicional
+  * Não é app de cobrança
+  * Não é terapia
+  * Sistema adaptativo e gentil
+
+* Resultado esperado:
+
+  * Mais clareza
+  * Menos sobrecarga
+  * Progresso sustentável
+  * Autoconhecimento prático
