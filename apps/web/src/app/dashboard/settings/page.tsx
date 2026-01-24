@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { userStorage, settingsStorage } from '@/lib/storage';
 
 interface UserSettings {
   name: string;
@@ -40,11 +41,12 @@ export default function SettingsPage() {
     },
   });
   const [isSaving, setIsSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState('');
 
   useEffect(() => {
-    const stored = localStorage.getItem('nciaflux_demo_user');
-    if (stored) {
-      const user = JSON.parse(stored);
+    // Load user data
+    const user = userStorage.get();
+    if (user) {
       setSettings((prev) => ({
         ...prev,
         name: user.name || prev.name,
@@ -53,20 +55,45 @@ export default function SettingsPage() {
         role: user.role || prev.role,
       }));
     }
+
+    // Load saved settings
+    const savedSettings = settingsStorage.get();
+    if (savedSettings) {
+      setSettings((prev) => ({
+        ...prev,
+        notifications: savedSettings.notifications || prev.notifications,
+        preferences: savedSettings.preferences || prev.preferences,
+      }));
+    }
   }, []);
 
   function handleSave() {
     setIsSaving(true);
-    setTimeout(() => {
-      localStorage.setItem('nciaflux_demo_user', JSON.stringify({
-        id: 'demo-user',
-        email: settings.email,
+    setSaveMessage('');
+
+    // Save user profile
+    const currentUser = userStorage.get();
+    if (currentUser) {
+      userStorage.set({
+        ...currentUser,
         name: settings.name,
-        role: settings.role,
+        email: settings.email,
         company: settings.company,
-      }));
+        role: settings.role,
+      });
+    }
+
+    // Save settings (notifications and preferences)
+    settingsStorage.set({
+      notifications: settings.notifications,
+      preferences: settings.preferences,
+    });
+
+    setTimeout(() => {
       setIsSaving(false);
-    }, 1000);
+      setSaveMessage('Alterações salvas com sucesso!');
+      setTimeout(() => setSaveMessage(''), 3000);
+    }, 500);
   }
 
   const tabs = [
@@ -354,7 +381,10 @@ export default function SettingsPage() {
           )}
 
           {/* Save Button */}
-          <div className="mt-6 flex justify-end">
+          <div className="mt-6 flex items-center justify-end gap-4">
+            {saveMessage && (
+              <span className="text-accent-success font-medium">{saveMessage}</span>
+            )}
             <button
               onClick={handleSave}
               disabled={isSaving}

@@ -1,83 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { tasksStorage, StoredTask, userStorage } from '@/lib/storage';
 
 type TaskStatus = 'pending' | 'in_progress' | 'completed' | 'skipped';
 type TaskPriority = 'high' | 'medium' | 'low';
-
-interface Task {
-  id: string;
-  title: string;
-  description: string;
-  assignee: string;
-  priority: TaskPriority;
-  status: TaskStatus;
-  dueDate: string;
-  category: string;
-}
-
-const MOCK_TASKS: Task[] = [
-  {
-    id: '1',
-    title: 'Revisar documentação do projeto',
-    description: 'Atualizar README e documentação técnica',
-    assignee: 'Ana Silva',
-    priority: 'high',
-    status: 'in_progress',
-    dueDate: '2024-01-25',
-    category: 'Trabalho',
-  },
-  {
-    id: '2',
-    title: 'Preparar apresentação semanal',
-    description: 'Slides para reunião de status',
-    assignee: 'Carlos Santos',
-    priority: 'medium',
-    status: 'pending',
-    dueDate: '2024-01-26',
-    category: 'Trabalho',
-  },
-  {
-    id: '3',
-    title: 'Corrigir bug no módulo de pagamentos',
-    description: 'Erro reportado pelo cliente #1234',
-    assignee: 'Maria Oliveira',
-    priority: 'high',
-    status: 'completed',
-    dueDate: '2024-01-24',
-    category: 'Trabalho',
-  },
-  {
-    id: '4',
-    title: 'Implementar nova feature de notificações',
-    description: 'Sistema de notificações push',
-    assignee: 'João Pereira',
-    priority: 'medium',
-    status: 'pending',
-    dueDate: '2024-01-28',
-    category: 'Trabalho',
-  },
-  {
-    id: '5',
-    title: 'Reunião de planejamento sprint',
-    description: 'Definir escopo da próxima sprint',
-    assignee: 'Fernanda Costa',
-    priority: 'high',
-    status: 'completed',
-    dueDate: '2024-01-24',
-    category: 'Trabalho',
-  },
-  {
-    id: '6',
-    title: 'Code review PR #456',
-    description: 'Revisar pull request do João',
-    assignee: 'Ana Silva',
-    priority: 'low',
-    status: 'pending',
-    dueDate: '2024-01-25',
-    category: 'Trabalho',
-  },
-];
 
 const STATUS_CONFIG: Record<TaskStatus, { label: string; color: string; bg: string }> = {
   pending: { label: 'Pendente', color: 'text-secondary-dark', bg: 'bg-secondary-main/20' },
@@ -93,11 +20,18 @@ const PRIORITY_CONFIG: Record<TaskPriority, { label: string; color: string; emoj
 };
 
 export default function TasksPage() {
-  const [tasks, setTasks] = useState<Task[]>(MOCK_TASKS);
+  const [tasks, setTasks] = useState<StoredTask[]>([]);
   const [filterStatus, setFilterStatus] = useState<TaskStatus | 'all'>('all');
   const [filterPriority, setFilterPriority] = useState<TaskPriority | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
+  const [editingTask, setEditingTask] = useState<StoredTask | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+
+  // Load tasks from storage on mount
+  useEffect(() => {
+    setTasks(tasksStorage.getAll());
+  }, []);
 
   const filteredTasks = tasks.filter((task) => {
     if (filterStatus !== 'all' && task.status !== filterStatus) return false;
@@ -113,6 +47,29 @@ export default function TasksPage() {
     pending: tasks.filter((t) => t.status === 'pending').length,
   };
 
+  function handleAddTask(taskData: Omit<StoredTask, 'id' | 'createdAt' | 'updatedAt'>) {
+    tasksStorage.add(taskData);
+    setTasks(tasksStorage.getAll());
+    setShowAddModal(false);
+  }
+
+  function handleUpdateTask(id: string, updates: Partial<StoredTask>) {
+    tasksStorage.update(id, updates);
+    setTasks(tasksStorage.getAll());
+    setEditingTask(null);
+  }
+
+  function handleDeleteTask(id: string) {
+    tasksStorage.delete(id);
+    setTasks(tasksStorage.getAll());
+    setDeleteConfirm(null);
+  }
+
+  function handleStatusChange(id: string, newStatus: TaskStatus) {
+    tasksStorage.update(id, { status: newStatus });
+    setTasks(tasksStorage.getAll());
+  }
+
   return (
     <div className="p-6 lg:p-8">
       {/* Header */}
@@ -122,7 +79,7 @@ export default function TasksPage() {
             Gestão de Tarefas
           </h1>
           <p className="text-neutral-textSecondary mt-1">
-            Acompanhe e gerencie as tarefas da equipe
+            Acompanhe e gerencie suas tarefas
           </p>
         </div>
         <button
@@ -233,7 +190,7 @@ export default function TasksPage() {
                   <td className="py-4 px-6">
                     <div className="flex items-center gap-2">
                       <div className="w-8 h-8 bg-primary-light/20 rounded-full flex items-center justify-center text-xs font-medium text-primary-main">
-                        {task.assignee.split(' ').map(n => n[0]).join('')}
+                        {task.assignee.split(' ').map(n => n[0]).join('').slice(0, 2)}
                       </div>
                       <span className="text-neutral-textSecondary">{task.assignee}</span>
                     </div>
@@ -244,21 +201,34 @@ export default function TasksPage() {
                     </span>
                   </td>
                   <td className="py-4 px-6 text-center">
-                    <span
-                      className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${STATUS_CONFIG[task.status].bg} ${STATUS_CONFIG[task.status].color}`}
+                    <select
+                      value={task.status}
+                      onChange={(e) => handleStatusChange(task.id, e.target.value as TaskStatus)}
+                      className={`px-3 py-1 rounded-full text-sm font-medium border-0 cursor-pointer ${STATUS_CONFIG[task.status].bg} ${STATUS_CONFIG[task.status].color}`}
                     >
-                      {STATUS_CONFIG[task.status].label}
-                    </span>
+                      <option value="pending">Pendente</option>
+                      <option value="in_progress">Em Andamento</option>
+                      <option value="completed">Concluída</option>
+                      <option value="skipped">Pulada</option>
+                    </select>
                   </td>
                   <td className="py-4 px-6 text-center text-neutral-textSecondary">
                     {new Date(task.dueDate).toLocaleDateString('pt-BR')}
                   </td>
                   <td className="py-4 px-6 text-center">
                     <div className="flex items-center justify-center gap-2">
-                      <button className="p-2 hover:bg-neutral-background rounded-lg transition-colors" title="Editar">
+                      <button
+                        onClick={() => setEditingTask(task)}
+                        className="p-2 hover:bg-neutral-background rounded-lg transition-colors"
+                        title="Editar"
+                      >
                         ✏️
                       </button>
-                      <button className="p-2 hover:bg-neutral-background rounded-lg transition-colors" title="Excluir">
+                      <button
+                        onClick={() => setDeleteConfirm(task.id)}
+                        className="p-2 hover:bg-neutral-background rounded-lg transition-colors"
+                        title="Excluir"
+                      >
                         🗑️
                       </button>
                     </div>
@@ -272,48 +242,96 @@ export default function TasksPage() {
         {filteredTasks.length === 0 && (
           <div className="py-12 text-center">
             <p className="text-neutral-textMuted">Nenhuma tarefa encontrada.</p>
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="mt-4 text-primary-main font-medium hover:underline"
+            >
+              Criar primeira tarefa
+            </button>
           </div>
         )}
       </div>
 
       {/* Add Task Modal */}
       {showAddModal && (
-        <AddTaskModal onClose={() => setShowAddModal(false)} onAdd={(task) => {
-          setTasks([...tasks, { ...task, id: `task_${Date.now()}` }]);
-          setShowAddModal(false);
-        }} />
+        <TaskModal
+          onClose={() => setShowAddModal(false)}
+          onSave={handleAddTask}
+        />
+      )}
+
+      {/* Edit Task Modal */}
+      {editingTask && (
+        <TaskModal
+          task={editingTask}
+          onClose={() => setEditingTask(null)}
+          onSave={(data) => handleUpdateTask(editingTask.id, data)}
+        />
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl p-6 max-w-sm w-full">
+            <h3 className="text-lg font-semibold text-neutral-textPrimary mb-2">
+              Confirmar exclusão
+            </h3>
+            <p className="text-neutral-textSecondary mb-6">
+              Tem certeza que deseja excluir esta tarefa? Esta ação não pode ser desfeita.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setDeleteConfirm(null)}
+                className="flex-1 px-4 py-2 border border-neutral-border rounded-lg text-neutral-textSecondary hover:bg-neutral-background transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => handleDeleteTask(deleteConfirm)}
+                className="flex-1 px-4 py-2 bg-accent-error text-white rounded-lg font-medium hover:bg-accent-error/90 transition-colors"
+              >
+                Excluir
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
 }
 
-function AddTaskModal({
+function TaskModal({
+  task,
   onClose,
-  onAdd,
+  onSave,
 }: {
+  task?: StoredTask;
   onClose: () => void;
-  onAdd: (task: Omit<Task, 'id'>) => void;
+  onSave: (task: Omit<StoredTask, 'id' | 'createdAt' | 'updatedAt'>) => void;
 }) {
+  const user = userStorage.get();
   const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    assignee: '',
-    priority: 'medium' as TaskPriority,
-    status: 'pending' as TaskStatus,
-    dueDate: '',
-    category: 'Trabalho',
+    title: task?.title || '',
+    description: task?.description || '',
+    assignee: task?.assignee || user?.name || 'Usuário Demo',
+    priority: task?.priority || 'medium' as TaskPriority,
+    status: task?.status || 'pending' as TaskStatus,
+    dueDate: task?.dueDate || new Date().toISOString().split('T')[0],
+    category: task?.category || 'Trabalho',
   });
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    onAdd(formData);
+    onSave(formData);
   }
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
         <div className="p-6 border-b border-neutral-border flex items-center justify-between">
-          <h2 className="text-xl font-semibold text-neutral-textPrimary">Nova Tarefa</h2>
+          <h2 className="text-xl font-semibold text-neutral-textPrimary">
+            {task ? 'Editar Tarefa' : 'Nova Tarefa'}
+          </h2>
           <button onClick={onClose} className="text-2xl text-neutral-textMuted hover:text-neutral-textPrimary">
             ×
           </button>
@@ -381,6 +399,23 @@ function AddTaskModal({
               />
             </div>
           </div>
+          {task && (
+            <div>
+              <label className="block text-sm font-medium text-neutral-textSecondary mb-2">
+                Status
+              </label>
+              <select
+                value={formData.status}
+                onChange={(e) => setFormData({ ...formData, status: e.target.value as TaskStatus })}
+                className="w-full px-4 py-2 rounded-lg border border-neutral-border focus:outline-none focus:ring-2 focus:ring-primary-main bg-white"
+              >
+                <option value="pending">Pendente</option>
+                <option value="in_progress">Em Andamento</option>
+                <option value="completed">Concluída</option>
+                <option value="skipped">Pulada</option>
+              </select>
+            </div>
+          )}
           <div className="flex gap-3 pt-4">
             <button
               type="button"
@@ -393,7 +428,7 @@ function AddTaskModal({
               type="submit"
               className="flex-1 px-4 py-2 bg-primary-main text-white rounded-lg font-medium hover:bg-primary-dark transition-colors"
             >
-              Criar Tarefa
+              {task ? 'Salvar' : 'Criar Tarefa'}
             </button>
           </div>
         </form>

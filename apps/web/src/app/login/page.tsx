@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { userStorage, StoredUser } from '@/lib/storage';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -11,27 +12,44 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
+  // Redirect if already logged in
+  useEffect(() => {
+    if (userStorage.isAuthenticated()) {
+      router.push('/dashboard');
+    }
+  }, [router]);
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setIsLoading(true);
     setError('');
 
-    // Demo mode - simulate login
-    setTimeout(() => {
-      if (email && password) {
-        // In production, this would authenticate with Supabase
-        localStorage.setItem('nciaflux_demo_user', JSON.stringify({
-          id: 'demo-user',
-          email: email,
-          name: 'Usuário Demo',
-          role: 'manager',
-        }));
-        router.push('/dashboard');
-      } else {
-        setError('Por favor, preencha todos os campos.');
-      }
+    // Validate inputs
+    if (!email || !password) {
+      setError('Por favor, preencha todos os campos.');
       setIsLoading(false);
-    }, 1000);
+      return;
+    }
+
+    if (password.length < 4) {
+      setError('Senha deve ter pelo menos 4 caracteres.');
+      setIsLoading(false);
+      return;
+    }
+
+    // Simulate network delay for UX
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
+    // Demo mode authentication - create user and store
+    const user: StoredUser = {
+      id: `user_${Date.now()}`,
+      email: email,
+      name: email.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
+      role: 'manager',
+    };
+
+    userStorage.set(user);
+    router.push('/dashboard');
   }
 
   return (

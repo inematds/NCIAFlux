@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { userStorage, StoredUser } from '@/lib/storage';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -11,11 +12,18 @@ export default function RegisterPage() {
     email: '',
     password: '',
     confirmPassword: '',
-    role: 'manager',
+    role: 'manager' as const,
     company: '',
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (userStorage.isAuthenticated()) {
+      router.push('/dashboard');
+    }
+  }, [router]);
 
   function updateField(field: string, value: string) {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -26,24 +34,38 @@ export default function RegisterPage() {
     setIsLoading(true);
     setError('');
 
+    // Validation
+    if (!formData.name || !formData.email || !formData.password) {
+      setError('Por favor, preencha todos os campos obrigatórios.');
+      setIsLoading(false);
+      return;
+    }
+
+    if (formData.password.length < 6) {
+      setError('A senha deve ter pelo menos 6 caracteres.');
+      setIsLoading(false);
+      return;
+    }
+
     if (formData.password !== formData.confirmPassword) {
       setError('As senhas não coincidem.');
       setIsLoading(false);
       return;
     }
 
-    // Demo mode - simulate registration
-    setTimeout(() => {
-      localStorage.setItem('nciaflux_demo_user', JSON.stringify({
-        id: 'demo-user',
-        email: formData.email,
-        name: formData.name,
-        role: formData.role,
-        company: formData.company,
-      }));
-      router.push('/dashboard');
-      setIsLoading(false);
-    }, 1000);
+    // Simulate network delay
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
+    // Create user and store
+    const user: StoredUser = {
+      id: `user_${Date.now()}`,
+      email: formData.email,
+      name: formData.name,
+      role: formData.role,
+    };
+
+    userStorage.set(user);
+    router.push('/dashboard');
   }
 
   return (
@@ -123,8 +145,8 @@ export default function RegisterPage() {
                 className="w-full px-4 py-3 rounded-lg border border-neutral-border focus:outline-none focus:ring-2 focus:ring-primary-main focus:border-transparent bg-white"
               >
                 <option value="manager">Gestor / Líder de Equipe</option>
-                <option value="therapist">Terapeuta / Profissional de Saúde</option>
-                <option value="hr">RH / Recursos Humanos</option>
+                <option value="user">Usuário Individual</option>
+                <option value="admin">Administrador</option>
               </select>
             </div>
 
@@ -176,6 +198,13 @@ export default function RegisterPage() {
               </Link>
             </p>
           </div>
+        </div>
+
+        {/* Demo Notice */}
+        <div className="mt-6 bg-secondary-main/20 rounded-xl p-4 text-center">
+          <p className="text-sm text-neutral-textSecondary">
+            <strong>Modo Demo:</strong> Os dados são salvos localmente no seu navegador.
+          </p>
         </div>
       </div>
     </div>

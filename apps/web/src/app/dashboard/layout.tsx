@@ -3,13 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-
-interface User {
-  id: string;
-  email: string;
-  name: string;
-  role: string;
-}
+import { userStorage, clearAllStorage, StoredUser } from '@/lib/storage';
 
 const menuItems = [
   { icon: '🏠', label: 'Dashboard', href: '/dashboard' },
@@ -26,30 +20,37 @@ export default function DashboardLayout({
 }) {
   const pathname = usePathname();
   const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<StoredUser | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check for demo user
-    const storedUser = localStorage.getItem('nciaflux_demo_user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    } else {
-      // Set demo user for development
-      const demoUser = {
-        id: 'demo-user',
-        email: 'demo@nciaflux.com',
-        name: 'Usuário Demo',
-        role: 'manager',
-      };
-      localStorage.setItem('nciaflux_demo_user', JSON.stringify(demoUser));
-      setUser(demoUser);
+    // Check authentication
+    const storedUser = userStorage.get();
+    if (!storedUser) {
+      // Not authenticated - redirect to login
+      router.push('/login');
+      return;
     }
-  }, []);
+    setUser(storedUser);
+    setIsLoading(false);
+  }, [router]);
 
   function handleLogout() {
-    localStorage.removeItem('nciaflux_demo_user');
+    clearAllStorage();
     router.push('/');
+  }
+
+  // Show loading while checking auth
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-neutral-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-primary-main border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-neutral-textSecondary">Carregando...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
