@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { userStorage, tasksStorage, StoredUser, StoredTask } from '@/lib/storage';
 
-// Mock data
+// Mock data for managers
 const MOCK_PRODUCTIVITY_DATA = [
   { week: 'Sem 1', value: 72 },
   { week: 'Sem 2', value: 78 },
@@ -11,7 +12,7 @@ const MOCK_PRODUCTIVITY_DATA = [
 ];
 
 const MOCK_MOOD_DISTRIBUTION = [
-  { mood: 'Ótimo', count: 45, color: 'bg-accent-success' },
+  { mood: 'Otimo', count: 45, color: 'bg-accent-success' },
   { mood: 'Bom', count: 32, color: 'bg-primary-main' },
   { mood: 'Neutro', count: 18, color: 'bg-secondary-main' },
   { mood: 'Baixo', count: 5, color: 'bg-accent-error' },
@@ -20,7 +21,7 @@ const MOCK_MOOD_DISTRIBUTION = [
 const MOCK_TASK_COMPLETION = [
   { category: 'Trabalho', completed: 156, total: 180 },
   { category: 'Pessoal', completed: 42, total: 50 },
-  { category: 'Saúde', completed: 28, total: 35 },
+  { category: 'Saude', completed: 28, total: 35 },
   { category: 'Aprendizado', completed: 15, total: 20 },
 ];
 
@@ -35,26 +36,261 @@ const MOCK_INDIVIDUAL_REPORTS = [
   { name: 'Ana Silva', productivity: 92, tasksCompleted: 48, focusSessions: 32, trend: 'up' },
   { name: 'Carlos Santos', productivity: 78, tasksCompleted: 35, focusSessions: 28, trend: 'stable' },
   { name: 'Maria Oliveira', productivity: 95, tasksCompleted: 52, focusSessions: 38, trend: 'up' },
-  { name: 'João Pereira', productivity: 65, tasksCompleted: 28, focusSessions: 18, trend: 'down' },
+  { name: 'Joao Pereira', productivity: 65, tasksCompleted: 28, focusSessions: 18, trend: 'down' },
   { name: 'Fernanda Costa', productivity: 88, tasksCompleted: 42, focusSessions: 30, trend: 'up' },
 ];
 
 export default function ReportsPage() {
+  const [user, setUser] = useState<StoredUser | null>(null);
+  const [tasks, setTasks] = useState<StoredTask[]>([]);
   const [period, setPeriod] = useState('month');
   const [reportType, setReportType] = useState<'team' | 'individual'>('team');
 
+  useEffect(() => {
+    const storedUser = userStorage.get();
+    setUser(storedUser);
+    setTasks(tasksStorage.getAll());
+  }, []);
+
+  const isManager = user?.role === 'manager' || user?.role === 'admin';
   const totalMoods = MOCK_MOOD_DISTRIBUTION.reduce((acc, m) => acc + m.count, 0);
 
+  // Calculate personal stats
+  const personalStats = {
+    totalTasks: tasks.length,
+    completedTasks: tasks.filter((t) => t.status === 'completed').length,
+    pendingTasks: tasks.filter((t) => t.status === 'pending').length,
+    inProgressTasks: tasks.filter((t) => t.status === 'in_progress').length,
+    highPriority: tasks.filter((t) => t.priority === 'high').length,
+    mediumPriority: tasks.filter((t) => t.priority === 'medium').length,
+    lowPriority: tasks.filter((t) => t.priority === 'low').length,
+  };
+
+  const productivity = personalStats.totalTasks > 0
+    ? Math.round((personalStats.completedTasks / personalStats.totalTasks) * 100)
+    : 0;
+
+  // Group tasks by category for personal view
+  const tasksByCategory = tasks.reduce((acc, task) => {
+    const cat = task.category || 'Sem Categoria';
+    if (!acc[cat]) {
+      acc[cat] = { completed: 0, total: 0 };
+    }
+    acc[cat].total++;
+    if (task.status === 'completed') {
+      acc[cat].completed++;
+    }
+    return acc;
+  }, {} as Record<string, { completed: number; total: number }>);
+
+  // For regular users, show personal report
+  if (!isManager) {
+    return (
+      <div className="p-6 lg:p-8">
+        {/* Header */}
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-8">
+          <div>
+            <h1 className="text-2xl lg:text-3xl font-bold text-neutral-textPrimary">
+              Meus Relatorios
+            </h1>
+            <p className="text-neutral-textSecondary mt-1">
+              Analise detalhada do seu desempenho pessoal
+            </p>
+          </div>
+          <div className="flex gap-3">
+            <select
+              value={period}
+              onChange={(e) => setPeriod(e.target.value)}
+              className="px-4 py-2 rounded-lg border border-neutral-border focus:outline-none focus:ring-2 focus:ring-primary-main bg-white"
+            >
+              <option value="week">Esta Semana</option>
+              <option value="month">Este Mes</option>
+              <option value="quarter">Este Trimestre</option>
+              <option value="year">Este Ano</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Personal Summary Stats */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <div className="bg-white rounded-xl p-5 shadow-sm">
+            <p className="text-sm text-neutral-textSecondary mb-1">Sua Produtividade</p>
+            <p className="text-3xl font-bold text-primary-main">{productivity}%</p>
+            <p className="text-sm text-neutral-textMuted mt-1">
+              {personalStats.completedTasks} de {personalStats.totalTasks} tarefas
+            </p>
+          </div>
+          <div className="bg-white rounded-xl p-5 shadow-sm">
+            <p className="text-sm text-neutral-textSecondary mb-1">Tarefas Concluidas</p>
+            <p className="text-3xl font-bold text-accent-success">{personalStats.completedTasks}</p>
+            <p className="text-sm text-neutral-textMuted mt-1">tarefas finalizadas</p>
+          </div>
+          <div className="bg-white rounded-xl p-5 shadow-sm">
+            <p className="text-sm text-neutral-textSecondary mb-1">Em Progresso</p>
+            <p className="text-3xl font-bold text-secondary-main">{personalStats.inProgressTasks}</p>
+            <p className="text-sm text-neutral-textMuted mt-1">tarefas em andamento</p>
+          </div>
+          <div className="bg-white rounded-xl p-5 shadow-sm">
+            <p className="text-sm text-neutral-textSecondary mb-1">Pendentes</p>
+            <p className="text-3xl font-bold text-neutral-textPrimary">{personalStats.pendingTasks}</p>
+            <p className="text-sm text-neutral-textMuted mt-1">aguardando inicio</p>
+          </div>
+        </div>
+
+        {/* Charts Grid */}
+        <div className="grid lg:grid-cols-2 gap-6 mb-8">
+          {/* Task Status Distribution */}
+          <div className="bg-white rounded-2xl p-6 shadow-sm">
+            <h3 className="text-lg font-semibold text-neutral-textPrimary mb-6">
+              Distribuicao por Status
+            </h3>
+            {personalStats.totalTasks === 0 ? (
+              <div className="h-48 flex items-center justify-center">
+                <div className="text-center">
+                  <span className="text-4xl block mb-2">📊</span>
+                  <p className="text-neutral-textSecondary">Sem tarefas para exibir</p>
+                  <a
+                    href="/dashboard/tasks"
+                    className="inline-block mt-2 text-primary-main text-sm font-medium hover:underline"
+                  >
+                    Criar primeira tarefa
+                  </a>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <ProgressItem
+                  label="Concluidas"
+                  value={personalStats.completedTasks}
+                  total={personalStats.totalTasks}
+                  color="bg-accent-success"
+                />
+                <ProgressItem
+                  label="Em Progresso"
+                  value={personalStats.inProgressTasks}
+                  total={personalStats.totalTasks}
+                  color="bg-secondary-main"
+                />
+                <ProgressItem
+                  label="Pendentes"
+                  value={personalStats.pendingTasks}
+                  total={personalStats.totalTasks}
+                  color="bg-neutral-border"
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Priority Distribution */}
+          <div className="bg-white rounded-2xl p-6 shadow-sm">
+            <h3 className="text-lg font-semibold text-neutral-textPrimary mb-6">
+              Distribuicao por Prioridade
+            </h3>
+            {personalStats.totalTasks === 0 ? (
+              <div className="h-48 flex items-center justify-center">
+                <div className="text-center">
+                  <span className="text-4xl block mb-2">🎯</span>
+                  <p className="text-neutral-textSecondary">Sem tarefas para exibir</p>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <ProgressItem
+                  label="Alta Prioridade"
+                  value={personalStats.highPriority}
+                  total={personalStats.totalTasks}
+                  color="bg-accent-error"
+                />
+                <ProgressItem
+                  label="Media Prioridade"
+                  value={personalStats.mediumPriority}
+                  total={personalStats.totalTasks}
+                  color="bg-secondary-main"
+                />
+                <ProgressItem
+                  label="Baixa Prioridade"
+                  value={personalStats.lowPriority}
+                  total={personalStats.totalTasks}
+                  color="bg-accent-success"
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Tasks by Category */}
+          <div className="bg-white rounded-2xl p-6 shadow-sm lg:col-span-2">
+            <h3 className="text-lg font-semibold text-neutral-textPrimary mb-6">
+              Conclusao por Categoria
+            </h3>
+            {Object.keys(tasksByCategory).length === 0 ? (
+              <div className="h-32 flex items-center justify-center">
+                <p className="text-neutral-textSecondary">Sem categorias para exibir</p>
+              </div>
+            ) : (
+              <div className="grid md:grid-cols-2 gap-4">
+                {Object.entries(tasksByCategory).map(([category, data]) => {
+                  const percentage = data.total > 0 ? Math.round((data.completed / data.total) * 100) : 0;
+                  return (
+                    <div key={category} className="p-4 bg-neutral-background/50 rounded-xl">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-medium text-neutral-textPrimary">{category}</span>
+                        <span className="text-sm text-neutral-textSecondary">
+                          {data.completed}/{data.total}
+                        </span>
+                      </div>
+                      <div className="h-2 bg-neutral-background rounded-full overflow-hidden">
+                        <div
+                          className={`h-full rounded-full transition-all duration-500 ${
+                            percentage >= 80 ? 'bg-accent-success' : percentage >= 50 ? 'bg-secondary-main' : 'bg-accent-error'
+                          }`}
+                          style={{ width: `${percentage}%` }}
+                        />
+                      </div>
+                      <p className="text-xs text-neutral-textMuted mt-1">{percentage}% concluido</p>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Personal Insights */}
+        <div className="bg-gradient-to-r from-primary-main to-primary-dark rounded-2xl p-6 text-white">
+          <h3 className="text-lg font-semibold mb-4">Resumo Pessoal</h3>
+          <div className="grid md:grid-cols-3 gap-4">
+            <div className="bg-white/10 rounded-xl p-4">
+              <p className="text-sm opacity-80 mb-2">Total de Tarefas</p>
+              <p className="font-semibold text-2xl">{personalStats.totalTasks}</p>
+              <p className="text-xs opacity-70 mt-1">tarefas criadas</p>
+            </div>
+            <div className="bg-white/10 rounded-xl p-4">
+              <p className="text-sm opacity-80 mb-2">Taxa de Conclusao</p>
+              <p className="font-semibold text-2xl">{productivity}%</p>
+              <p className="text-xs opacity-70 mt-1">de produtividade</p>
+            </div>
+            <div className="bg-white/10 rounded-xl p-4">
+              <p className="text-sm opacity-80 mb-2">Prioridades Altas</p>
+              <p className="font-semibold text-2xl">{personalStats.highPriority}</p>
+              <p className="text-xs opacity-70 mt-1">tarefas urgentes</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Manager view - team reports
   return (
     <div className="p-6 lg:p-8">
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-8">
         <div>
           <h1 className="text-2xl lg:text-3xl font-bold text-neutral-textPrimary">
-            Relatórios
+            Relatorios
           </h1>
           <p className="text-neutral-textSecondary mt-1">
-            Análise detalhada do desempenho da equipe
+            Analise detalhada do desempenho da equipe
           </p>
         </div>
         <div className="flex gap-3">
@@ -64,7 +300,7 @@ export default function ReportsPage() {
             className="px-4 py-2 rounded-lg border border-neutral-border focus:outline-none focus:ring-2 focus:ring-primary-main bg-white"
           >
             <option value="week">Esta Semana</option>
-            <option value="month">Este Mês</option>
+            <option value="month">Este Mes</option>
             <option value="quarter">Este Trimestre</option>
             <option value="year">Este Ano</option>
           </select>
@@ -84,7 +320,7 @@ export default function ReportsPage() {
               : 'bg-white text-neutral-textSecondary hover:bg-neutral-background'
           }`}
         >
-          Relatório da Equipe
+          Relatorio da Equipe
         </button>
         <button
           onClick={() => setReportType('individual')}
@@ -94,7 +330,7 @@ export default function ReportsPage() {
               : 'bg-white text-neutral-textSecondary hover:bg-neutral-background'
           }`}
         >
-          Relatórios Individuais
+          Relatorios Individuais
         </button>
       </div>
 
@@ -103,24 +339,24 @@ export default function ReportsPage() {
           {/* Summary Stats */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
             <div className="bg-white rounded-xl p-5 shadow-sm">
-              <p className="text-sm text-neutral-textSecondary mb-1">Produtividade Média</p>
+              <p className="text-sm text-neutral-textSecondary mb-1">Produtividade Media</p>
               <p className="text-3xl font-bold text-primary-main">78%</p>
-              <p className="text-sm text-accent-success mt-1">↑ 5% vs período anterior</p>
+              <p className="text-sm text-accent-success mt-1">+5% vs periodo anterior</p>
             </div>
             <div className="bg-white rounded-xl p-5 shadow-sm">
-              <p className="text-sm text-neutral-textSecondary mb-1">Tarefas Concluídas</p>
+              <p className="text-sm text-neutral-textSecondary mb-1">Tarefas Concluidas</p>
               <p className="text-3xl font-bold text-neutral-textPrimary">241</p>
-              <p className="text-sm text-accent-success mt-1">↑ 12% vs período anterior</p>
+              <p className="text-sm text-accent-success mt-1">+12% vs periodo anterior</p>
             </div>
             <div className="bg-white rounded-xl p-5 shadow-sm">
-              <p className="text-sm text-neutral-textSecondary mb-1">Sessões de Foco</p>
+              <p className="text-sm text-neutral-textSecondary mb-1">Sessoes de Foco</p>
               <p className="text-3xl font-bold text-neutral-textPrimary">269</p>
-              <p className="text-sm text-accent-success mt-1">↑ 8% vs período anterior</p>
+              <p className="text-sm text-accent-success mt-1">+8% vs periodo anterior</p>
             </div>
             <div className="bg-white rounded-xl p-5 shadow-sm">
               <p className="text-sm text-neutral-textSecondary mb-1">Check-ins Realizados</p>
               <p className="text-3xl font-bold text-neutral-textPrimary">98</p>
-              <p className="text-sm text-neutral-textMuted mt-1">= Igual ao período anterior</p>
+              <p className="text-sm text-neutral-textMuted mt-1">= Igual ao periodo anterior</p>
             </div>
           </div>
 
@@ -129,7 +365,7 @@ export default function ReportsPage() {
             {/* Productivity Trend */}
             <div className="bg-white rounded-2xl p-6 shadow-sm">
               <h3 className="text-lg font-semibold text-neutral-textPrimary mb-6">
-                Tendência de Produtividade
+                Tendencia de Produtividade
               </h3>
               <div className="h-48 flex items-end justify-between gap-4">
                 {MOCK_PRODUCTIVITY_DATA.map((item) => (
@@ -150,7 +386,7 @@ export default function ReportsPage() {
             {/* Mood Distribution */}
             <div className="bg-white rounded-2xl p-6 shadow-sm">
               <h3 className="text-lg font-semibold text-neutral-textPrimary mb-6">
-                Distribuição de Humor
+                Distribuicao de Humor
               </h3>
               <div className="space-y-4">
                 {MOCK_MOOD_DISTRIBUTION.map((mood) => (
@@ -175,7 +411,7 @@ export default function ReportsPage() {
             {/* Task Completion by Category */}
             <div className="bg-white rounded-2xl p-6 shadow-sm">
               <h3 className="text-lg font-semibold text-neutral-textPrimary mb-6">
-                Conclusão por Categoria
+                Conclusao por Categoria
               </h3>
               <div className="space-y-4">
                 {MOCK_TASK_COMPLETION.map((cat) => {
@@ -205,18 +441,18 @@ export default function ReportsPage() {
             {/* Focus Sessions */}
             <div className="bg-white rounded-2xl p-6 shadow-sm">
               <h3 className="text-lg font-semibold text-neutral-textPrimary mb-6">
-                Sessões de Foco por Técnica
+                Sessoes de Foco por Tecnica
               </h3>
               <div className="space-y-4">
                 {MOCK_FOCUS_SESSIONS.map((session) => (
                   <div key={session.technique} className="flex items-center justify-between p-3 bg-neutral-background rounded-lg">
                     <div>
                       <p className="font-medium text-neutral-textPrimary">{session.technique}</p>
-                      <p className="text-sm text-neutral-textMuted">Média: {session.avgDuration} min</p>
+                      <p className="text-sm text-neutral-textMuted">Media: {session.avgDuration} min</p>
                     </div>
                     <div className="text-right">
                       <p className="text-xl font-bold text-primary-main">{session.sessions}</p>
-                      <p className="text-xs text-neutral-textMuted">sessões</p>
+                      <p className="text-xs text-neutral-textMuted">sessoes</p>
                     </div>
                   </div>
                 ))}
@@ -238,16 +474,16 @@ export default function ReportsPage() {
                     Produtividade
                   </th>
                   <th className="text-center py-4 px-6 text-sm font-medium text-neutral-textSecondary">
-                    Tarefas Concluídas
+                    Tarefas Concluidas
                   </th>
                   <th className="text-center py-4 px-6 text-sm font-medium text-neutral-textSecondary">
-                    Sessões de Foco
+                    Sessoes de Foco
                   </th>
                   <th className="text-center py-4 px-6 text-sm font-medium text-neutral-textSecondary">
-                    Tendência
+                    Tendencia
                   </th>
                   <th className="text-center py-4 px-6 text-sm font-medium text-neutral-textSecondary">
-                    Ações
+                    Acoes
                   </th>
                 </tr>
               </thead>
@@ -314,17 +550,17 @@ export default function ReportsPage() {
 
       {/* Insights */}
       <div className="mt-8 bg-gradient-to-r from-primary-main to-primary-dark rounded-2xl p-6 text-white">
-        <h3 className="text-lg font-semibold mb-4">💡 Insights da Semana</h3>
+        <h3 className="text-lg font-semibold mb-4">Insights da Semana</h3>
         <div className="grid md:grid-cols-3 gap-4">
           <div className="bg-white/10 rounded-xl p-4">
             <p className="text-sm opacity-80 mb-2">Melhor Dia</p>
             <p className="font-semibold">Quarta-feira</p>
-            <p className="text-xs opacity-70 mt-1">52 tarefas concluídas</p>
+            <p className="text-xs opacity-70 mt-1">52 tarefas concluidas</p>
           </div>
           <div className="bg-white/10 rounded-xl p-4">
-            <p className="text-sm opacity-80 mb-2">Técnica Mais Eficaz</p>
+            <p className="text-sm opacity-80 mb-2">Tecnica Mais Eficaz</p>
             <p className="font-semibold">Pomodoro</p>
-            <p className="text-xs opacity-70 mt-1">89% de sessões concluídas</p>
+            <p className="text-xs opacity-70 mt-1">89% de sessoes concluidas</p>
           </div>
           <div className="bg-white/10 rounded-xl p-4">
             <p className="text-sm opacity-80 mb-2">Destaque</p>
@@ -332,6 +568,36 @@ export default function ReportsPage() {
             <p className="text-xs opacity-70 mt-1">Maior produtividade: 95%</p>
           </div>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function ProgressItem({
+  label,
+  value,
+  total,
+  color,
+}: {
+  label: string;
+  value: number;
+  total: number;
+  color: string;
+}) {
+  const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-1">
+        <span className="text-sm font-medium text-neutral-textPrimary">{label}</span>
+        <span className="text-sm text-neutral-textSecondary">
+          {value} ({percentage}%)
+        </span>
+      </div>
+      <div className="h-3 bg-neutral-background rounded-full overflow-hidden">
+        <div
+          className={`h-full ${color} rounded-full transition-all duration-500`}
+          style={{ width: `${percentage}%` }}
+        />
       </div>
     </div>
   );

@@ -42,6 +42,9 @@ export default function SettingsPage() {
   });
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState('');
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [showPhotoModal, setShowPhotoModal] = useState(false);
+  const [avatarInitials, setAvatarInitials] = useState('');
 
   useEffect(() => {
     // Load user data
@@ -54,6 +57,7 @@ export default function SettingsPage() {
         company: user.company || prev.company,
         role: user.role || prev.role,
       }));
+      setAvatarInitials(user.avatar_url || '');
     }
 
     // Load saved settings
@@ -145,10 +149,17 @@ export default function SettingsPage() {
               </h2>
               <div className="space-y-6">
                 <div className="flex items-center gap-6">
-                  <div className="w-20 h-20 bg-primary-light/20 rounded-full flex items-center justify-center text-2xl font-bold text-primary-main">
-                    {settings.name.split(' ').map(n => n[0]).join('')}
+                  <div className="w-20 h-20 bg-primary-light/20 rounded-full flex items-center justify-center text-2xl font-bold text-primary-main overflow-hidden">
+                    {avatarInitials ? (
+                      <span className="text-3xl">{avatarInitials}</span>
+                    ) : (
+                      settings.name.split(' ').map(n => n[0]).join('').slice(0, 2)
+                    )}
                   </div>
-                  <button className="px-4 py-2 border border-neutral-border rounded-lg text-neutral-textSecondary hover:bg-neutral-background transition-colors">
+                  <button
+                    onClick={() => setShowPhotoModal(true)}
+                    className="px-4 py-2 border border-neutral-border rounded-lg text-neutral-textSecondary hover:bg-neutral-background transition-colors"
+                  >
                     Alterar foto
                   </button>
                 </div>
@@ -205,12 +216,49 @@ export default function SettingsPage() {
 
                 <div className="pt-4 border-t border-neutral-border">
                   <h3 className="font-medium text-neutral-textPrimary mb-4">Segurança</h3>
-                  <button className="px-4 py-2 border border-neutral-border rounded-lg text-neutral-textSecondary hover:bg-neutral-background transition-colors">
+                  <button
+                    onClick={() => setShowPasswordModal(true)}
+                    className="px-4 py-2 border border-neutral-border rounded-lg text-neutral-textSecondary hover:bg-neutral-background transition-colors"
+                  >
                     Alterar senha
                   </button>
                 </div>
               </div>
             </div>
+          )}
+
+          {/* Password Modal */}
+          {showPasswordModal && (
+            <PasswordChangeModal
+              onClose={() => setShowPasswordModal(false)}
+              onSave={(newPassword) => {
+                const user = userStorage.get();
+                if (user) {
+                  userStorage.set({ ...user, password: newPassword });
+                }
+                setShowPasswordModal(false);
+                setSaveMessage('Senha alterada com sucesso!');
+                setTimeout(() => setSaveMessage(''), 3000);
+              }}
+            />
+          )}
+
+          {/* Photo Modal */}
+          {showPhotoModal && (
+            <PhotoChangeModal
+              currentAvatar={avatarInitials}
+              onClose={() => setShowPhotoModal(false)}
+              onSave={(emoji) => {
+                setAvatarInitials(emoji);
+                const user = userStorage.get();
+                if (user) {
+                  userStorage.set({ ...user, avatar_url: emoji });
+                }
+                setShowPhotoModal(false);
+                setSaveMessage('Foto alterada com sucesso!');
+                setTimeout(() => setSaveMessage(''), 3000);
+              }}
+            />
           )}
 
           {activeTab === 'notifications' && (
@@ -441,5 +489,220 @@ function ToggleSwitch({
         }`}
       />
     </button>
+  );
+}
+
+function PasswordChangeModal({
+  onClose,
+  onSave,
+}: {
+  onClose: () => void;
+  onSave: (password: string) => void;
+}) {
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showCurrent, setShowCurrent] = useState(false);
+  const [showNew, setShowNew] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [error, setError] = useState('');
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError('');
+
+    if (newPassword.length < 6) {
+      setError('A nova senha deve ter pelo menos 6 caracteres.');
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setError('As senhas não coincidem.');
+      return;
+    }
+
+    onSave(newPassword);
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-2xl w-full max-w-md">
+        <div className="p-6 border-b border-neutral-border flex items-center justify-between">
+          <h2 className="text-xl font-semibold text-neutral-textPrimary">Alterar Senha</h2>
+          <button onClick={onClose} className="text-2xl text-neutral-textMuted hover:text-neutral-textPrimary">
+            ×
+          </button>
+        </div>
+        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          {error && (
+            <div className="bg-accent-error/10 text-accent-error px-4 py-3 rounded-lg text-sm">
+              {error}
+            </div>
+          )}
+
+          <div>
+            <label className="block text-sm font-medium text-neutral-textSecondary mb-2">
+              Senha atual
+            </label>
+            <div className="relative">
+              <input
+                type={showCurrent ? 'text' : 'password'}
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                className="w-full px-4 py-2 pr-12 rounded-lg border border-neutral-border focus:outline-none focus:ring-2 focus:ring-primary-main"
+                placeholder="••••••••"
+              />
+              <button
+                type="button"
+                onClick={() => setShowCurrent(!showCurrent)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-textMuted"
+              >
+                {showCurrent ? '🙈' : '👁️'}
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-neutral-textSecondary mb-2">
+              Nova senha
+            </label>
+            <div className="relative">
+              <input
+                type={showNew ? 'text' : 'password'}
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                className="w-full px-4 py-2 pr-12 rounded-lg border border-neutral-border focus:outline-none focus:ring-2 focus:ring-primary-main"
+                placeholder="••••••••"
+                required
+                minLength={6}
+              />
+              <button
+                type="button"
+                onClick={() => setShowNew(!showNew)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-textMuted"
+              >
+                {showNew ? '🙈' : '👁️'}
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-neutral-textSecondary mb-2">
+              Confirmar nova senha
+            </label>
+            <div className="relative">
+              <input
+                type={showConfirm ? 'text' : 'password'}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="w-full px-4 py-2 pr-12 rounded-lg border border-neutral-border focus:outline-none focus:ring-2 focus:ring-primary-main"
+                placeholder="••••••••"
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirm(!showConfirm)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-textMuted"
+              >
+                {showConfirm ? '🙈' : '👁️'}
+              </button>
+            </div>
+          </div>
+
+          <div className="flex gap-3 pt-4">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 px-4 py-2 border border-neutral-border rounded-lg text-neutral-textSecondary hover:bg-neutral-background transition-colors"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              className="flex-1 px-4 py-2 bg-primary-main text-white rounded-lg font-medium hover:bg-primary-dark transition-colors"
+            >
+              Salvar
+            </button>
+          </div>
+
+          <p className="text-xs text-neutral-textMuted text-center">
+            Modo Demo: A senha é salva apenas localmente no navegador.
+          </p>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function PhotoChangeModal({
+  currentAvatar,
+  onClose,
+  onSave,
+}: {
+  currentAvatar: string;
+  onClose: () => void;
+  onSave: (emoji: string) => void;
+}) {
+  const [selected, setSelected] = useState(currentAvatar);
+
+  const avatarOptions = ['😊', '😎', '🤓', '🧑‍💻', '👨‍💼', '👩‍💼', '🦸', '🧙', '🎨', '🚀', '💼', '🌟', '🔥', '💎', '🎯', '🏆'];
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-2xl w-full max-w-md">
+        <div className="p-6 border-b border-neutral-border flex items-center justify-between">
+          <h2 className="text-xl font-semibold text-neutral-textPrimary">Alterar Foto</h2>
+          <button onClick={onClose} className="text-2xl text-neutral-textMuted hover:text-neutral-textPrimary">
+            ×
+          </button>
+        </div>
+        <div className="p-6">
+          <p className="text-neutral-textSecondary mb-4">
+            Escolha um emoji para representar seu perfil:
+          </p>
+
+          <div className="grid grid-cols-8 gap-2 mb-6">
+            {avatarOptions.map((emoji) => (
+              <button
+                key={emoji}
+                onClick={() => setSelected(emoji)}
+                className={`w-10 h-10 text-2xl rounded-lg flex items-center justify-center transition-all ${
+                  selected === emoji
+                    ? 'bg-primary-main/20 ring-2 ring-primary-main'
+                    : 'hover:bg-neutral-background'
+                }`}
+              >
+                {emoji}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex items-center justify-center mb-6">
+            <div className="w-24 h-24 bg-primary-light/20 rounded-full flex items-center justify-center text-4xl">
+              {selected || '👤'}
+            </div>
+          </div>
+
+          <div className="flex gap-3">
+            <button
+              onClick={onClose}
+              className="flex-1 px-4 py-2 border border-neutral-border rounded-lg text-neutral-textSecondary hover:bg-neutral-background transition-colors"
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={() => onSave(selected)}
+              className="flex-1 px-4 py-2 bg-primary-main text-white rounded-lg font-medium hover:bg-primary-dark transition-colors"
+            >
+              Salvar
+            </button>
+          </div>
+
+          <p className="text-xs text-neutral-textMuted text-center mt-4">
+            Modo Demo: Em produção, você poderia fazer upload de uma foto real.
+          </p>
+        </div>
+      </div>
+    </div>
   );
 }

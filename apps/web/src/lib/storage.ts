@@ -17,6 +17,26 @@ export interface StoredUser {
   role: string;
   company?: string;
   avatar_url?: string;
+  password?: string; // For demo mode password change
+}
+
+export interface StoredTeam {
+  id: string;
+  name: string;
+  description: string;
+  ownerId: string;
+  createdAt: string;
+  members: StoredTeamMember[];
+}
+
+export interface StoredTeamMember {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  status: 'active' | 'away' | 'offline';
+  productivity: number;
+  lastCheckIn: string;
 }
 
 export interface StoredTask {
@@ -47,45 +67,6 @@ export interface StoredSettings {
 }
 
 // Default data
-const DEFAULT_TASKS: StoredTask[] = [
-  {
-    id: 'task_1',
-    title: 'Revisar documentação do projeto',
-    description: 'Atualizar README e documentação técnica',
-    assignee: 'Usuário Demo',
-    priority: 'high',
-    status: 'in_progress',
-    dueDate: new Date(Date.now() + 86400000).toISOString().split('T')[0],
-    category: 'Trabalho',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: 'task_2',
-    title: 'Preparar apresentação semanal',
-    description: 'Slides para reunião de status',
-    assignee: 'Usuário Demo',
-    priority: 'medium',
-    status: 'pending',
-    dueDate: new Date(Date.now() + 172800000).toISOString().split('T')[0],
-    category: 'Trabalho',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: 'task_3',
-    title: 'Corrigir bug no módulo de pagamentos',
-    description: 'Erro reportado pelo cliente #1234',
-    assignee: 'Usuário Demo',
-    priority: 'high',
-    status: 'completed',
-    dueDate: new Date().toISOString().split('T')[0],
-    category: 'Trabalho',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-];
-
 const DEFAULT_SETTINGS: StoredSettings = {
   notifications: {
     email: true,
@@ -130,18 +111,21 @@ export const userStorage = {
 export const tasksStorage = {
   getAll(): StoredTask[] {
     if (!isBrowser) return [];
-    const data = localStorage.getItem(STORAGE_KEYS.TASKS);
+    const user = userStorage.get();
+    // Tasks are stored per user
+    const key = user ? `${STORAGE_KEYS.TASKS}_${user.id}` : STORAGE_KEYS.TASKS;
+    const data = localStorage.getItem(key);
     if (!data) {
-      // Initialize with default tasks
-      this.setAll(DEFAULT_TASKS);
-      return DEFAULT_TASKS;
+      return []; // Start with empty tasks for new users
     }
     return JSON.parse(data);
   },
 
   setAll(tasks: StoredTask[]): void {
     if (!isBrowser) return;
-    localStorage.setItem(STORAGE_KEYS.TASKS, JSON.stringify(tasks));
+    const user = userStorage.get();
+    const key = user ? `${STORAGE_KEYS.TASKS}_${user.id}` : STORAGE_KEYS.TASKS;
+    localStorage.setItem(key, JSON.stringify(tasks));
   },
 
   add(task: Omit<StoredTask, 'id' | 'createdAt' | 'updatedAt'>): StoredTask {
@@ -207,6 +191,67 @@ export const settingsStorage = {
     const updated = { ...current, ...updates };
     this.set(updated);
     return updated;
+  },
+};
+
+// Teams Storage
+export const teamsStorage = {
+  getAll(): StoredTeam[] {
+    if (!isBrowser) return [];
+    const data = localStorage.getItem(STORAGE_KEYS.TEAMS);
+    return data ? JSON.parse(data) : [];
+  },
+
+  setAll(teams: StoredTeam[]): void {
+    if (!isBrowser) return;
+    localStorage.setItem(STORAGE_KEYS.TEAMS, JSON.stringify(teams));
+  },
+
+  add(team: Omit<StoredTeam, 'id' | 'createdAt'>): StoredTeam {
+    const teams = this.getAll();
+    const newTeam: StoredTeam = {
+      ...team,
+      id: `team_${Date.now()}`,
+      createdAt: new Date().toISOString(),
+    };
+    teams.push(newTeam);
+    this.setAll(teams);
+    return newTeam;
+  },
+
+  update(id: string, updates: Partial<StoredTeam>): StoredTeam | null {
+    const teams = this.getAll();
+    const index = teams.findIndex((t) => t.id === id);
+    if (index === -1) return null;
+    teams[index] = { ...teams[index], ...updates };
+    this.setAll(teams);
+    return teams[index];
+  },
+
+  delete(id: string): boolean {
+    const teams = this.getAll();
+    const filtered = teams.filter((t) => t.id !== id);
+    if (filtered.length === teams.length) return false;
+    this.setAll(filtered);
+    return true;
+  },
+
+  addMember(teamId: string, member: StoredTeamMember): StoredTeam | null {
+    const teams = this.getAll();
+    const index = teams.findIndex((t) => t.id === teamId);
+    if (index === -1) return null;
+    teams[index].members.push(member);
+    this.setAll(teams);
+    return teams[index];
+  },
+
+  removeMember(teamId: string, memberId: string): boolean {
+    const teams = this.getAll();
+    const index = teams.findIndex((t) => t.id === teamId);
+    if (index === -1) return false;
+    teams[index].members = teams[index].members.filter((m) => m.id !== memberId);
+    this.setAll(teams);
+    return true;
   },
 };
 

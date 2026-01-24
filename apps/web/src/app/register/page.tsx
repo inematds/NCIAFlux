@@ -12,9 +12,11 @@ export default function RegisterPage() {
     email: '',
     password: '',
     confirmPassword: '',
-    role: 'manager' as const,
+    role: 'user' as 'user' | 'manager' | 'admin',
     company: '',
   });
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -144,9 +146,9 @@ export default function RegisterPage() {
                 onChange={(e) => updateField('role', e.target.value)}
                 className="w-full px-4 py-3 rounded-lg border border-neutral-border focus:outline-none focus:ring-2 focus:ring-primary-main focus:border-transparent bg-white"
               >
-                <option value="manager">Gestor / Líder de Equipe</option>
-                <option value="user">Usuário Individual</option>
-                <option value="admin">Administrador</option>
+                <option value="user">Usuário Individual (apenas minhas tarefas)</option>
+                <option value="manager">Gestor / Líder (gerencia equipes)</option>
+                <option value="admin">Administrador (acesso total)</option>
               </select>
             </div>
 
@@ -154,31 +156,49 @@ export default function RegisterPage() {
               <label htmlFor="password" className="block text-sm font-medium text-neutral-textSecondary mb-2">
                 Senha
               </label>
-              <input
-                id="password"
-                type="password"
-                value={formData.password}
-                onChange={(e) => updateField('password', e.target.value)}
-                className="w-full px-4 py-3 rounded-lg border border-neutral-border focus:outline-none focus:ring-2 focus:ring-primary-main focus:border-transparent"
-                placeholder="••••••••"
-                required
-                minLength={6}
-              />
+              <div className="relative">
+                <input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  value={formData.password}
+                  onChange={(e) => updateField('password', e.target.value)}
+                  className="w-full px-4 py-3 pr-12 rounded-lg border border-neutral-border focus:outline-none focus:ring-2 focus:ring-primary-main focus:border-transparent"
+                  placeholder="••••••••"
+                  required
+                  minLength={6}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-textMuted hover:text-neutral-textSecondary"
+                >
+                  {showPassword ? '🙈' : '👁️'}
+                </button>
+              </div>
             </div>
 
             <div>
               <label htmlFor="confirmPassword" className="block text-sm font-medium text-neutral-textSecondary mb-2">
                 Confirmar senha
               </label>
-              <input
-                id="confirmPassword"
-                type="password"
-                value={formData.confirmPassword}
-                onChange={(e) => updateField('confirmPassword', e.target.value)}
-                className="w-full px-4 py-3 rounded-lg border border-neutral-border focus:outline-none focus:ring-2 focus:ring-primary-main focus:border-transparent"
-                placeholder="••••••••"
-                required
-              />
+              <div className="relative">
+                <input
+                  id="confirmPassword"
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  value={formData.confirmPassword}
+                  onChange={(e) => updateField('confirmPassword', e.target.value)}
+                  className="w-full px-4 py-3 pr-12 rounded-lg border border-neutral-border focus:outline-none focus:ring-2 focus:ring-primary-main focus:border-transparent"
+                  placeholder="••••••••"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-textMuted hover:text-neutral-textSecondary"
+                >
+                  {showConfirmPassword ? '🙈' : '👁️'}
+                </button>
+              </div>
             </div>
 
             <button

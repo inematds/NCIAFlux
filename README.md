@@ -138,6 +138,15 @@ NCIAFlux (NeuroFluxo) é um aplicativo mobile projetado especificamente para pes
 ```
 NCIAFlux/
 ├── apps/
+│   ├── web/                       # App Web (Next.js 14)
+│   │   └── src/
+│   │       ├── app/               # App Router pages
+│   │       │   ├── dashboard/     # Dashboard, Tasks, Teams, Reports, Settings
+│   │       │   ├── login/         # Autenticação
+│   │       │   ├── register/      # Cadastro
+│   │       │   └── (static)/      # Páginas estáticas
+│   │       └── lib/               # Utilitários
+│   │           └── storage.ts     # LocalStorage service
 │   └── mobile/                    # App React Native (Expo)
 │       ├── src/
 │       │   ├── components/        # Componentes reutilizáveis
@@ -339,7 +348,8 @@ cd apps/mobile && npx expo start
 | Comando | Descrição |
 |---------|-----------|
 | `pnpm dev` | Inicia todos os apps |
-| `pnpm dev:mobile` | Inicia o app mobile |
+| `pnpm dev:web` | Inicia o app web (http://localhost:3000) |
+| `pnpm dev:mobile` | Inicia o app mobile (Expo) |
 | `pnpm build` | Build de produção |
 | `pnpm lint` | Executa linting |
 | `pnpm test` | Executa testes |
@@ -351,15 +361,26 @@ cd apps/mobile && npx expo start
 
 | Camada | Tecnologia |
 |--------|------------|
+| **Web** | Next.js 14 + Tailwind CSS |
 | **Mobile** | React Native 0.73 + Expo 50 |
 | **Linguagem** | TypeScript 5.0 |
-| **Navegação** | React Navigation 6 |
+| **Navegação** | App Router (Web) / React Navigation 6 (Mobile) |
 | **Estado** | Zustand + React Query |
 | **Backend** | Supabase (PostgreSQL + Auth + Storage) |
-| **Estilização** | StyleSheet nativo |
+| **Estilização** | Tailwind CSS (Web) / StyleSheet nativo (Mobile) |
 | **Animações** | React Native Animated |
-| **Armazenamento Local** | AsyncStorage |
+| **Armazenamento Local** | localStorage (Web) / AsyncStorage (Mobile) |
 | **Monorepo** | Turborepo + pnpm |
+
+### Web App - Funcionalidades por Role
+
+| Funcionalidade | Usuário | Gestor/Admin |
+|----------------|---------|--------------|
+| Dashboard | Stats pessoais | Stats da equipe |
+| Tarefas | CRUD próprias | CRUD próprias |
+| Equipes | Não disponível | CRUD completo |
+| Relatórios | Pessoais | Equipe + Individuais |
+| Configurações | Perfil + Senha + Foto | Perfil + Senha + Foto |
 
 ---
 
@@ -408,6 +429,8 @@ cd apps/mobile && npx expo start
 |-----------|-----------|
 | [PRD](docs/prd.md) | Product Requirements Document |
 | [Arquitetura](docs/architecture.md) | Arquitetura técnica detalhada |
+| [Arquitetura do Sistema](docs/arquitetura-sistema.md) | Visão geral Web + Mobile + Backend |
+| [Guia do Usuário](docs/guia-usuario.md) | Manual completo para usuários |
 | [UX/UI Spec](docs/front-end-spec.md) | Especificação de interface |
 | [Market Research](docs/market-research-analysis.md) | Análise de mercado |
 | [Todo](docs/todo.md) | Plano de ação do projeto |
