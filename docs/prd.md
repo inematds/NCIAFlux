@@ -1,7 +1,7 @@
 # NCIAFlux Product Requirements Document (PRD)
 
-**Versão:** 1.0
-**Data:** 23 de Janeiro de 2026
+**Versão:** 1.1
+**Data:** 24 de Janeiro de 2026
 **Status:** Draft
 
 ---
@@ -28,6 +28,7 @@ O NCIAFlux diferencia-se por três pilares: **Autoconhecimento** (descoberta do 
 | Data | Versão | Descrição | Autor |
 |------|--------|-----------|-------|
 | 2026-01-23 | 1.0 | Criação inicial do PRD | PM (BMad) |
+| 2026-01-24 | 1.1 | Adição de módulos: Brain Dump, Cronotipos, Planner Diário, Rotinas, Revisões | PM (Claude) |
 
 ---
 
@@ -51,11 +52,68 @@ O NCIAFlux diferencia-se por três pilares: **Autoconhecimento** (descoberta do 
 #### Módulo Plano Personalizado (Todos os planos)
 
 - **FR11**: O perfil da descoberta deve se tornar automaticamente o perfil base ao continuar
-- **FR12**: O plano diário deve conter: 1 prioridade real, máximo 2 tarefas leves, 1 bloco de foco
+- **FR12**: O plano diário deve conter: 1 prioridade real (Top 1), máximo 2 tarefas leves, 1 bloco de foco
 - **FR13**: O sistema deve suportar rotinas condicionais no formato "se/então"
 - **FR14**: O sistema deve sugerir no máximo 3 técnicas por vez (brain dump, starter step, pomodoro adaptado, blocos de energia)
 - **FR15**: As técnicas devem mudar conforme padrões de uso
 - **FR16**: O sistema deve permitir widgets de 1-toque para ações rápidas
+
+#### Módulo Brain Dump Estruturado (Todos os planos)
+
+- **FR59**: O sistema deve oferecer área dedicada para "despejo mental" (Brain Dump)
+- **FR60**: O Brain Dump deve ter categorias pré-definidas: Ligar, Enviar mensagem, Enviar e-mail, Planejar, Pesquisar/Aprender, Fazer/Criar
+- **FR61**: O usuário deve poder adicionar itens rapidamente por voz ou texto
+- **FR62**: O sistema deve oferecer triagem automática em 3 categorias: Hoje (máx 3), Esta Semana (máx 5), Delegar/Pedir ajuda (máx 3)
+- **FR63**: O Brain Dump deve ter área para "Meu Grande Objetivo" do dia/semana
+- **FR64**: O sistema deve alertar quando lista ficar muito grande (> 10 itens não triados)
+- **FR65**: A triagem deve resultar em Top 1 (prioridade absoluta) automaticamente sugerido
+
+#### Módulo Cronotipos (Todos os planos)
+
+- **FR66**: O questionário de descoberta deve identificar o cronotipo do usuário (Urso, Golfinho, Coruja, Leão)
+- **FR67**: Cada cronotipo deve ter rotina diária específica pré-configurada:
+  - **Urso**: Meditar pela manhã → Metas de conclusão parcial → Pausas para alongar → Tarefas leves
+  - **Golfinho**: Priorizar listas → Trabalho profundo 3h → Técnica Pomodoro → Intervalos curtos
+  - **Coruja**: Brain dump → Check-in diário → Tarefas desafiadoras → Definir metas para amanhã
+  - **Leão**: Definir 1 prioridade → Criar ambiente de trabalho → Tarefas difíceis primeiro → Terminar com leves
+- **FR68**: O usuário deve poder visualizar e ajustar a rotina do seu cronotipo
+- **FR69**: O sistema deve sugerir horários ideais de foco baseado no cronotipo
+- **FR70**: O cronotipo deve influenciar notificações e lembretes
+
+#### Módulo Planner Diário (Todos os planos)
+
+- **FR71**: O Planner deve exibir visão do dia dividida em períodos: Manhã, Tarde, Noite
+- **FR72**: O Planner deve incluir seção de "Confirmação do dia" (intenção positiva)
+- **FR73**: O Planner deve incluir seção de "Gratidão" (ação de graças)
+- **FR74**: O Planner deve registrar humor do usuário via emojis (😊😐😔😰😴)
+- **FR75**: O Planner deve registrar qualidade do sono da noite anterior (escala 1-10)
+- **FR76**: O Planner deve ter lista de prioridades com limite visual (Top 1 destacado, máx 3 secundárias)
+- **FR77**: O Planner deve mostrar rotina matinal por horário (ex: 6h dormir, 7h acordar, 8h meditação)
+- **FR78**: O Planner deve mostrar rotina noturna por horário (ex: 17h sair trabalho, 20h exercício, 21h descanso)
+- **FR79**: O Planner deve ter campo "Revisão para hoje" (nota 1-10 de como espera o dia)
+
+#### Módulo Rotinas Matinal e Noturna (Todos os planos)
+
+- **FR80**: O sistema deve oferecer construtor de rotina matinal em formato de fluxograma visual
+- **FR81**: A rotina matinal deve usar decisões condicionais: "Você dormiu bem?" → Sim/Não → caminhos diferentes
+- **FR82**: Exemplos de condições matinais: qualidade do sono, toma banho de manhã, espaço bagunçado
+- **FR83**: A rotina matinal deve culminar em: "Criar lista de tarefas do dia"
+- **FR84**: O sistema deve oferecer construtor de rotina noturna similar
+- **FR85**: A rotina noturna deve incluir: preparação para amanhã, revisão do dia, descompressão
+- **FR86**: O usuário deve poder configurar horário de início de cada rotina
+- **FR87**: O sistema deve enviar notificação gentil no horário da rotina configurada
+- **FR88**: Tipo de personalidade (MBTI simplificado) pode influenciar sugestões de rotina
+
+#### Módulo Sistema de Revisão (Todos os planos)
+
+- **FR89**: O sistema deve oferecer Revisão Matinal com pergunta: "O que me deixa orgulhoso esta manhã?"
+- **FR90**: O sistema deve oferecer Revisão Noturna com perguntas:
+  1. "O que me deixou orgulhoso hoje?"
+  2. "O que eu mudaria amanhã? (uma coisa)"
+- **FR91**: As revisões devem ser opcionais e rápidas (máx 2 minutos)
+- **FR92**: O sistema deve armazenar histórico de revisões para identificar padrões
+- **FR93**: Revisões nunca devem ter tom de cobrança - sempre de auto-observação gentil
+- **FR94**: O sistema pode sugerir insights baseados em revisões anteriores (ex: "Você mencionou sono 3x esta semana")
 
 #### Módulo Acompanhamento (Todos os planos)
 
@@ -191,16 +249,21 @@ Interface minimalista, acolhedora e não-clínica que respeita cérebros neurodi
 
 ### 3.3 Core Screens and Views
 
-1. **Tela de Descoberta** - Questionário uma pergunta por vez
-2. **Tela de Resultado** - Perfil + insight + sugestão
-3. **Painel Principal (Dashboard)** - Prioridade, energia, foco, ajuste
-4. **Tela de Plano do Dia** - Tarefas e blocos de foco
-5. **Chat de Acompanhamento** - Interface conversacional leve
-6. **Configurações de Notificações** - Simples e avançada
-7. **Biblioteca de Relatórios** - Cards de relatórios disponíveis
-8. **Modo Crise** - Interface ultra-simplificada
-9. **Perfil/Configurações** - Gestão de conta e plano
-10. **Comunidade** (Avançado) - Feed e times
+1. **Tela de Descoberta** - Questionário uma pergunta por vez (inclui identificação de cronotipo)
+2. **Tela de Resultado** - Perfil + cronotipo + insight + sugestão
+3. **Painel Principal (Dashboard)** - Prioridade Top 1, energia, foco, humor, acesso rápido
+4. **Planner Diário** - Visão manhã/tarde/noite com rotinas, tarefas e revisões
+5. **Brain Dump** - Área de despejo mental com categorias e triagem
+6. **Construtor de Rotina Matinal** - Fluxograma visual com decisões se/então
+7. **Construtor de Rotina Noturna** - Fluxograma visual com preparação para amanhã
+8. **Timer de Foco** - Pomodoro adaptado com técnicas do cronotipo
+9. **Tela de Revisão** - Perguntas de reflexão (manhã e noite)
+10. **Chat de Acompanhamento** - Interface conversacional leve
+11. **Configurações de Notificações** - Simples e avançada
+12. **Biblioteca de Relatórios** - Cards de relatórios disponíveis
+13. **Modo Crise** - Interface ultra-simplificada
+14. **Perfil/Configurações** - Gestão de conta, cronotipo e plano
+15. **Comunidade** (Avançado) - Feed e times
 
 ### 3.4 Accessibility
 
@@ -287,6 +350,7 @@ Interface minimalista, acolhedora e não-clínica que respeita cérebros neurodi
 | 4 | Experiência e Engajamento | Micro-recompensas, widgets, modo crise |
 | 5 | Features Avançadas | Relatórios avançados, educação, comunidade |
 | 6 | Plano Profissional | Integração com terapeutas e acompanhamento supervisionado |
+| 7 | Sistema de Produtividade TDAH | Brain Dump, Cronotipos, Planner Diário, Rotinas e Revisões |
 
 ### Features V2 (Futuras)
 
@@ -341,44 +405,49 @@ Interface minimalista, acolhedora e não-clínica que respeita cérebros neurodi
 
 **Como** usuário,
 **Quero** responder perguntas simples sobre como meu cérebro funciona,
-**Para que** o sistema entenda meu perfil.
+**Para que** o sistema entenda meu perfil e cronotipo.
 
 **Acceptance Criteria:**
 1. Interface de questionário com uma pergunta por tela
 2. Navegação por deslizar ou toque
 3. Progresso visual mostrando etapa atual
 4. Perguntas cobrem: dificuldades, energia/horários, estilo de execução, sobrecarga
-5. Tempo total de 5-7 minutos
-6. Linguagem humana e não-clínica em todas as perguntas
-7. Possibilidade de pausar e continuar depois
+5. Perguntas incluem identificação de cronotipo (horário de pico, sono, preferências)
+6. Tempo total de 5-7 minutos
+7. Linguagem humana e não-clínica em todas as perguntas
+8. Possibilidade de pausar e continuar depois
 
-#### Story 1.4: Motor de Geração de Perfil
+#### Story 1.4: Motor de Geração de Perfil e Cronotipo
 
 **Como** sistema,
 **Quero** processar as respostas do questionário,
-**Para que** gere um perfil cognitivo personalizado.
+**Para que** gere um perfil cognitivo personalizado com cronotipo identificado.
 
 **Acceptance Criteria:**
 1. Algoritmo processa respostas e gera perfil estruturado
 2. Perfil contém: resumo (1-2 frases), insight central, sugestão prática
-3. Perfil é salvo no banco de dados associado ao usuário
-4. Lógica permite extensão futura (mais dimensões de perfil)
-5. Testes unitários cobrem casos principais de geração
+3. Sistema identifica cronotipo do usuário: Urso, Golfinho, Coruja ou Leão
+4. Cronotipo determina rotina diária sugerida inicial
+5. Perfil é salvo no banco de dados associado ao usuário
+6. Lógica permite extensão futura (mais dimensões de perfil)
+7. Testes unitários cobrem casos principais de geração e identificação de cronotipo
 
 #### Story 1.5: Tela de Resultado da Descoberta
 
 **Como** usuário,
-**Quero** ver meu perfil de forma clara e inspiradora,
+**Quero** ver meu perfil e cronotipo de forma clara e inspiradora,
 **Para que** me sinta compreendido e tenha clareza sobre como agir.
 
 **Acceptance Criteria:**
 1. Tela exibe perfil resumido de forma visual e acolhedora
-2. Insight central destacado com linguagem empática
-3. Sugestão prática acionável claramente apresentada
-4. Botão para salvar resultado
-5. Botão para compartilhar resultado (gera imagem ou link)
-6. Opção clara de "Continuar usando o app" vs "Apenas salvar"
-7. Nenhuma pressão para continuar - experiência completa mesmo sem cadastro pago
+2. Cronotipo identificado com ícone e descrição (Urso 🐻, Golfinho 🐬, Coruja 🦉, Leão 🦁)
+3. Rotina sugerida baseada no cronotipo apresentada visualmente
+4. Insight central destacado com linguagem empática
+5. Sugestão prática acionável claramente apresentada
+6. Botão para salvar resultado
+7. Botão para compartilhar resultado (gera imagem ou link)
+8. Opção clara de "Continuar usando o app" vs "Apenas salvar"
+9. Nenhuma pressão para continuar - experiência completa mesmo sem cadastro pago
 
 #### Story 1.6: Fluxo de Descoberta sem Cadastro
 
@@ -712,6 +781,159 @@ Interface minimalista, acolhedora e não-clínica que respeita cérebros neurodi
 4. Exportação em PDF
 5. Período personalizável
 6. Notas do profissional podem ser adicionadas
+
+---
+
+### Epic 7: Sistema de Produtividade TDAH
+
+**Objetivo**: Implementar o sistema completo de produtividade adaptado para TDAH, incluindo Brain Dump estruturado, identificação por cronotipos, Planner Diário visual, Rotinas Matinal/Noturna com fluxogramas e Sistema de Revisão para fechamento do ciclo diário.
+
+#### Story 7.1: Brain Dump Estruturado
+
+**Como** usuário,
+**Quero** despejar todos os pensamentos da minha cabeça em categorias,
+**Para que** reduza a sobrecarga mental e transforme ansiedade em ação.
+
+**Acceptance Criteria:**
+1. Área dedicada "Brain Dump" acessível do dashboard
+2. Categorias pré-definidas: Ligar, Mensagem, E-mail, Planejar, Pesquisar, Fazer/Criar
+3. Campo livre para itens sem categoria
+4. Input rápido por voz ou texto
+5. Visualização clara de todos os itens despejados
+6. Contador de itens com alerta visual se > 10 não triados
+7. Campo "Meu Grande Objetivo" destacado no topo
+
+#### Story 7.2: Triagem e Top 1
+
+**Como** usuário,
+**Quero** transformar meu brain dump em ações priorizadas,
+**Para que** saiba exatamente o que fazer sem decisão demais.
+
+**Acceptance Criteria:**
+1. Botão "Triar" transforma brain dump em triagem
+2. Interface de arrastar itens para: Hoje (máx 3), Esta Semana (máx 5), Delegar (máx 3)
+3. Sistema sugere Top 1 automaticamente baseado em urgência/importância
+4. Usuário pode ajustar Top 1 com 1 toque
+5. Itens triados somem do brain dump e vão para planner
+6. Regra visual: se lista > 3 itens para hoje, aviso gentil aparece
+7. Opção de mover item para "Algum dia" (sem prazo)
+
+#### Story 7.3: Sistema de Cronotipos
+
+**Como** usuário,
+**Quero** ter minha rotina adaptada ao meu cronotipo,
+**Para que** trabalhe nos horários que meu cérebro funciona melhor.
+
+**Acceptance Criteria:**
+1. Tela de configuração do cronotipo acessível do perfil
+2. Quiz rápido (3-5 perguntas) para identificar/confirmar cronotipo
+3. Descrição clara de cada cronotipo com pontos fortes e desafios:
+   - 🐻 **Urso**: Segue ritmo solar, produtivo no meio da manhã
+   - 🐬 **Golfinho**: Sono leve, precisa de estrutura rígida
+   - 🦉 **Coruja**: Noturno, criativo à noite, manhã difícil
+   - 🦁 **Leão**: Madrugador, produtivo bem cedo, cansa à noite
+4. Rotina sugerida específica para cada cronotipo
+5. Horários de notificação ajustados ao cronotipo
+6. Usuário pode mudar cronotipo manualmente
+
+#### Story 7.4: Rotinas por Cronotipo
+
+**Como** usuário,
+**Quero** ter uma rotina pré-configurada baseada no meu cronotipo,
+**Para que** tenha um ponto de partida que funciona para mim.
+
+**Acceptance Criteria:**
+1. Cada cronotipo tem rotina matinal e noturna pré-definida
+2. Rotina do Urso: Meditar → Metas parciais → Pausas → Tarefas leves
+3. Rotina do Golfinho: Listas → Trabalho profundo 3h → Pomodoro → Intervalos curtos
+4. Rotina da Coruja: Brain dump → Check-in → Tarefas difíceis → Metas amanhã
+5. Rotina do Leão: 1 prioridade → Ambiente → Difíceis primeiro → Leves no fim
+6. Usuário pode personalizar rotina mantendo estrutura base
+7. Rotina aparece no Planner Diário automaticamente
+
+#### Story 7.5: Planner Diário Visual
+
+**Como** usuário,
+**Quero** ver meu dia organizado visualmente por períodos,
+**Para que** tenha clareza do fluxo do dia sem sobrecarga.
+
+**Acceptance Criteria:**
+1. Visão dividida em Manhã (6h-12h), Tarde (12h-18h), Noite (18h-24h)
+2. Seção superior: Confirmação do dia + Gratidão + Humor + Sono
+3. Humor via emojis (😊😐😔😰😴) com 1 toque
+4. Sono da noite anterior (escala 1-10) com slider rápido
+5. Top 1 destacado visualmente no centro
+6. Tarefas secundárias (máx 3) abaixo do Top 1
+7. Rotina matinal por horário na seção Manhã
+8. Rotina noturna por horário na seção Noite
+9. Campo "Revisão para hoje" (expectativa 1-10)
+10. Design limpo, sem sobrecarga visual
+
+#### Story 7.6: Construtor de Rotina Matinal
+
+**Como** usuário,
+**Quero** criar minha rotina matinal em formato de fluxograma,
+**Para que** não dependa de motivação, apenas siga o caminho.
+
+**Acceptance Criteria:**
+1. Interface visual de fluxograma com blocos arrastáveis
+2. Blocos de decisão "Se/Então": Dormiu bem? → Sim/Não
+3. Blocos de ação: Exercício, Meditação, Café, Banho, etc.
+4. Condições disponíveis: qualidade sono, humor, dia da semana, agenda
+5. Ações disponíveis: atividade física, mindfulness, alimentação, higiene, organização
+6. Preview da rotina em texto simples
+7. Horário de início configurável
+8. Notificação gentil no horário configurado
+9. Rotina culmina em "Criar lista de tarefas"
+
+#### Story 7.7: Construtor de Rotina Noturna
+
+**Como** usuário,
+**Quero** criar minha rotina noturna para fechar o dia,
+**Para que** prepare o amanhã e descanse melhor.
+
+**Acceptance Criteria:**
+1. Interface similar à rotina matinal
+2. Blocos específicos noturnos: Revisão, Preparar amanhã, Descompressão
+3. Condições: energia atual, tarefas pendentes, hora atual
+4. Ações: exercício leve, leitura, gratidão, preparar roupa/mochila, desligar telas
+5. Horário de início configurável
+6. Notificação gentil no horário configurado
+7. Rotina culmina em "Definir Top 1 de amanhã"
+
+#### Story 7.8: Sistema de Revisão Diária
+
+**Como** usuário,
+**Quero** fazer revisões rápidas manhã e noite,
+**Para que** aprenda com meus padrões sem culpa.
+
+**Acceptance Criteria:**
+1. Revisão Matinal (2 min): "O que me deixa orgulhoso esta manhã?"
+2. Revisão Noturna (3 min):
+   - "O que me deixou orgulhoso hoje?"
+   - "O que eu mudaria amanhã? (uma coisa)"
+3. Respostas por texto livre ou sugestões rápidas
+4. Tom sempre gentil, nunca de cobrança
+5. Histórico de revisões acessível
+6. Sistema identifica padrões (ex: "Sono apareceu 3x esta semana")
+7. Insights gentis baseados em padrões (opcional)
+8. Revisões são opcionais - nunca punir por pular
+
+#### Story 7.9: Ciclo Diário Completo
+
+**Como** usuário,
+**Quero** ter um ciclo diário integrado,
+**Para que** todas as partes funcionem juntas de forma fluida.
+
+**Acceptance Criteria:**
+1. Fluxo matinal: Acordar → Rotina Matinal → Revisão Matinal → Brain Dump → Triagem → Top 1
+2. Fluxo diário: Planner → Foco → Check-ins leves → Ajustes
+3. Fluxo noturno: Rotina Noturna → Revisão Noturna → Preparar amanhã
+4. Transições suaves entre cada etapa
+5. Progresso visual do ciclo no dashboard
+6. Notificações gentis nos momentos de transição
+7. Modo simplificado para dias difíceis (pular etapas sem culpa)
+8. Métricas de consistência (não produtividade) disponíveis
 
 ---
 
