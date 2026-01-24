@@ -22,6 +22,7 @@ import {
 } from '@nciaflux/shared';
 import { useAuth } from '../../hooks/useAuth';
 import { MainStackParamList } from '../../navigation/MainNavigator';
+import { CelebrationOverlay, CelebrationType } from '../../components';
 
 type DashboardNavigationProp = NativeStackNavigationProp<MainStackParamList, 'Tabs'>;
 
@@ -79,6 +80,10 @@ export function DashboardScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [energyLevel, setEnergyLevel] = useState<number | null>(null);
   const [tasks, setTasks] = useState<Task[]>(MOCK_TASKS);
+  const [celebration, setCelebration] = useState<{
+    visible: boolean;
+    type: CelebrationType;
+  }>({ visible: false, type: 'task_complete' });
 
   const timeOfDay = getTimeOfDay();
   const completedTasks = tasks.filter((t) => t.status === 'completed').length;
@@ -92,17 +97,38 @@ export function DashboardScreen() {
   }
 
   function handleTaskToggle(taskId: string) {
+    const task = tasks.find((t) => t.id === taskId);
+    const wasCompleted = task?.status === 'completed';
+
     setTasks((prev) =>
-      prev.map((task) =>
-        task.id === taskId
+      prev.map((t) =>
+        t.id === taskId
           ? {
-              ...task,
-              status: task.status === 'completed' ? 'pending' : ('completed' as TaskStatus),
-              completed_at: task.status === 'completed' ? undefined : new Date(),
+              ...t,
+              status: t.status === 'completed' ? 'pending' : ('completed' as TaskStatus),
+              completed_at: t.status === 'completed' ? undefined : new Date(),
             }
-          : task
+          : t
       )
     );
+
+    // Show celebration when completing a task
+    if (!wasCompleted) {
+      const newCompletedCount = completedTasks + 1;
+      const totalTasks = tasks.length;
+
+      // Determine celebration type
+      let celebrationType: CelebrationType = 'task_complete';
+      if (newCompletedCount === 1) {
+        celebrationType = 'first_task';
+      } else if (newCompletedCount === totalTasks) {
+        celebrationType = 'all_tasks';
+      } else if (newCompletedCount % 5 === 0) {
+        celebrationType = 'daily_goal';
+      }
+
+      setCelebration({ visible: true, type: celebrationType });
+    }
   }
 
   function handleCrisisMode() {
@@ -316,6 +342,13 @@ export function DashboardScreen() {
           </Text>
         </View>
       </ScrollView>
+
+      {/* Celebration Overlay */}
+      <CelebrationOverlay
+        type={celebration.type}
+        visible={celebration.visible}
+        onDismiss={() => setCelebration({ ...celebration, visible: false })}
+      />
     </SafeAreaView>
   );
 }
