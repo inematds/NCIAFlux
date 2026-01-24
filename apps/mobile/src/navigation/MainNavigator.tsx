@@ -12,6 +12,9 @@ import { FocusBlockScreen } from '../screens/main/FocusBlockScreen';
 import { TaskDetailScreen } from '../screens/main/TaskDetailScreen';
 import { CheckInScreen } from '../screens/main/CheckInScreen';
 import { ReportsScreen } from '../screens/main/ReportsScreen';
+import { NotificationSettingsScreen } from '../screens/main/NotificationSettingsScreen';
+import { ReportsLibraryScreen } from '../screens/main/ReportsLibraryScreen';
+import { EducationalContentScreen } from '../screens/main/EducationalContentScreen';
 
 export type MainTabParamList = {
   Dashboard: undefined;
@@ -27,6 +30,9 @@ export type MainStackParamList = {
   TaskDetail: { taskId: string };
   CheckIn: { type?: CheckInType };
   Reports: undefined;
+  NotificationSettings: undefined;
+  ReportsLibrary: undefined;
+  EducationalContent: undefined;
 };
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -112,6 +118,13 @@ export function MainNavigator() {
         options={{ animation: 'slide_from_bottom' }}
       />
       <Stack.Screen name="Reports" component={ReportsScreen} />
+      <Stack.Screen
+        name="NotificationSettings"
+        component={NotificationSettingsScreen}
+        options={{ animation: 'slide_from_right' }}
+      />
+      <Stack.Screen name="ReportsLibrary" component={ReportsLibraryScreen} />
+      <Stack.Screen name="EducationalContent" component={EducationalContentScreen} />
     </Stack.Navigator>
   );
 }
