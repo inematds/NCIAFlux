@@ -63,9 +63,9 @@
 
 ### 2.4 MVP - Módulo Acompanhamento (Básico)
 - [x] Epic: Chat texto (sinais leves)
-- [ ] Epic: Check-ins e coleta de dados
+- [x] Epic: Check-ins e coleta de dados
 - [ ] Epic: Sistema de notificações (simples)
-- [ ] Epic: Relatório simples
+- [x] Epic: Relatório simples
 
 ### 2.5 MVP - Experiência e Engajamento
 - [ ] Epic: Micro-recompensas visuais
@@ -187,6 +187,7 @@
 | 2026-01-23 | Estrutura base do app mobile | Dev |
 | 2026-01-23 | Schema do banco de dados criado | Dev |
 | 2026-01-23 | Sprint 4: Modo Crise e Perfil aprimorados | Dev |
+| 2026-01-23 | Sprint 5: Check-ins e Relatórios | Dev |
 
 ---
 
