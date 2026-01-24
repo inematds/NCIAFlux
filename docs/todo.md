@@ -49,20 +49,20 @@
 - [x] Hook de autenticação com Supabase
 
 ### 2.2 MVP - Módulo Descoberta (Gratuito)
-- [ ] Epic: Sistema de questionário
-- [ ] Epic: Geração de perfil
-- [ ] Epic: Feedback e insights
-- [ ] Epic: Salvar/compartilhar resultado
+- [x] Epic: Sistema de questionário
+- [x] Epic: Geração de perfil
+- [x] Epic: Feedback e insights
+- [x] Epic: Salvar/compartilhar resultado
 
 ### 2.3 MVP - Módulo Plano Personalizado (Básico)
-- [ ] Epic: Dashboard/Painel visual
-- [ ] Epic: Sistema de prioridades e tarefas
-- [ ] Epic: Rotinas condicionais (se/então)
-- [ ] Epic: Técnicas adaptativas
-- [ ] Epic: Blocos de foco
+- [x] Epic: Dashboard/Painel visual
+- [x] Epic: Sistema de prioridades e tarefas
+- [x] Epic: Rotinas condicionais (se/então)
+- [x] Epic: Técnicas adaptativas (dicas e sugestões)
+- [x] Epic: Blocos de foco (Pomodoro, Deep Work, Timeboxing, Free Flow)
 
 ### 2.4 MVP - Módulo Acompanhamento (Básico)
-- [ ] Epic: Chat texto (sinais leves)
+- [x] Epic: Chat texto (sinais leves)
 - [ ] Epic: Check-ins e coleta de dados
 - [ ] Epic: Sistema de notificações (simples)
 - [ ] Epic: Relatório simples
