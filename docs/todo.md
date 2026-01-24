@@ -83,21 +83,21 @@
 
 ### 3.1 Comunicação Avançada
 - [ ] Epic: Chat por voz
-- [ ] Epic: Notificações avançadas (configuráveis)
+- [x] Epic: Notificações avançadas (configuráveis)
 - [ ] Epic: Integração WhatsApp (opcional)
 
 ### 3.2 Relatórios Avançados
-- [ ] Epic: Biblioteca de relatórios
-- [ ] Epic: Relatórios selecionáveis pelo usuário
+- [x] Epic: Biblioteca de relatórios
+- [x] Epic: Relatórios selecionáveis pelo usuário
 
 ### 3.3 Educação
-- [ ] Epic: Sistema de pílulas educativas
+- [x] Epic: Sistema de pílulas educativas
 - [ ] Epic: Gestão de conteúdo (admin)
 
 ### 3.4 Comunidade
-- [ ] Epic: Sistema de comunidade
-- [ ] Epic: Times temáticos
-- [ ] Epic: Moderação
+- [x] Epic: Sistema de comunidade
+- [x] Epic: Times temáticos
+- [x] Epic: Moderação
 
 ---
 
@@ -190,6 +190,9 @@
 | 2026-01-23 | Sprint 5: Check-ins e Relatórios | Dev |
 | 2026-01-23 | Sprint 6: Micro-recompensas e Celebrações | Dev |
 | 2026-01-23 | Sprint 7: Notificações, Widgets e Perfil Adaptativo | Dev |
+| 2026-01-23 | Sprint 8: Notificações avançadas e Biblioteca de relatórios | Dev |
+| 2026-01-23 | Sprint 9: Sistema de pílulas educativas | Dev |
+| 2026-01-23 | Sprint 10: Sistema de comunidade com moderação | Dev |
 
 ---
 
