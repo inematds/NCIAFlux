@@ -64,18 +64,18 @@
 ### 2.4 MVP - Módulo Acompanhamento (Básico)
 - [x] Epic: Chat texto (sinais leves)
 - [x] Epic: Check-ins e coleta de dados
-- [ ] Epic: Sistema de notificações (simples)
+- [x] Epic: Sistema de notificações (simples)
 - [x] Epic: Relatório simples
 
 ### 2.5 MVP - Experiência e Engajamento
 - [x] Epic: Micro-recompensas visuais
-- [ ] Epic: Widgets 1-toque
+- [x] Epic: Widgets 1-toque
 - [x] Epic: Celebrações de progresso
 - [x] Epic: Modo crise
 
 ### 2.6 MVP - Perfil Adaptativo
-- [ ] Epic: Ajustes automáticos baseados em uso
-- [ ] Epic: Redescoberta pontual
+- [x] Epic: Ajustes automáticos baseados em uso
+- [x] Epic: Redescoberta pontual
 
 ---
 
@@ -189,6 +189,7 @@
 | 2026-01-23 | Sprint 4: Modo Crise e Perfil aprimorados | Dev |
 | 2026-01-23 | Sprint 5: Check-ins e Relatórios | Dev |
 | 2026-01-23 | Sprint 6: Micro-recompensas e Celebrações | Dev |
+| 2026-01-23 | Sprint 7: Notificações, Widgets e Perfil Adaptativo | Dev |
 
 ---
 
