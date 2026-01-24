@@ -39,20 +39,31 @@ function generateProfile(answers: Record<string, DiscoveryAnswer>): CognitivePro
   const accountability = answers['7']?.value as string || 'sometimes';
   const pressureResponse = answers['8']?.value as string || 'mixed';
 
+  // Map morning energy to energy level
+  const morningEnergyLevel = ['low', 'poor_sleep', 'anxious'].includes(morningEnergy) ? 'low'
+    : morningEnergy === 'high' ? 'high'
+    : 'medium';
+
   // Generate energy pattern based on answers
   const energyPattern = {
-    morning: morningEnergy,
-    afternoon: productiveTime === 'afternoon' ? 'high' : 'medium',
-    evening: productiveTime === 'evening' ? 'high' : 'medium',
-    night: 'low',
+    morning: morningEnergyLevel,
+    afternoon: ['afternoon'].includes(productiveTime) ? 'high' : 'medium',
+    evening: ['evening'].includes(productiveTime) ? 'high' : 'medium',
+    night: ['late_night'].includes(productiveTime) ? 'high' : 'low',
   };
 
   // Generate personalized summary
   const summaryParts = [];
   if (morningEnergy === 'low') {
     summaryParts.push('Voce tem um inicio de dia mais lento, precisando de tempo para engrenar.');
+  } else if (morningEnergy === 'poor_sleep') {
+    summaryParts.push('Seu sono afeta muito sua energia matinal - cuidar do descanso e prioridade.');
+  } else if (morningEnergy === 'anxious') {
+    summaryParts.push('Voce tende a acordar com a mente acelerada - tecnicas de relaxamento podem ajudar.');
   } else if (morningEnergy === 'high') {
     summaryParts.push('Voce acorda com boa energia e pode aproveitar as manhas.');
+  } else if (morningEnergy === 'varies') {
+    summaryParts.push('Sua energia matinal varia - identifique os padroes do que afeta seu sono.');
   }
 
   if (focusDuration <= 20) {
@@ -65,6 +76,8 @@ function generateProfile(answers: Record<string, DiscoveryAnswer>): CognitivePro
     summaryParts.push('Uma tarefa por vez e seu estilo ideal.');
   } else if (executionStyle === 'burst') {
     summaryParts.push('Voce funciona bem em rajadas de produtividade.');
+  } else if (executionStyle === 'mood') {
+    summaryParts.push('Seu estilo de trabalho depende do seu humor e energia do momento.');
   }
 
   // Generate insight
@@ -75,10 +88,16 @@ function generateProfile(answers: Record<string, DiscoveryAnswer>): CognitivePro
     insight = 'Voce funciona melhor com autonomia e auto-gestao. ';
   }
 
+  if (distractions.includes('anxiety')) {
+    insight += 'Tecnicas de respiracao e grounding podem ajudar quando a ansiedade surgir. ';
+  }
+
   if (distractions.includes('notifications') || distractions.includes('social_media')) {
     insight += 'Desligar notificacoes durante o foco pode fazer muita diferenca.';
   } else if (distractions.includes('thoughts')) {
     insight += 'Ter um bloco de notas por perto para capturar pensamentos pode ajudar.';
+  } else if (distractions.includes('people')) {
+    insight += 'Comunicar seus horarios de foco pode reduzir interrupcoes.';
   }
 
   // Generate suggestion
@@ -91,6 +110,14 @@ function generateProfile(answers: Record<string, DiscoveryAnswer>): CognitivePro
 
   if (copingStrategies.includes('music')) {
     suggestion += ' Musica instrumental pode ajudar a manter o foco.';
+  }
+
+  if (copingStrategies.includes('movement') || copingStrategies.includes('breaks')) {
+    suggestion += ' Pequenas pausas com movimento sao essenciais para voce.';
+  }
+
+  if (pressureResponse === 'procrastinate') {
+    suggestion += ' Dividir tarefas em passos menores pode evitar a procrastinacao.';
   }
 
   return {
@@ -110,10 +137,13 @@ function generateProfile(answers: Record<string, DiscoveryAnswer>): CognitivePro
 }
 
 const TIME_LABELS: Record<string, string> = {
+  early_morning: 'Bem cedo',
   morning: 'Manha',
   afternoon: 'Tarde',
   evening: 'Noite',
+  late_night: 'Madrugada',
   night: 'Madrugada',
+  varies: 'Varia',
 };
 
 const ENERGY_LABELS: Record<string, string> = {
@@ -132,6 +162,7 @@ const EXECUTION_LABELS: Record<string, string> = {
   sequential: 'Uma tarefa por vez',
   parallel: 'Varias ao mesmo tempo',
   burst: 'Em rajadas',
+  mood: 'Depende do humor',
 };
 
 const COPING_LABELS: Record<string, string> = {
@@ -143,6 +174,8 @@ const COPING_LABELS: Record<string, string> = {
   body_doubling: 'Companhia',
   rewards: 'Recompensas',
   deadlines: 'Prazos',
+  environment: 'Mudar ambiente',
+  breaks: 'Pausas frequentes',
 };
 
 const DISTRACTION_LABELS: Record<string, string> = {
@@ -153,7 +186,18 @@ const DISTRACTION_LABELS: Record<string, string> = {
   social_media: 'Redes sociais',
   hunger: 'Fome',
   fatigue: 'Cansaco',
+  anxiety: 'Ansiedade',
+  people: 'Interrupcoes',
+  boredom: 'Tedio',
 };
+
+// Helper to get label, handling "other:" prefix for custom values
+function getLabel(value: string, labels: Record<string, string>): string {
+  if (value.startsWith('other:')) {
+    return value.replace('other:', '');
+  }
+  return labels[value] || value;
+}
 
 export default function DiscoveryResultPage() {
   const router = useRouter();
@@ -307,7 +351,7 @@ export default function DiscoveryResultPage() {
                 key={strength}
                 className="px-4 py-2 rounded-full bg-accent-success/20 text-accent-success font-medium text-sm"
               >
-                {COPING_LABELS[strength] || strength}
+                {getLabel(strength, COPING_LABELS)}
               </span>
             ))}
           </div>
@@ -324,7 +368,7 @@ export default function DiscoveryResultPage() {
                 key={trigger}
                 className="px-4 py-2 rounded-full bg-secondary-main/20 text-secondary-dark font-medium text-sm"
               >
-                {DISTRACTION_LABELS[trigger] || trigger}
+                {getLabel(trigger, DISTRACTION_LABELS)}
               </span>
             ))}
           </div>

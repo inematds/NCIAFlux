@@ -21,11 +21,13 @@ interface DiscoveryQuestion {
   min_value?: number;
   max_value?: number;
   required: boolean;
+  allowOther?: boolean;
 }
 
 interface DiscoveryAnswer {
   question_id: string;
   value: string | string[] | number;
+  otherText?: string;
 }
 
 const QUESTIONS: DiscoveryQuestion[] = [
@@ -39,6 +41,9 @@ const QUESTIONS: DiscoveryQuestion[] = [
       { value: 'low', label: 'Dificil acordar, pouca energia', emoji: '😴' },
       { value: 'medium', label: 'Normal, demoro a engrenar', emoji: '😐' },
       { value: 'high', label: 'Acordo bem disposto', emoji: '⚡' },
+      { value: 'poor_sleep', label: 'Dormi pouco/mal', emoji: '😫' },
+      { value: 'anxious', label: 'Acordo ansioso/preocupado', emoji: '😰' },
+      { value: 'varies', label: 'Varia muito de um dia pro outro', emoji: '🎲' },
     ],
     required: true,
   },
@@ -49,10 +54,12 @@ const QUESTIONS: DiscoveryQuestion[] = [
     question_text: 'Em que periodo do dia voce se sente mais produtivo?',
     question_type: 'single_choice',
     options: [
-      { value: 'morning', label: 'Manha' },
-      { value: 'afternoon', label: 'Tarde' },
-      { value: 'evening', label: 'Noite' },
-      { value: 'varies', label: 'Varia muito' },
+      { value: 'early_morning', label: 'Bem cedo (antes das 9h)', emoji: '🌅' },
+      { value: 'morning', label: 'Manha (9h-12h)', emoji: '☀️' },
+      { value: 'afternoon', label: 'Tarde (12h-18h)', emoji: '🌤️' },
+      { value: 'evening', label: 'Noite (18h-22h)', emoji: '🌙' },
+      { value: 'late_night', label: 'Madrugada (apos 22h)', emoji: '🌃' },
+      { value: 'varies', label: 'Varia muito', emoji: '🔄' },
     ],
     required: true,
   },
@@ -73,14 +80,18 @@ const QUESTIONS: DiscoveryQuestion[] = [
     question_text: 'O que mais te distrai durante o dia?',
     question_type: 'multiple_choice',
     options: [
-      { value: 'notifications', label: 'Notificacoes' },
-      { value: 'noise', label: 'Barulho' },
-      { value: 'thoughts', label: 'Pensamentos' },
-      { value: 'social_media', label: 'Redes sociais' },
-      { value: 'hunger', label: 'Fome' },
-      { value: 'fatigue', label: 'Cansaco' },
+      { value: 'notifications', label: 'Notificacoes', emoji: '🔔' },
+      { value: 'noise', label: 'Barulho', emoji: '🔊' },
+      { value: 'thoughts', label: 'Pensamentos/preocupacoes', emoji: '💭' },
+      { value: 'social_media', label: 'Redes sociais', emoji: '📱' },
+      { value: 'hunger', label: 'Fome', emoji: '🍔' },
+      { value: 'fatigue', label: 'Cansaco', emoji: '😩' },
+      { value: 'anxiety', label: 'Ansiedade', emoji: '😰' },
+      { value: 'people', label: 'Pessoas interrompendo', emoji: '👥' },
+      { value: 'boredom', label: 'Tedio/falta de interesse', emoji: '😑' },
     ],
     required: true,
+    allowOther: true,
   },
   {
     id: '5',
@@ -89,9 +100,10 @@ const QUESTIONS: DiscoveryQuestion[] = [
     question_text: 'Como voce prefere organizar suas tarefas?',
     question_type: 'single_choice',
     options: [
-      { value: 'sequential', label: 'Uma de cada vez, em ordem' },
-      { value: 'parallel', label: 'Varias ao mesmo tempo' },
-      { value: 'burst', label: 'Tudo de uma vez quando da' },
+      { value: 'sequential', label: 'Uma de cada vez, em ordem', emoji: '1️⃣' },
+      { value: 'parallel', label: 'Varias ao mesmo tempo', emoji: '🔀' },
+      { value: 'burst', label: 'Tudo de uma vez quando da', emoji: '💥' },
+      { value: 'mood', label: 'Depende do meu humor/energia', emoji: '🎭' },
     ],
     required: true,
   },
@@ -102,16 +114,19 @@ const QUESTIONS: DiscoveryQuestion[] = [
     question_text: 'O que ja te ajudou a manter o foco?',
     question_type: 'multiple_choice',
     options: [
-      { value: 'lists', label: 'Listas' },
-      { value: 'timers', label: 'Timers' },
-      { value: 'music', label: 'Musica' },
-      { value: 'movement', label: 'Movimento' },
-      { value: 'caffeine', label: 'Cafe' },
-      { value: 'body_doubling', label: 'Trabalhar com alguem' },
-      { value: 'rewards', label: 'Recompensas' },
-      { value: 'deadlines', label: 'Prazos' },
+      { value: 'lists', label: 'Listas', emoji: '📝' },
+      { value: 'timers', label: 'Timers', emoji: '⏱️' },
+      { value: 'music', label: 'Musica', emoji: '🎵' },
+      { value: 'movement', label: 'Movimento/exercicio', emoji: '🏃' },
+      { value: 'caffeine', label: 'Cafe/energetico', emoji: '☕' },
+      { value: 'body_doubling', label: 'Trabalhar com alguem', emoji: '👥' },
+      { value: 'rewards', label: 'Recompensas', emoji: '🎁' },
+      { value: 'deadlines', label: 'Prazos/urgencia', emoji: '⏰' },
+      { value: 'environment', label: 'Mudar de ambiente', emoji: '🏠' },
+      { value: 'breaks', label: 'Pausas frequentes', emoji: '🧘' },
     ],
     required: true,
+    allowOther: true,
   },
   {
     id: '7',
@@ -120,9 +135,9 @@ const QUESTIONS: DiscoveryQuestion[] = [
     question_text: 'Voce funciona melhor com alguem te cobrando?',
     question_type: 'single_choice',
     options: [
-      { value: 'yes', label: 'Sim, preciso de cobranca externa' },
-      { value: 'no', label: 'Nao, prefiro autonomia' },
-      { value: 'sometimes', label: 'Depende da situacao' },
+      { value: 'yes', label: 'Sim, preciso de cobranca externa', emoji: '👀' },
+      { value: 'no', label: 'Nao, prefiro autonomia', emoji: '🦅' },
+      { value: 'sometimes', label: 'Depende da situacao', emoji: '🤔' },
     ],
     required: true,
   },
@@ -133,9 +148,10 @@ const QUESTIONS: DiscoveryQuestion[] = [
     question_text: 'Como voce reage sob pressao/prazos apertados?',
     question_type: 'single_choice',
     options: [
-      { value: 'thrives', label: 'Me motiva e rendo mais' },
-      { value: 'freezes', label: 'Travo e fico ansioso' },
-      { value: 'mixed', label: 'As vezes ajuda, as vezes atrapalha' },
+      { value: 'thrives', label: 'Me motiva e rendo mais', emoji: '🚀' },
+      { value: 'freezes', label: 'Travo e fico ansioso', emoji: '🥶' },
+      { value: 'mixed', label: 'As vezes ajuda, as vezes atrapalha', emoji: '🎢' },
+      { value: 'procrastinate', label: 'Procrastino ate o ultimo momento', emoji: '⏳' },
     ],
     required: true,
   },
@@ -157,6 +173,8 @@ export default function DiscoveryPage() {
   const [answers, setAnswers] = useState<Record<string, DiscoveryAnswer>>({});
   const [sliderValue, setSliderValue] = useState(25);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [otherTexts, setOtherTexts] = useState<Record<string, string>>({});
+  const [showOtherInput, setShowOtherInput] = useState<Record<string, boolean>>({});
 
   const currentQuestion = QUESTIONS[currentIndex];
   const progress = ((currentIndex + 1) / QUESTIONS.length) * 100;
@@ -182,6 +200,40 @@ export default function DiscoveryPage() {
       setAnswers((prev) => ({
         ...prev,
         [currentQuestion.id]: { question_id: currentQuestion.id, value: newValue },
+      }));
+    }
+  }
+
+  function handleToggleOther() {
+    const questionId = currentQuestion.id;
+    const isShowing = !showOtherInput[questionId];
+    setShowOtherInput((prev) => ({ ...prev, [questionId]: isShowing }));
+
+    if (!isShowing) {
+      // If hiding, remove "other" from answers
+      if (currentQuestion.question_type === 'multiple_choice') {
+        const current = (currentAnswer?.value as string[]) || [];
+        const newValue = current.filter((v) => !v.startsWith('other:'));
+        setAnswers((prev) => ({
+          ...prev,
+          [questionId]: { question_id: questionId, value: newValue },
+        }));
+      }
+      setOtherTexts((prev) => ({ ...prev, [questionId]: '' }));
+    }
+  }
+
+  function handleOtherTextChange(text: string) {
+    const questionId = currentQuestion.id;
+    setOtherTexts((prev) => ({ ...prev, [questionId]: text }));
+
+    if (currentQuestion.question_type === 'multiple_choice') {
+      const current = (currentAnswer?.value as string[]) || [];
+      const filtered = current.filter((v) => !v.startsWith('other:'));
+      const newValue = text.trim() ? [...filtered, `other:${text}`] : filtered;
+      setAnswers((prev) => ({
+        ...prev,
+        [questionId]: { question_id: questionId, value: newValue, otherText: text },
       }));
     }
   }
@@ -318,6 +370,43 @@ export default function DiscoveryPage() {
                     )}
                   </button>
                 ))}
+
+                {/* Other option */}
+                {currentQuestion.allowOther && (
+                  <div className="mt-4">
+                    <button
+                      onClick={handleToggleOther}
+                      className={`w-full flex items-center gap-4 p-4 rounded-xl border-2 text-left transition-all ${
+                        showOtherInput[currentQuestion.id]
+                          ? 'border-primary-main bg-primary-main/10'
+                          : 'border-neutral-border bg-white hover:border-neutral-textMuted'
+                      }`}
+                    >
+                      <span className="text-2xl">✏️</span>
+                      <span className={`flex-1 font-medium ${
+                        showOtherInput[currentQuestion.id] ? 'text-primary-main' : 'text-neutral-textPrimary'
+                      }`}>
+                        Outro...
+                      </span>
+                      {showOtherInput[currentQuestion.id] && (
+                        <span className="text-primary-main font-bold">✓</span>
+                      )}
+                    </button>
+
+                    {showOtherInput[currentQuestion.id] && (
+                      <div className="mt-3">
+                        <input
+                          type="text"
+                          placeholder="Digite aqui..."
+                          value={otherTexts[currentQuestion.id] || ''}
+                          onChange={(e) => handleOtherTextChange(e.target.value)}
+                          className="w-full p-4 rounded-xl border-2 border-primary-main/30 bg-white text-neutral-textPrimary placeholder-neutral-textMuted focus:outline-none focus:border-primary-main"
+                          autoFocus
+                        />
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             )}
           </div>
