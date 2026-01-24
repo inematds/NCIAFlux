@@ -1,7 +1,5 @@
 'use client';
 
-import { useState } from 'react';
-
 // Mock data
 const MOCK_STATS = {
   totalUsers: 24,
