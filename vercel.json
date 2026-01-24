@@ -1,0 +1,12 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "projects": [
+    {
+      "src": "apps/web",
+      "use": "@vercel/next"
+    }
+  ],
+  "github": {
+    "silent": true
+  }
+}
