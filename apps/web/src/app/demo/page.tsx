@@ -85,20 +85,22 @@ function generateSampleData() {
   // Sample Planner for today
   const plannerData = {
     date: todayStr,
-    morningCheckin: {
-      mood: 'good' as const,
-      sleepQuality: 7,
-      intention: 'Focar nas tarefas de alta prioridade',
-      gratitude: 'Por ter uma equipe incrivel',
-    },
+    confirmation: 'Focar nas tarefas de alta prioridade',
+    gratitude: 'Por ter uma equipe incrivel',
+    mood: 'good',
+    sleepQuality: 7,
+    expectedRating: 8,
+    top1: 'Preparar apresentacao para cliente',
+    tasks: [
+      { id: 'pt_1', content: 'Preparar apresentacao para cliente', period: 'morning' as const, completed: false, isTop1: true },
+      { id: 'pt_2', content: 'Agendar reuniao com equipe', period: 'afternoon' as const, completed: false, isTop1: false },
+      { id: 'pt_3', content: 'Ligar para fornecedor', period: 'afternoon' as const, completed: false, isTop1: false },
+      { id: 'pt_4', content: 'Atualizar documentacao do projeto', period: 'evening' as const, completed: false, isTop1: false },
+    ],
     morningRoutineCompleted: true,
-    blocks: {
-      morning: ['task_2'],
-      afternoon: ['task_4', 'task_7'],
-      evening: ['task_5'],
-    },
-    top1: 'task_2',
-    notes: 'Dia focado em entregas importantes',
+    eveningRoutineCompleted: false,
+    morningReview: '',
+    eveningReview: '',
   };
 
   // Sample Morning Routine
