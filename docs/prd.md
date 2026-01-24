@@ -1,8 +1,9 @@
 # NCIAFlux Product Requirements Document (PRD)
 
-**Versão:** 1.1
+**Versão:** 1.2
 **Data:** 24 de Janeiro de 2026
 **Status:** Draft
+**Umbrella Brand:** MentesBrilhantes
 
 ---
 
@@ -29,6 +30,55 @@ O NCIAFlux diferencia-se por três pilares: **Autoconhecimento** (descoberta do 
 |------|--------|-----------|-------|
 | 2026-01-23 | 1.0 | Criação inicial do PRD | PM (BMad) |
 | 2026-01-24 | 1.1 | Adição de módulos: Brain Dump, Cronotipos, Planner Diário, Rotinas, Revisões | PM (Claude) |
+| 2026-01-24 | 1.2 | Arquitetura MentesBrilhantes (multi-perfil), Gestão de Projetos, Agenda, Notas | Architect (Winston) |
+
+### 1.4 MentesBrilhantes - Visão do Produto
+
+**MentesBrilhantes** é o nome do projeto NeuroFluxo/NCIAFlux - um único produto que atende **qualquer pessoa** que precisa de uma forma simples de se organizar e monitorar suas atividades.
+
+#### Filosofia do Produto
+
+O MentesBrilhantes não é exclusivo para pessoas com TDAH. É para **qualquer pessoa** que:
+- Tem dificuldade de organização
+- Quer uma rotina mais estruturada
+- Precisa de um sistema simples e sem pressão
+- Busca autoconhecimento e produtividade sustentável
+
+#### Princípios Unificados
+
+| Princípio | Aplicação |
+|-----------|-----------|
+| **Simplicidade** | Interface limpa, poucas opções, ações em 1-3 toques |
+| **Flexibilidade** | Funciona para quem quer pouco ou muito controle |
+| **Sem Pressão** | Tom gentil, sem cobrança, métricas opcionais |
+| **Adaptável** | Sistema aprende com o uso e se ajusta |
+| **Acessível** | Grátis com todas features localmente |
+
+#### Público-Alvo Expandido
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    MentesBrilhantes                         │
+│              "Organize sua mente, simplifique sua vida"     │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│   👤 Adultos com TDAH                                       │
+│   👤 Profissionais sobrecarregados                          │
+│   👤 Estudantes que precisam de organização                 │
+│   👤 Qualquer pessoa buscando rotina e foco                 │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+#### Funcionalidades Personalizáveis
+
+Em vez de perfis fixos, o usuário **personaliza** sua experiência:
+
+- **Limite de tarefas diárias**: pode escolher 3, 5, 10 ou sem limite
+- **Tom das notificações**: gentil, neutro ou motivador
+- **Nível de detalhe**: simples (Dashboard básico) ou completo (Planner, Projetos, Agenda)
+- **Modo Crise**: disponível para todos, ativado quando necessário
+- **Cronotipos**: opcional, para quem quer adaptar horários
 
 ---
 
@@ -115,6 +165,43 @@ O NCIAFlux diferencia-se por três pilares: **Autoconhecimento** (descoberta do 
 - **FR93**: Revisões nunca devem ter tom de cobrança - sempre de auto-observação gentil
 - **FR94**: O sistema pode sugerir insights baseados em revisões anteriores (ex: "Você mencionou sono 3x esta semana")
 
+#### Módulo Gestão de Projetos (Todos os planos)
+
+- **FR95**: O sistema deve permitir criar Projetos como containers para agrupar tarefas relacionadas
+- **FR96**: Cada Projeto deve ter: nome, cor, emoji (opcional), status (ativo/arquivado/concluído)
+- **FR97**: Tarefas podem ser associadas a um Projeto (associação opcional)
+- **FR98**: O sistema deve permitir visualizar todas as tarefas de um Projeto específico
+- **FR99**: O sistema deve mostrar progresso do Projeto (% de tarefas concluídas)
+- **FR100**: Projetos podem ser arquivados (mantendo histórico) ou excluídos
+- **FR101**: Filtro por Projeto deve estar disponível no Planner e Dashboard
+- **FR102**: Limite de Projetos ativos deve ser configurável por perfil (adhd=5, productivity=20, teams=ilimitado)
+
+#### Módulo Agenda/Calendário (Todos os planos)
+
+- **FR103**: O sistema deve oferecer visualização de Agenda em formato dia/semana
+- **FR104**: Tarefas com data agendada devem aparecer automaticamente na Agenda
+- **FR105**: O sistema deve permitir criar Eventos independentes de tarefas
+- **FR106**: Eventos devem ter: título, descrição, horário início/fim, recorrência, cor
+- **FR107**: Blocos de rotina (matinal/noturna) devem aparecer na Agenda automaticamente
+- **FR108**: O sistema deve permitir arrastar tarefas para a Agenda para agendá-las
+- **FR109**: (V1) Agenda funciona apenas localmente no sistema
+- **FR110**: (V2) Integração com Google Calendar via OAuth
+- **FR111**: (V2) Integração com Apple Calendar via CalDAV
+- **FR112**: (V2) Integração com Outlook via Microsoft Graph API
+- **FR113**: (V2) Sincronização bidirecional com calendários externos
+
+#### Módulo Notas/Anotações (Todos os planos)
+
+- **FR114**: O sistema deve oferecer área de captura rápida de Notas
+- **FR115**: Notas devem ter: conteúdo (texto), data criação, status (inbox/processada/arquivada)
+- **FR116**: O sistema deve ter área "Inbox" para processar notas pendentes
+- **FR117**: Uma Nota pode ser convertida em Tarefa com 1 ação
+- **FR118**: Uma Nota pode ser convertida em Evento de Agenda com 1 ação
+- **FR119**: Notas podem ser associadas a Projetos
+- **FR120**: O sistema deve permitir captura rápida de Nota via botão flutuante "+"
+- **FR121**: (Avançado) Notas podem ter tags para categorização
+- **FR122**: Integração Brain Dump: Notas podem ser enviadas para categorias do Brain Dump
+
 #### Módulo Acompanhamento (Todos os planos)
 
 - **FR17**: O painel visual deve ser acessível em 1 toque com design limpo
@@ -183,6 +270,19 @@ O NCIAFlux diferencia-se por três pilares: **Autoconhecimento** (descoberta do 
 - **FR56**: O plano Premium adiciona sincronizacao na nuvem, multiplos dispositivos e gestao de equipes
 - **FR57**: O upgrade/downgrade deve ser fluido sem perda de dados
 - **FR58**: Dados locais podem ser migrados para nuvem ao fazer upgrade
+
+#### Módulo Demo (Marketing/Showcase)
+
+- **FR123**: O sistema deve oferecer login de demonstração "/demo" na tela inicial
+- **FR124**: O modo demo deve simular diferentes cenários de uso com dados fictícios:
+  - **Demo Básico**: Usuário iniciante com poucas tarefas e descoberta recente
+  - **Demo Completo**: Usuário ativo com projetos, tarefas, rotinas configuradas
+  - **Demo Cronotipo**: Foco na rotina por cronotipo (Urso, Golfinho, Coruja, Leão)
+- **FR125**: Dados do demo são pré-carregados e não persistem entre sessões
+- **FR126**: Banner ou indicador visual claro de "Modo Demonstração"
+- **FR127**: Botão "Criar minha conta" sempre visível durante o demo
+- **FR128**: Demo funciona 100% offline (dados embarcados no app)
+- **FR129**: Demo permite testar todas as funcionalidades sem restrição
 
 ### 2.2 Non-Functional Requirements
 
@@ -264,6 +364,11 @@ Interface minimalista, acolhedora e não-clínica que respeita cérebros neurodi
 13. **Modo Crise** - Interface ultra-simplificada
 14. **Perfil/Configurações** - Gestão de conta, cronotipo e plano
 15. **Comunidade** (Avançado) - Feed e times
+16. **Lista de Projetos** - Visualização de todos os projetos com progresso
+17. **Detalhe do Projeto** - Tarefas do projeto, progresso, status
+18. **Agenda/Calendário** - Visualização dia/semana com eventos e tarefas agendadas
+19. **Notas (Inbox)** - Área de captura rápida e processamento de notas
+20. **Captura Rápida** - Modal/overlay para adicionar nota com 1 toque
 
 ### 3.4 Accessibility
 
@@ -351,6 +456,7 @@ Interface minimalista, acolhedora e não-clínica que respeita cérebros neurodi
 | 5 | Features Avançadas | Relatórios avançados, educação, comunidade |
 | 6 | Plano Profissional | Integração com terapeutas e acompanhamento supervisionado |
 | 7 | Sistema de Produtividade TDAH | Brain Dump, Cronotipos, Planner Diário, Rotinas e Revisões |
+| 8 | Organização Avançada | Gestão de Projetos, Agenda/Calendário e Sistema de Notas |
 
 ### Features V2 (Futuras)
 
@@ -364,6 +470,9 @@ Interface minimalista, acolhedora e não-clínica que respeita cérebros neurodi
 | Gamificação expandida | Níveis, conquistas, desafios |
 | IA conversacional avançada | Chat mais inteligente |
 | Marketplace de técnicas | Usuários compartilham o que funciona |
+| **Integrações de Calendário** | Google Calendar, Apple Calendar, Outlook (OAuth/CalDAV/Graph API) |
+| **Sincronização de Notas** | Integração com Notion, Obsidian, Apple Notes |
+| **Projetos Colaborativos** | Compartilhar projetos com outros usuários |
 
 ---
 
@@ -934,6 +1043,169 @@ Interface minimalista, acolhedora e não-clínica que respeita cérebros neurodi
 6. Notificações gentis nos momentos de transição
 7. Modo simplificado para dias difíceis (pular etapas sem culpa)
 8. Métricas de consistência (não produtividade) disponíveis
+
+---
+
+### Epic 8: Organização Avançada
+
+**Objetivo**: Implementar sistema de Gestão de Projetos para agrupar tarefas, Agenda/Calendário para visualização temporal, e Sistema de Notas para captura rápida com conversão para tarefas ou eventos.
+
+#### Story 8.1: Sistema de Projetos - CRUD Básico
+
+**Como** usuário,
+**Quero** criar e gerenciar projetos,
+**Para que** agrupe tarefas relacionadas e tenha visão organizada.
+
+**Acceptance Criteria:**
+1. Tela de listagem de Projetos acessível do menu principal
+2. Criar projeto com: nome, cor (paleta pré-definida), emoji (opcional)
+3. Editar nome, cor e emoji do projeto
+4. Arquivar projeto (mantém histórico, não aparece na lista ativa)
+5. Excluir projeto (com confirmação, remove associações de tarefas)
+6. Status do projeto: Ativo, Arquivado, Concluído
+7. Projetos ordenados por: última atualização ou alfabético
+8. Limite de projetos ativos configurável nas preferências
+
+#### Story 8.2: Associação Tarefa-Projeto
+
+**Como** usuário,
+**Quero** associar tarefas a projetos,
+**Para que** saiba qual tarefa pertence a qual contexto.
+
+**Acceptance Criteria:**
+1. Campo opcional de Projeto ao criar/editar tarefa
+2. Dropdown com lista de projetos ativos
+3. Opção "Sem projeto" sempre disponível
+4. Cor do projeto aparece como indicador visual na tarefa
+5. Filtro por projeto disponível no Dashboard e Planner
+6. Ao arquivar projeto, tarefas pendentes podem ser movidas ou mantidas
+7. Tarefa pode ser movida entre projetos facilmente
+
+#### Story 8.3: Visão do Projeto
+
+**Como** usuário,
+**Quero** ver todas as informações de um projeto específico,
+**Para que** tenha clareza do progresso e próximos passos.
+
+**Acceptance Criteria:**
+1. Tela de detalhe do projeto ao clicar em um projeto
+2. Lista de todas as tarefas do projeto (pendentes, concluídas, todas)
+3. Barra de progresso visual (% de tarefas concluídas)
+4. Contador: X de Y tarefas concluídas
+5. Adicionar tarefa direto na tela do projeto
+6. Filtros: Todas, Pendentes, Concluídas
+7. Ações rápidas: Arquivar, Editar, Excluir
+8. Histórico de atividades do projeto (opcional)
+
+#### Story 8.4: Agenda - Visualização de Calendário
+
+**Como** usuário,
+**Quero** visualizar meu dia/semana em formato de agenda,
+**Para que** tenha noção temporal das minhas atividades.
+
+**Acceptance Criteria:**
+1. Tela de Agenda acessível do menu principal
+2. Visualização padrão: Dia atual
+3. Toggle para visualização de Semana
+4. Tarefas com data aparecem na agenda automaticamente
+5. Blocos de rotina (matinal/noturna) aparecem nos horários configurados
+6. Sessões de foco agendadas aparecem na agenda
+7. Navegação entre dias/semanas (swipe ou setas)
+8. Indicador visual de "Hoje"
+9. Design limpo sem sobrecarga
+
+#### Story 8.5: Eventos de Agenda
+
+**Como** usuário,
+**Quero** criar eventos independentes na agenda,
+**Para que** registre compromissos que não são tarefas.
+
+**Acceptance Criteria:**
+1. Criar evento com: título, data, horário início, horário fim
+2. Eventos podem ser de dia inteiro (sem horário específico)
+3. Descrição opcional no evento
+4. Cor do evento (diferente de tarefas)
+5. Eventos recorrentes: diário, semanal, mensal, anual
+6. Editar e excluir eventos
+7. Excluir uma ocorrência ou todas (para recorrentes)
+8. Eventos aparecem visualmente distintos de tarefas
+
+#### Story 8.6: Agendamento de Tarefas
+
+**Como** usuário,
+**Quero** agendar tarefas para horários específicos,
+**Para que** planeje quando vou executar cada atividade.
+
+**Acceptance Criteria:**
+1. Tarefa pode ter data e horário de agendamento
+2. Arrastar tarefa para a agenda define data/hora
+3. Tarefa agendada aparece no slot de horário correspondente
+4. Duração estimada da tarefa (30min, 1h, 2h, personalizado)
+5. Tarefa agendada pode ser reagendada arrastando
+6. Notificação no horário da tarefa (se notificações ativas)
+7. Diferenciação visual entre tarefa agendada e evento
+
+#### Story 8.7: Sistema de Notas - Captura Rápida
+
+**Como** usuário,
+**Quero** capturar pensamentos rapidamente,
+**Para que** não perca ideias e processe depois.
+
+**Acceptance Criteria:**
+1. Botão flutuante "+" visível em telas principais
+2. Modal de captura rápida abre com 1 toque
+3. Campo de texto com foco automático
+4. Salvar nota com Enter ou botão
+5. Nota vai para "Inbox" com status pendente
+6. Timestamp automático de criação
+7. Captura funciona offline
+8. Suporte a múltiplas linhas
+
+#### Story 8.8: Inbox de Notas
+
+**Como** usuário,
+**Quero** processar minhas notas capturadas,
+**Para que** transforme pensamentos em ações ou arquive.
+
+**Acceptance Criteria:**
+1. Tela "Notas" com área de Inbox proeminente
+2. Lista de notas não processadas ordenada por data
+3. Contador de notas pendentes no menu
+4. Ações por nota: Converter em Tarefa, Converter em Evento, Arquivar, Excluir
+5. Swipe actions para ações rápidas
+6. Nota convertida muda status para "Processada" e mantém referência
+7. Área de notas arquivadas (acessível mas não proeminente)
+8. Busca em notas (texto)
+
+#### Story 8.9: Conversão de Notas
+
+**Como** usuário,
+**Quero** transformar notas em tarefas ou eventos,
+**Para que** meus pensamentos se tornem ações planejadas.
+
+**Acceptance Criteria:**
+1. "Converter em Tarefa": abre criação de tarefa com texto da nota pré-preenchido
+2. Tarefa criada mantém link para nota original
+3. "Converter em Evento": abre criação de evento com título pré-preenchido
+4. Evento criado mantém link para nota original
+5. Opção de associar a Projeto durante conversão
+6. Nota original é marcada como "Processada"
+7. Conversão pode ser desfeita (restaura nota para Inbox)
+8. Preview da nota durante conversão
+
+#### Story 8.10: Integração Notas-Brain Dump
+
+**Como** usuário,
+**Quero** enviar notas para o Brain Dump,
+**Para que** use o sistema de triagem existente.
+
+**Acceptance Criteria:**
+1. Ação "Enviar para Brain Dump" disponível nas notas
+2. Selecionar categoria do Brain Dump ao enviar
+3. Nota aparece na categoria selecionada do Brain Dump
+4. Nota original é marcada como "Processada"
+5. Triagem do Brain Dump funciona normalmente com notas enviadas
+6. Link bidirecional entre nota e item do Brain Dump
 
 ---
 

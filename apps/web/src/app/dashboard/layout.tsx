@@ -6,16 +6,38 @@ import { usePathname, useRouter } from 'next/navigation';
 import { userStorage, clearAllStorage, StoredUser } from '@/lib/storage';
 import { storageModeService } from '@/lib/hybrid-storage';
 
-const menuItems = [
-  { icon: '🏠', label: 'Dashboard', href: '/dashboard' },
-  { icon: '🧠', label: 'Descobrir Perfil', href: '/dashboard/discovery' },
-  { icon: '😊', label: 'Check-in', href: '/dashboard/checkin' },
-  { icon: '🎯', label: 'Timer de Foco', href: '/dashboard/focus' },
+interface MenuItem {
+  icon: string;
+  label: string;
+  href: string;
+  section?: string;
+}
+
+const menuItems: MenuItem[] = [
+  // Principal
+  { icon: '🏠', label: 'Dashboard', href: '/dashboard', section: 'Principal' },
+  { icon: '📝', label: 'Brain Dump', href: '/dashboard/brain-dump' },
+  { icon: '📅', label: 'Planner', href: '/dashboard/planner' },
+  { icon: '🔄', label: 'Rotinas', href: '/dashboard/routines' },
+
+  // Organizacao
+  { icon: '📆', label: 'Agenda', href: '/dashboard/calendar', section: 'Organizacao' },
+  { icon: '📁', label: 'Projetos', href: '/dashboard/projects' },
   { icon: '📋', label: 'Tarefas', href: '/dashboard/tasks' },
-  { icon: '📊', label: 'Relatorios', href: '/dashboard/reports' },
-  { icon: '👥', label: 'Equipes', href: '/dashboard/teams' },
+  { icon: '📓', label: 'Notas', href: '/dashboard/notes' },
+
+  // Produtividade
+  { icon: '🎯', label: 'Timer de Foco', href: '/dashboard/focus', section: 'Produtividade' },
+  { icon: '😊', label: 'Check-in', href: '/dashboard/checkin' },
   { icon: '🆘', label: 'Modo Crise', href: '/dashboard/crisis' },
-  { icon: '⚙️', label: 'Configuracoes', href: '/dashboard/settings' },
+
+  // Perfil & Revisao
+  { icon: '🧠', label: 'Cronotipo', href: '/dashboard/chronotype', section: 'Perfil' },
+  { icon: '📊', label: 'Revisoes', href: '/dashboard/review' },
+  { icon: '📈', label: 'Relatorios', href: '/dashboard/reports' },
+
+  // Sistema
+  { icon: '⚙️', label: 'Configuracoes', href: '/dashboard/settings', section: 'Sistema' },
 ];
 
 export default function DashboardLayout({
@@ -28,6 +50,7 @@ export default function DashboardLayout({
   const [user, setUser] = useState<StoredUser | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
+  const [isDemoMode, setIsDemoMode] = useState(false);
 
   useEffect(() => {
     // Check authentication
@@ -39,6 +62,10 @@ export default function DashboardLayout({
     }
     setUser(storedUser);
     setIsLoading(false);
+
+    // Check if in demo mode
+    const demoMode = localStorage.getItem('nciaflux_demo_mode');
+    setIsDemoMode(demoMode === 'true');
   }, [router]);
 
   function handleLogout() {
@@ -70,33 +97,42 @@ export default function DashboardLayout({
         <div className="p-4 border-b border-neutral-border">
           <Link href="/dashboard" className="flex items-center gap-3">
             <div className="w-10 h-10 bg-primary-main rounded-xl flex items-center justify-center text-white font-bold text-lg">
-              N
+              M
             </div>
             {sidebarOpen && (
-              <span className="text-xl font-bold text-neutral-textPrimary">
-                NCIAFlux
+              <span className="text-lg font-bold text-neutral-textPrimary">
+                MentesBrilhantes
               </span>
             )}
           </Link>
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 p-4">
-          <ul className="space-y-2">
-            {menuItems.map((item) => {
-              const isActive = pathname === item.href;
+        <nav className="flex-1 p-4 overflow-y-auto">
+          <ul className="space-y-1">
+            {menuItems.map((item, index) => {
+              const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+              const showSection = item.section && sidebarOpen;
+              const prevItem = menuItems[index - 1];
+              const isFirstInSection = item.section && (!prevItem || prevItem.section !== item.section);
+
               return (
                 <li key={item.href}>
+                  {isFirstInSection && showSection && (
+                    <div className="text-xs font-medium text-neutral-textMuted uppercase tracking-wider px-4 pt-4 pb-2">
+                      {item.section}
+                    </div>
+                  )}
                   <Link
                     href={item.href}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${
+                    className={`flex items-center gap-3 px-4 py-2.5 rounded-xl transition-colors ${
                       isActive
                         ? 'bg-primary-main text-white'
                         : 'text-neutral-textSecondary hover:bg-neutral-background'
                     }`}
                   >
-                    <span className="text-xl">{item.icon}</span>
-                    {sidebarOpen && <span className="font-medium">{item.label}</span>}
+                    <span className="text-lg">{item.icon}</span>
+                    {sidebarOpen && <span className="text-sm font-medium">{item.label}</span>}
                   </Link>
                 </li>
               );
@@ -158,8 +194,22 @@ export default function DashboardLayout({
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-auto">
-        {children}
+      <main className="flex-1 overflow-auto flex flex-col">
+        {/* Demo Mode Banner */}
+        {isDemoMode && (
+          <div className="bg-gradient-to-r from-secondary-main to-purple-500 text-white px-4 py-2 text-center text-sm flex items-center justify-center gap-3">
+            <span>🎮 Voce esta no modo Demo com dados de exemplo</span>
+            <Link
+              href="/register"
+              className="px-3 py-1 bg-white/20 hover:bg-white/30 rounded-lg font-medium transition-colors"
+            >
+              Criar conta gratuita
+            </Link>
+          </div>
+        )}
+        <div className="flex-1 overflow-auto">
+          {children}
+        </div>
       </main>
     </div>
   );

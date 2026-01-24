@@ -65,8 +65,11 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
-          <Link href="/" className="inline-block">
-            <h1 className="text-3xl font-bold text-primary-main">NCIAFlux</h1>
+          <Link href="/" className="inline-flex items-center gap-3 justify-center">
+            <div className="w-12 h-12 bg-primary-main rounded-xl flex items-center justify-center text-white font-bold text-xl">
+              M
+            </div>
+            <span className="text-3xl font-bold text-primary-main">MentesBrilhantes</span>
           </Link>
           <p className="text-neutral-textSecondary mt-2">
             Entre na sua conta

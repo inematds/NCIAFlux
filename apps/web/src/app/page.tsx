@@ -8,10 +8,19 @@ export default function Home() {
       {/* Header */}
       <header className="container mx-auto px-6 py-4">
         <nav className="flex items-center justify-between">
-          <div className="text-2xl font-bold text-white">
-            NCIAFlux
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-primary-main font-bold text-lg">
+              M
+            </div>
+            <span className="text-2xl font-bold text-white">MentesBrilhantes</span>
           </div>
           <div className="flex items-center gap-4">
+            <Link
+              href="/demo"
+              className="text-white/90 hover:text-white transition-colors"
+            >
+              Demo
+            </Link>
             <Link
               href="/login"
               className="text-white/90 hover:text-white transition-colors"
@@ -32,25 +41,25 @@ export default function Home() {
       <main className="container mx-auto px-6 py-20">
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-5xl md:text-6xl font-bold text-white mb-6">
-            Gestão Inteligente para
-            <span className="text-secondary-main"> TDAH</span>
+            Produtividade que
+            <span className="text-secondary-main"> entende voce</span>
           </h1>
           <p className="text-xl text-white/80 mb-10 max-w-2xl mx-auto">
-            Plataforma completa para profissionais e gestores acompanharem
-            e apoiarem pessoas com TDAH no ambiente de trabalho.
+            Sistema completo de organizacao pessoal baseado em neurociencia.
+            Brain Dump, Rotinas, Cronotipos e muito mais para você fazer mais com menos estresse.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
-              href="/register"
+              href="/demo"
               className="bg-secondary-main text-neutral-textPrimary px-8 py-4 rounded-xl font-semibold text-lg hover:bg-secondary-light transition-colors"
             >
-              Começar Gratuitamente
+              Experimentar Gratis
             </Link>
             <Link
-              href="/demo"
+              href="/register"
               className="border-2 border-white text-white px-8 py-4 rounded-xl font-semibold text-lg hover:bg-white/10 transition-colors"
             >
-              Ver Demonstração
+              Criar Conta
             </Link>
           </div>
         </div>
@@ -58,28 +67,68 @@ export default function Home() {
         {/* Features */}
         <div className="grid md:grid-cols-3 gap-8 mt-24">
           <FeatureCard
-            icon="📊"
-            title="Dashboard Inteligente"
-            description="Visualize métricas de produtividade e bem-estar da sua equipe em tempo real."
+            icon="📝"
+            title="Brain Dump"
+            description="Capture todos os pensamentos e organize com triagem inteligente. Defina seu Top 1 diario."
           />
           <FeatureCard
-            icon="📋"
-            title="Gestão de Tarefas"
-            description="Acompanhe tarefas e projetos com visibilidade clara do progresso."
+            icon="🔄"
+            title="Rotinas Adaptativas"
+            description="Crie rotinas matinais e noturnas com decisoes condicionais que se adaptam ao seu dia."
           />
           <FeatureCard
-            icon="📈"
-            title="Relatórios Detalhados"
-            description="Relatórios personalizados para entender padrões e melhorar resultados."
+            icon="🧠"
+            title="Cronotipos"
+            description="Descubra seu perfil de produtividade e receba dicas personalizadas para seu ritmo."
           />
         </div>
 
-        {/* Stats */}
-        <div className="grid md:grid-cols-4 gap-6 mt-24 bg-white/10 backdrop-blur-sm rounded-2xl p-8">
-          <StatCard value="95%" label="Satisfação" />
-          <StatCard value="+40%" label="Produtividade" />
-          <StatCard value="10k+" label="Usuários" />
-          <StatCard value="500+" label="Empresas" />
+        {/* More Features */}
+        <div className="grid md:grid-cols-4 gap-6 mt-12">
+          <FeatureCard
+            icon="📅"
+            title="Planner Diario"
+            description="Organize seu dia em blocos de tempo com check-in de humor e energia."
+          />
+          <FeatureCard
+            icon="📁"
+            title="Projetos"
+            description="Agrupe tarefas por projetos e acompanhe o progresso visualmente."
+          />
+          <FeatureCard
+            icon="📓"
+            title="Notas"
+            description="Capture ideias rapidamente com inbox e organize em pastas."
+          />
+          <FeatureCard
+            icon="📊"
+            title="Revisoes"
+            description="Reflita semanalmente sobre vitorias, desafios e aprendizados."
+          />
+        </div>
+
+        {/* CTA */}
+        <div className="mt-24 bg-white/10 backdrop-blur-sm rounded-2xl p-8 text-center">
+          <h2 className="text-3xl font-bold text-white mb-4">
+            Pronto para transformar sua produtividade?
+          </h2>
+          <p className="text-white/80 mb-6 max-w-xl mx-auto">
+            Experimente gratuitamente com dados de exemplo ou crie sua conta para comecar do zero.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link
+              href="/demo"
+              className="bg-white text-primary-main px-8 py-3 rounded-xl font-semibold hover:bg-white/90 transition-colors"
+            >
+              Ver Demo
+            </Link>
+            <Link
+              href="/register"
+              className="bg-secondary-main text-neutral-textPrimary px-8 py-3 rounded-xl font-semibold hover:bg-secondary-light transition-colors"
+            >
+              Criar Conta Gratis
+            </Link>
+          </div>
         </div>
       </main>
 
@@ -87,7 +136,7 @@ export default function Home() {
       <footer className="container mx-auto px-6 py-8 mt-12 border-t border-white/20">
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-white/60">
-            © 2024 NCIAFlux. Todos os direitos reservados.
+            © 2024 MentesBrilhantes. Produtividade que entende voce.
           </p>
           <div className="flex gap-6">
             <Link href="/privacy" className="text-white/60 hover:text-white transition-colors">
@@ -116,11 +165,3 @@ function FeatureCard({ icon, title, description }: { icon: string; title: string
   );
 }
 
-function StatCard({ value, label }: { value: string; label: string }) {
-  return (
-    <div className="text-center">
-      <div className="text-3xl md:text-4xl font-bold text-white">{value}</div>
-      <div className="text-white/60 mt-1">{label}</div>
-    </div>
-  );
-}
