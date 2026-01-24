@@ -141,3 +141,53 @@ export const LIMITS = {
   TASK_DESCRIPTION_MAX_LENGTH: 500,
   CHAT_MESSAGE_MAX_LENGTH: 1000,
 } as const;
+
+// Check-in questions and responses
+export const CHECK_IN_MOODS = [
+  { value: 'great', emoji: '😊', label: 'Ótimo' },
+  { value: 'good', emoji: '🙂', label: 'Bem' },
+  { value: 'okay', emoji: '😐', label: 'Ok' },
+  { value: 'low', emoji: '😔', label: 'Baixo' },
+  { value: 'struggling', emoji: '😢', label: 'Difícil' },
+] as const;
+
+export const CHECK_IN_PROMPTS = {
+  morning: {
+    greeting: 'Bom dia! Como você está começando o dia?',
+    energy: 'Como está sua energia agora?',
+    intention: 'Qual é sua intenção principal para hoje?',
+  },
+  midday: {
+    greeting: 'Como está indo o dia até agora?',
+    energy: 'Como está sua energia neste momento?',
+    accomplishment: 'O que você já conseguiu fazer?',
+  },
+  evening: {
+    greeting: 'Como foi seu dia?',
+    energy: 'Como está sua energia no fim do dia?',
+    reflection: 'O que você aprendeu sobre si hoje?',
+  },
+  on_demand: {
+    greeting: 'Como você está se sentindo agora?',
+    energy: 'Como está sua energia?',
+    support: 'Como posso te ajudar?',
+  },
+} as const;
+
+export const CHECK_IN_RESPONSES = {
+  high_energy: [
+    'Que bom saber que sua energia está alta! Aproveite para tarefas mais desafiadoras.',
+    'Excelente! Esse é um ótimo momento para focar em algo importante.',
+    'Energia alta detectada! Use esse momento a seu favor.',
+  ],
+  low_energy: [
+    'Tudo bem ter dias assim. Que tal começar com algo leve?',
+    'Está tudo bem descansar quando precisa. Cuide de você.',
+    'Dias de baixa energia fazem parte. Seja gentil consigo.',
+  ],
+  struggling: [
+    'Obrigado por compartilhar. Estou aqui com você.',
+    'Reconhecer como se sente é um passo importante. Você não está sozinho.',
+    'Dias difíceis acontecem. Quer que eu sugira algo para ajudar?',
+  ],
+} as const;

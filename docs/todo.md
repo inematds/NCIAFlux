@@ -71,7 +71,7 @@
 - [ ] Epic: Micro-recompensas visuais
 - [ ] Epic: Widgets 1-toque
 - [ ] Epic: Celebrações de progresso
-- [ ] Epic: Modo crise
+- [x] Epic: Modo crise
 
 ### 2.6 MVP - Perfil Adaptativo
 - [ ] Epic: Ajustes automáticos baseados em uso
@@ -186,6 +186,7 @@
 | 2026-01-23 | Setup do monorepo com Turborepo | Dev |
 | 2026-01-23 | Estrutura base do app mobile | Dev |
 | 2026-01-23 | Schema do banco de dados criado | Dev |
+| 2026-01-23 | Sprint 4: Modo Crise e Perfil aprimorados | Dev |
 
 ---
 

@@ -113,6 +113,14 @@ export function DashboardScreen() {
     navigation.navigate('FocusBlock', { taskId });
   }
 
+  function handleCheckIn() {
+    navigation.navigate('CheckIn', {});
+  }
+
+  function handleReports() {
+    navigation.navigate('Reports');
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView
@@ -193,6 +201,18 @@ export function DashboardScreen() {
           >
             <Text style={styles.focusIcon}>🎯</Text>
             <Text style={styles.focusLabel}>Iniciar Foco</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Quick Actions */}
+        <View style={styles.quickActionsRow}>
+          <TouchableOpacity style={styles.quickActionCard} onPress={handleCheckIn}>
+            <Text style={styles.quickActionEmoji}>📝</Text>
+            <Text style={styles.quickActionLabel}>Check-in</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.quickActionCard} onPress={handleReports}>
+            <Text style={styles.quickActionEmoji}>📊</Text>
+            <Text style={styles.quickActionLabel}>Relatórios</Text>
           </TouchableOpacity>
         </View>
 
@@ -473,6 +493,34 @@ const styles = StyleSheet.create({
     color: COLORS.primary.contrast,
     marginTop: SPACING.xs,
     fontWeight: '500',
+  },
+  quickActionsRow: {
+    flexDirection: 'row',
+    gap: SPACING.sm,
+    marginBottom: SPACING.xl,
+  },
+  quickActionCard: {
+    flex: 1,
+    backgroundColor: COLORS.neutral.white,
+    borderRadius: BORDER_RADIUS.lg,
+    padding: SPACING.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.03,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  quickActionEmoji: {
+    fontSize: 18,
+    marginRight: SPACING.sm,
+  },
+  quickActionLabel: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: COLORS.neutral.textPrimary,
   },
   section: {
     marginBottom: SPACING.xl,

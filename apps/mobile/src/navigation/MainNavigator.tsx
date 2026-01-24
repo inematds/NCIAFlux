@@ -2,7 +2,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Text } from 'react-native';
 
-import { COLORS } from '@nciaflux/shared';
+import { COLORS, CheckInType } from '@nciaflux/shared';
 import { DashboardScreen } from '../screens/main/DashboardScreen';
 import { PlanScreen } from '../screens/main/PlanScreen';
 import { ChatScreen } from '../screens/main/ChatScreen';
@@ -10,6 +10,8 @@ import { ProfileScreen } from '../screens/main/ProfileScreen';
 import { CrisisModeScreen } from '../screens/main/CrisisModeScreen';
 import { FocusBlockScreen } from '../screens/main/FocusBlockScreen';
 import { TaskDetailScreen } from '../screens/main/TaskDetailScreen';
+import { CheckInScreen } from '../screens/main/CheckInScreen';
+import { ReportsScreen } from '../screens/main/ReportsScreen';
 
 export type MainTabParamList = {
   Dashboard: undefined;
@@ -23,6 +25,8 @@ export type MainStackParamList = {
   CrisisMode: undefined;
   FocusBlock: { taskId?: string };
   TaskDetail: { taskId: string };
+  CheckIn: { type?: CheckInType };
+  Reports: undefined;
 };
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -102,6 +106,12 @@ export function MainNavigator() {
         options={{ animation: 'slide_from_bottom' }}
       />
       <Stack.Screen name="TaskDetail" component={TaskDetailScreen} />
+      <Stack.Screen
+        name="CheckIn"
+        component={CheckInScreen}
+        options={{ animation: 'slide_from_bottom' }}
+      />
+      <Stack.Screen name="Reports" component={ReportsScreen} />
     </Stack.Navigator>
   );
 }
