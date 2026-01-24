@@ -33,11 +33,16 @@ const MOCK_WEEKLY_DATA = [
 export default function DashboardPage() {
   const [user, setUser] = useState<StoredUser | null>(null);
   const [tasks, setTasks] = useState<StoredTask[]>([]);
+  const [hasProfile, setHasProfile] = useState(true);
 
   useEffect(() => {
     const storedUser = userStorage.get();
     setUser(storedUser);
     setTasks(tasksStorage.getAll());
+
+    // Check if user has completed discovery
+    const profile = localStorage.getItem('nciaflux_cognitive_profile');
+    setHasProfile(!!profile);
   }, []);
 
   const today = new Date().toLocaleDateString('pt-BR', {
@@ -71,6 +76,30 @@ export default function DashboardPage() {
         </h1>
         <p className="text-neutral-textSecondary mt-1 capitalize">{today}</p>
       </div>
+
+      {/* Discovery Prompt - For users who haven't completed it */}
+      {!isManager && !hasProfile && (
+        <div className="mb-8 bg-gradient-to-r from-primary-main/10 to-secondary-main/10 rounded-2xl p-6 border border-primary-main/20">
+          <div className="flex items-start gap-4">
+            <span className="text-4xl">🧠</span>
+            <div className="flex-1">
+              <h2 className="text-lg font-semibold text-neutral-textPrimary mb-1">
+                Descubra seu perfil cognitivo
+              </h2>
+              <p className="text-neutral-textSecondary mb-4">
+                Responda algumas perguntas para entender melhor como seu cerebro funciona
+                e receba sugestoes personalizadas.
+              </p>
+              <a
+                href="/dashboard/discovery"
+                className="inline-block px-6 py-2 rounded-xl bg-primary-main text-white font-medium hover:bg-primary-dark transition-colors"
+              >
+                Comecar descoberta
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Stats Grid - Different for user vs manager */}
       {isManager ? (
@@ -238,9 +267,10 @@ export default function DashboardPage() {
           ) : (
             // User quick actions
             <div className="space-y-3">
+              <QuickActionButton href="/dashboard/checkin" icon="😊" label="Fazer Check-in" />
+              <QuickActionButton href="/dashboard/focus" icon="🎯" label="Timer de Foco" />
               <QuickActionButton href="/dashboard/tasks" icon="➕" label="Nova Tarefa" />
-              <QuickActionButton href="/dashboard/tasks" icon="📋" label="Ver Todas as Tarefas" />
-              <QuickActionButton href="/dashboard/settings" icon="⚙️" label="Configurações" />
+              <QuickActionButton href="/dashboard/crisis" icon="🆘" label="Preciso de Ajuda" highlight />
             </div>
           )}
         </div>
@@ -446,18 +476,26 @@ function QuickActionButton({
   href,
   icon,
   label,
+  highlight,
 }: {
   href: string;
   icon: string;
   label: string;
+  highlight?: boolean;
 }) {
   return (
     <a
       href={href}
-      className="flex items-center gap-3 p-4 rounded-xl bg-neutral-background/50 hover:bg-neutral-background transition-colors"
+      className={`flex items-center gap-3 p-4 rounded-xl transition-colors ${
+        highlight
+          ? 'bg-accent-error/10 hover:bg-accent-error/20 border border-accent-error/30'
+          : 'bg-neutral-background/50 hover:bg-neutral-background'
+      }`}
     >
       <span className="text-xl">{icon}</span>
-      <span className="font-medium text-neutral-textPrimary">{label}</span>
+      <span className={`font-medium ${highlight ? 'text-accent-error' : 'text-neutral-textPrimary'}`}>
+        {label}
+      </span>
     </a>
   );
 }

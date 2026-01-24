@@ -4,13 +4,18 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { userStorage, clearAllStorage, StoredUser } from '@/lib/storage';
+import { storageModeService } from '@/lib/hybrid-storage';
 
 const menuItems = [
   { icon: '🏠', label: 'Dashboard', href: '/dashboard' },
+  { icon: '🧠', label: 'Descobrir Perfil', href: '/dashboard/discovery' },
+  { icon: '😊', label: 'Check-in', href: '/dashboard/checkin' },
+  { icon: '🎯', label: 'Timer de Foco', href: '/dashboard/focus' },
   { icon: '📋', label: 'Tarefas', href: '/dashboard/tasks' },
-  { icon: '📊', label: 'Relatórios', href: '/dashboard/reports' },
+  { icon: '📊', label: 'Relatorios', href: '/dashboard/reports' },
   { icon: '👥', label: 'Equipes', href: '/dashboard/teams' },
-  { icon: '⚙️', label: 'Configurações', href: '/dashboard/settings' },
+  { icon: '🆘', label: 'Modo Crise', href: '/dashboard/crisis' },
+  { icon: '⚙️', label: 'Configuracoes', href: '/dashboard/settings' },
 ];
 
 export default function DashboardLayout({
@@ -98,6 +103,23 @@ export default function DashboardLayout({
             })}
           </ul>
         </nav>
+
+        {/* Storage Mode Indicator */}
+        {sidebarOpen && (
+          <div className="px-4 py-2 border-t border-neutral-border">
+            <div className="flex items-center gap-2 text-xs">
+              <span className={`w-2 h-2 rounded-full ${storageModeService.isStatsTrackingEnabled() ? 'bg-green-500' : 'bg-yellow-500'}`}></span>
+              <span className="text-neutral-textMuted">
+                {storageModeService.isLocalMode() ? 'Dados locais' : 'Dados na nuvem'}
+              </span>
+            </div>
+            {storageModeService.isStatsTrackingEnabled() && (
+              <p className="text-[10px] text-neutral-textMuted mt-1 ml-4">
+                Stats sincronizados
+              </p>
+            )}
+          </div>
+        )}
 
         {/* User */}
         <div className="p-4 border-t border-neutral-border">

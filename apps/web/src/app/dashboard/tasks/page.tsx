@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { tasksStorage, StoredTask, userStorage } from '@/lib/storage';
+import { userStatsService } from '@/lib/hybrid-storage';
 
 type TaskStatus = 'pending' | 'in_progress' | 'completed' | 'skipped';
 type TaskPriority = 'high' | 'medium' | 'low';
@@ -51,6 +52,12 @@ export default function TasksPage() {
     tasksStorage.add(taskData);
     setTasks(tasksStorage.getAll());
     setShowAddModal(false);
+
+    // Track task creation in Supabase stats
+    const user = userStorage.get();
+    if (user) {
+      userStatsService.incrementTaskStats(user.email, 1, 0);
+    }
   }
 
   function handleUpdateTask(id: string, updates: Partial<StoredTask>) {
@@ -66,8 +73,17 @@ export default function TasksPage() {
   }
 
   function handleStatusChange(id: string, newStatus: TaskStatus) {
+    const oldTask = tasksStorage.getById(id);
     tasksStorage.update(id, { status: newStatus });
     setTasks(tasksStorage.getAll());
+
+    // Track task completion in Supabase stats
+    if (newStatus === 'completed' && oldTask?.status !== 'completed') {
+      const user = userStorage.get();
+      if (user) {
+        userStatsService.incrementTaskStats(user.email, 0, 1);
+      }
+    }
   }
 
   return (

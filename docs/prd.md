@@ -13,7 +13,7 @@
 - Criar uma experiência de descoberta isolada que entrega valor imediato em 5-7 minutos
 - Desenvolver um sistema de plano diário adaptativo que respeita o fluxo real do cérebro ADHD
 - Implementar acompanhamento gentil sem cobrança de métricas ou performance
-- Oferecer estrutura de planos escalável (Gratuito → Básico → Avançado → Profissional)
+- Oferecer estrutura de planos escalável (Gratuito Local → Premium Cloud → Empresarial)
 - Posicionar o NCIAFlux como alternativa acessível no mercado brasileiro de apps ADHD
 - Garantir que o sistema evolua com o usuário sem exigir redescoberta constante
 
@@ -48,7 +48,7 @@ O NCIAFlux diferencia-se por três pilares: **Autoconhecimento** (descoberta do 
 - **FR9**: O usuário deve poder compartilhar seu resultado
 - **FR10**: A descoberta deve funcionar de forma completamente isolada, sem exigir cadastro ou compromisso
 
-#### Módulo Plano Personalizado (Básico+)
+#### Módulo Plano Personalizado (Todos os planos)
 
 - **FR11**: O perfil da descoberta deve se tornar automaticamente o perfil base ao continuar
 - **FR12**: O plano diário deve conter: 1 prioridade real, máximo 2 tarefas leves, 1 bloco de foco
@@ -57,7 +57,7 @@ O NCIAFlux diferencia-se por três pilares: **Autoconhecimento** (descoberta do 
 - **FR15**: As técnicas devem mudar conforme padrões de uso
 - **FR16**: O sistema deve permitir widgets de 1-toque para ações rápidas
 
-#### Módulo Acompanhamento (Básico+)
+#### Módulo Acompanhamento (Todos os planos)
 
 - **FR17**: O painel visual deve ser acessível em 1 toque com design limpo
 - **FR18**: O painel deve mostrar: prioridade do dia, energia do dia, foco iniciado, botão de ajuste
@@ -66,7 +66,7 @@ O NCIAFlux diferencia-se por três pilares: **Autoconhecimento** (descoberta do 
 - **FR21**: O chat deve coletar sinais leves, não histórias longas
 - **FR22**: Os check-ins devem ser 1-2 interações por dia no máximo
 
-#### Módulo Notificações (Básico+)
+#### Módulo Notificações (Todos os planos)
 
 - **FR23**: O sistema de notificações deve iniciar no modo mais simples possível
 - **FR24**: O usuário deve poder ativar notificações adicionais conforme desejo
@@ -75,7 +75,7 @@ O NCIAFlux diferencia-se por três pilares: **Autoconhecimento** (descoberta do 
 - **FR27**: As mensagens devem ter tom de convite, não cobrança
 - **FR28**: (Avançado) O usuário deve poder configurar cada notificação individualmente
 
-#### Módulo Relatórios (Básico+)
+#### Módulo Relatórios (Todos os planos)
 
 - **FR29**: O relatório simples deve ser o padrão e sempre visível
 - **FR30**: (Avançado) O sistema deve oferecer biblioteca de relatórios avançados
@@ -83,14 +83,14 @@ O NCIAFlux diferencia-se por três pilares: **Autoconhecimento** (descoberta do 
 - **FR32**: Os relatórios selecionados devem ficar em área dedicada, acessíveis quando o usuário quiser
 - **FR33**: O sistema nunca deve empurrar métricas automaticamente
 
-#### Módulo Perfil Adaptativo (Básico+)
+#### Módulo Perfil Adaptativo (Todos os planos)
 
 - **FR34**: O sistema deve coletar sinais leves de uso (início de tarefas, conclusão, energia, horários)
 - **FR35**: O sistema deve fazer ajustes automáticos pequenos (tarefas, horário de foco, técnicas, rotina)
 - **FR36**: A redescoberta pontual só deve ocorrer se: usuário pedir, rotina mudar muito, ou adesão cair significativamente
 - **FR37**: Na redescoberta, apenas partes relevantes devem ser refeitas
 
-#### Módulo Experiência e Engajamento (Básico+)
+#### Módulo Experiência e Engajamento (Todos os planos)
 
 - **FR38**: O sistema deve fornecer micro-recompensas visuais ao completar ações
 - **FR39**: O sistema deve celebrar progressos de forma visual e gentil
@@ -99,7 +99,7 @@ O NCIAFlux diferencia-se por três pilares: **Autoconhecimento** (descoberta do 
 
 #### Módulo Educação (Avançado)
 
-- **FR42**: O tutorial do sistema deve estar sempre disponível (Básico+)
+- **FR42**: O tutorial do sistema deve estar sempre disponível (Todos os planos)
 - **FR43**: As pílulas educativas devem ser liberadas gradualmente pela gestão
 - **FR44**: A gestão deve controlar quais conteúdos aparecem por plano
 - **FR45**: O sistema deve poder expandir conteúdos sem necessidade de deploy
@@ -118,11 +118,13 @@ O NCIAFlux diferencia-se por três pilares: **Autoconhecimento** (descoberta do 
 - **FR52**: O profissional deve ter dashboard próprio para acompanhamento
 - **FR53**: O acompanhamento supervisionado deve ter controles de privacidade
 
-#### Gestão de Planos
+#### Gestao de Planos
 
-- **FR54**: O sistema deve suportar 4 níveis de plano: Gratuito, Básico, Avançado, Profissional
-- **FR55**: Cada feature deve respeitar restrições de plano
-- **FR56**: O upgrade/downgrade deve ser fluido sem perda de dados
+- **FR54**: O sistema deve suportar 3 niveis de plano: Gratuito (local), Premium (cloud), Empresarial
+- **FR55**: O plano Gratuito inclui TODAS as funcionalidades com dados armazenados localmente no dispositivo
+- **FR56**: O plano Premium adiciona sincronizacao na nuvem, multiplos dispositivos e gestao de equipes
+- **FR57**: O upgrade/downgrade deve ser fluido sem perda de dados
+- **FR58**: Dados locais podem ser migrados para nuvem ao fazer upgrade
 
 ### 2.2 Non-Functional Requirements
 
@@ -395,20 +397,21 @@ Interface minimalista, acolhedora e não-clínica que respeita cérebros neurodi
 
 ### Epic 2: Plano e Painel
 
-**Objetivo**: Implementar o sistema de plano diário personalizado e o painel principal, permitindo que usuários do plano Básico+ tenham uma rotina adaptada ao seu perfil.
+**Objetivo**: Implementar o sistema de plano diário personalizado e o painel principal, permitindo que usuários do plano Todos os planos tenham uma rotina adaptada ao seu perfil.
 
-#### Story 2.1: Estrutura de Planos e Feature Flags
+#### Story 2.1: Estrutura de Planos e Armazenamento
 
 **Como** sistema,
-**Quero** ter estrutura de planos (Gratuito, Básico, Avançado, Profissional),
-**Para que** features sejam liberadas conforme o plano do usuário.
+**Quero** ter estrutura de planos (Gratuito Local, Premium Cloud, Empresarial),
+**Para que** usuarios tenham acesso a todas funcionalidades com opcao de sincronizacao.
 
 **Acceptance Criteria:**
-1. Modelo de dados suporta diferentes níveis de plano
-2. Feature flags controlam acesso a funcionalidades por plano
-3. Middleware/guard verifica permissões antes de acessar features
-4. Tela de upgrade disponível quando usuário tenta acessar feature bloqueada
-5. Configuração de planos gerenciável sem deploy
+1. Modelo de dados suporta diferentes modos de armazenamento (local vs cloud)
+2. Plano Gratuito oferece TODAS as funcionalidades com dados em localStorage
+3. Plano Premium adiciona sincronizacao na nuvem e acesso multi-dispositivo
+4. Tela de upgrade destaca beneficios de sincronizacao e equipes
+5. Migracao de dados local para cloud ao fazer upgrade
+6. Configuracao de planos gerenciavel sem deploy
 
 #### Story 2.2: Geração de Plano Diário
 

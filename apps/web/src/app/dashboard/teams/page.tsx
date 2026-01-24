@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { teamsStorage, userStorage, StoredTeam, StoredTeamMember } from '@/lib/storage';
+import { userStatsService } from '@/lib/hybrid-storage';
 
 const STATUS_CONFIG = {
   active: { label: 'Ativo', color: 'bg-accent-success', textColor: 'text-accent-success' },
@@ -44,6 +45,9 @@ export default function TeamsPage() {
     });
     setTeams(teamsStorage.getAll());
     setShowAddModal(false);
+
+    // Track team creation in Supabase stats
+    userStatsService.incrementTeamStats(user.email, 1);
   }
 
   function handleDeleteTeam(id: string) {

@@ -37,29 +37,54 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Always initialize - demo mode or real mode
+    // Check for existing session or finish loading
     if (isDemoMode) {
-      initDemoMode();
+      // In demo mode, check if user was previously "logged in"
+      checkDemoSession();
     } else if (supabase) {
       checkSession();
       const cleanup = setupAuthListener();
       return cleanup;
     } else {
-      // Fallback - shouldn't happen but handle gracefully
-      initDemoMode();
+      // Fallback - finish loading without auto-login
+      setIsLoading(false);
     }
   }, []);
 
-  function initDemoMode() {
-    console.log('Initializing demo mode...');
-    setUser(DEMO_USER);
-    setSession({
-      access_token: 'demo-token',
-      refresh_token: 'demo-refresh-token',
-      expires_at: Date.now() + 3600000,
-      user: DEMO_USER,
-    });
-    setIsLoading(false);
+  async function checkDemoSession() {
+    try {
+      const savedUser = await SecureStore.getItemAsync('nciaflux_demo_user');
+      if (savedUser) {
+        const userData = JSON.parse(savedUser) as User;
+        setUser(userData);
+        setSession({
+          access_token: 'demo-token',
+          refresh_token: 'demo-refresh-token',
+          expires_at: Date.now() + 3600000,
+          user: userData,
+        });
+      }
+    } catch (error) {
+      console.error('Error checking demo session:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  async function saveDemoUser(userData: User) {
+    try {
+      await SecureStore.setItemAsync('nciaflux_demo_user', JSON.stringify(userData));
+    } catch (error) {
+      console.error('Error saving demo user:', error);
+    }
+  }
+
+  async function clearDemoUser() {
+    try {
+      await SecureStore.deleteItemAsync('nciaflux_demo_user');
+    } catch (error) {
+      console.error('Error clearing demo user:', error);
+    }
   }
 
   function setupAuthListener() {
@@ -139,8 +164,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   async function login(email: string, password: string) {
     if (isDemoMode || !supabase) {
-      // In demo mode, any login works
-      setUser({ ...DEMO_USER, email, name: email.split('@')[0] });
+      // In demo mode, any login works - save the user data
+      const userData: User = {
+        ...DEMO_USER,
+        id: `demo-${Date.now()}`,
+        email,
+        name: email.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
+      };
+      await saveDemoUser(userData);
+      setUser(userData);
+      setSession({
+        access_token: 'demo-token',
+        refresh_token: 'demo-refresh-token',
+        expires_at: Date.now() + 3600000,
+        user: userData,
+      });
       return;
     }
 
@@ -159,8 +197,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   async function register(email: string, password: string, name?: string) {
     if (isDemoMode || !supabase) {
-      // In demo mode, registration just logs in
-      setUser({ ...DEMO_USER, email, name: name || email.split('@')[0] });
+      // In demo mode, registration creates and saves user
+      const userData: User = {
+        ...DEMO_USER,
+        id: `demo-${Date.now()}`,
+        email,
+        name: name || email.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
+        onboarding_completed: false, // New users need onboarding
+      };
+      await saveDemoUser(userData);
+      setUser(userData);
+      setSession({
+        access_token: 'demo-token',
+        refresh_token: 'demo-refresh-token',
+        expires_at: Date.now() + 3600000,
+        user: userData,
+      });
       return;
     }
 
@@ -182,8 +234,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   async function logout() {
     if (isDemoMode || !supabase) {
-      // In demo mode, logout re-initializes demo user
-      initDemoMode();
+      // In demo mode, logout clears the saved user
+      await clearDemoUser();
+      setUser(null);
+      setSession(null);
       return;
     }
 

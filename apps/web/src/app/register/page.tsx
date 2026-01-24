@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { userStorage, StoredUser } from '@/lib/storage';
+import { userStatsService, storageModeService } from '@/lib/hybrid-storage';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -58,15 +59,22 @@ export default function RegisterPage() {
     // Simulate network delay
     await new Promise((resolve) => setTimeout(resolve, 500));
 
-    // Create user and store
+    // Create user and store locally
     const user: StoredUser = {
       id: `user_${Date.now()}`,
       email: formData.email,
       name: formData.name,
       role: formData.role,
+      company: formData.company || undefined,
     };
 
     userStorage.set(user);
+
+    // Save user stats to Supabase (async, don't block registration)
+    userStatsService.upsertUserStats(user).catch((err) => {
+      console.error('Failed to save user stats:', err);
+    });
+
     router.push('/dashboard');
   }
 
@@ -220,10 +228,15 @@ export default function RegisterPage() {
           </div>
         </div>
 
-        {/* Demo Notice */}
+        {/* Storage Mode Notice */}
         <div className="mt-6 bg-secondary-main/20 rounded-xl p-4 text-center">
           <p className="text-sm text-neutral-textSecondary">
-            <strong>Modo Demo:</strong> Os dados são salvos localmente no seu navegador.
+            <strong>Plano Gratuito:</strong> Seus dados ficam salvos localmente no navegador.
+            {storageModeService.isStatsTrackingEnabled() && (
+              <span className="block mt-1 text-xs text-green-600">
+                Estatisticas de uso sincronizadas com o servidor.
+              </span>
+            )}
           </p>
         </div>
       </div>

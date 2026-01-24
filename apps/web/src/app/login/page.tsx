@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { userStorage, StoredUser } from '@/lib/storage';
+import { userStatsService, storageModeService } from '@/lib/hybrid-storage';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -41,7 +42,7 @@ export default function LoginPage() {
     // Simulate network delay for UX
     await new Promise((resolve) => setTimeout(resolve, 500));
 
-    // Demo mode authentication - create user and store
+    // Demo mode authentication - create user and store locally
     const user: StoredUser = {
       id: `user_${Date.now()}`,
       email: email,
@@ -50,6 +51,12 @@ export default function LoginPage() {
     };
 
     userStorage.set(user);
+
+    // Update user stats in Supabase (async, don't block login)
+    userStatsService.upsertUserStats(user).catch((err) => {
+      console.error('Failed to update user stats:', err);
+    });
+
     router.push('/dashboard');
   }
 
@@ -143,10 +150,15 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* Demo Notice */}
+        {/* Storage Mode Notice */}
         <div className="mt-6 bg-secondary-main/20 rounded-xl p-4 text-center">
           <p className="text-sm text-neutral-textSecondary">
-            <strong>Modo Demo:</strong> Use qualquer email e senha para testar.
+            <strong>Plano Gratuito:</strong> Use qualquer email e senha para testar.
+            {storageModeService.isStatsTrackingEnabled() && (
+              <span className="block mt-1 text-xs text-green-600">
+                Estatisticas de uso sincronizadas com o servidor.
+              </span>
+            )}
           </p>
         </div>
       </div>

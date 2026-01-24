@@ -282,12 +282,13 @@ challenges              -- Desafios dos times
 
 ## Planos de Assinatura
 
-| Plano | Features | Preço Sugerido |
-|-------|----------|----------------|
-| **Gratuito** | Descoberta isolada (perfil + insights) | R$ 0 |
-| **Básico** | Plano + Acompanhamento + Widgets + Modo Crise | R$ 19,90/mês |
-| **Avançado** | + Voz + Relatórios + Educação + Comunidade | R$ 29,90/mês |
-| **Profissional** | + Integração com terapeuta/coach | R$ 49,90/mês |
+| Plano | Features | Armazenamento | Preco |
+|-------|----------|---------------|-------|
+| **Gratuito** | TODAS as funcionalidades | Local (dispositivo) | R$ 0 |
+| **Premium** | + Sincronizacao na nuvem + Multi-dispositivo + Gestao de equipes | Cloud | R$ 29,90/mes |
+| **Empresarial** | + Multiplas equipes + Integracao RH + SSO | Cloud | Sob consulta |
+
+> **Nota**: O plano gratuito oferece acesso completo a todas as funcionalidades (descoberta, check-in, timer de foco, tarefas, modo crise, relatorios). A diferenca e que os dados ficam armazenados localmente no dispositivo. O plano Premium adiciona sincronizacao na nuvem para acesso em multiplos dispositivos e recursos de gestao de equipes.
 
 ---
 
