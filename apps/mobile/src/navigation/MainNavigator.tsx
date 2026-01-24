@@ -15,6 +15,8 @@ import { ReportsScreen } from '../screens/main/ReportsScreen';
 import { NotificationSettingsScreen } from '../screens/main/NotificationSettingsScreen';
 import { ReportsLibraryScreen } from '../screens/main/ReportsLibraryScreen';
 import { EducationalContentScreen } from '../screens/main/EducationalContentScreen';
+import { CommunityScreen } from '../screens/main/CommunityScreen';
+import { TeamDetailScreen } from '../screens/main/TeamDetailScreen';
 
 export type MainTabParamList = {
   Dashboard: undefined;
@@ -33,6 +35,8 @@ export type MainStackParamList = {
   NotificationSettings: undefined;
   ReportsLibrary: undefined;
   EducationalContent: undefined;
+  Community: undefined;
+  TeamDetail: { teamId: string };
 };
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -125,6 +129,8 @@ export function MainNavigator() {
       />
       <Stack.Screen name="ReportsLibrary" component={ReportsLibraryScreen} />
       <Stack.Screen name="EducationalContent" component={EducationalContentScreen} />
+      <Stack.Screen name="Community" component={CommunityScreen} />
+      <Stack.Screen name="TeamDetail" component={TeamDetailScreen} />
     </Stack.Navigator>
   );
 }
