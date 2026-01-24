@@ -5,16 +5,13 @@
 -- PERMITIR INSERÇÃO DE NOVOS USUÁRIOS
 -- ============================================
 
--- Política para permitir que o trigger crie usuários
--- (O trigger handle_new_user já tem SECURITY DEFINER, então funciona)
-
 -- Política para permitir que usuários vejam outros usuários (para equipes)
 CREATE POLICY "Users can view team members"
     ON public.users FOR SELECT
     USING (TRUE);  -- Permite ver todos os usuários (necessário para funcionalidade de equipes)
 
 -- ============================================
--- TABELAS DE EQUIPES (Novas)
+-- TABELAS DE EQUIPES (Criar primeiro, sem policies)
 -- ============================================
 
 -- Tabela de equipes
@@ -36,20 +33,6 @@ CREATE TRIGGER update_teams_updated_at
 
 ALTER TABLE public.teams ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Users can view teams they belong to"
-    ON public.teams FOR SELECT
-    USING (
-        owner_id = auth.uid() OR
-        EXISTS (
-            SELECT 1 FROM public.team_members tm
-            WHERE tm.team_id = id AND tm.user_id = auth.uid()
-        )
-    );
-
-CREATE POLICY "Owners can manage their teams"
-    ON public.teams FOR ALL
-    USING (owner_id = auth.uid());
-
 -- Tabela de membros de equipe
 CREATE TABLE IF NOT EXISTS public.team_members (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -65,26 +48,6 @@ CREATE INDEX IF NOT EXISTS idx_team_members_team ON public.team_members(team_id)
 CREATE INDEX IF NOT EXISTS idx_team_members_user ON public.team_members(user_id);
 
 ALTER TABLE public.team_members ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Users can view team members of their teams"
-    ON public.team_members FOR SELECT
-    USING (
-        EXISTS (
-            SELECT 1 FROM public.team_members tm2
-            WHERE tm2.team_id = team_id AND tm2.user_id = auth.uid()
-        )
-    );
-
-CREATE POLICY "Team admins can manage members"
-    ON public.team_members FOR ALL
-    USING (
-        EXISTS (
-            SELECT 1 FROM public.team_members tm
-            WHERE tm.team_id = team_id
-            AND tm.user_id = auth.uid()
-            AND tm.role IN ('owner', 'admin')
-        )
-    );
 
 -- ============================================
 -- CONVITES DE EQUIPE
@@ -106,6 +69,47 @@ CREATE INDEX IF NOT EXISTS idx_team_invites_token ON public.team_invites(token);
 
 ALTER TABLE public.team_invites ENABLE ROW LEVEL SECURITY;
 
+-- ============================================
+-- POLICIES (Agora que todas as tabelas existem)
+-- ============================================
+
+-- Policies para teams
+CREATE POLICY "Users can view teams they belong to"
+    ON public.teams FOR SELECT
+    USING (
+        owner_id = auth.uid() OR
+        EXISTS (
+            SELECT 1 FROM public.team_members tm
+            WHERE tm.team_id = id AND tm.user_id = auth.uid()
+        )
+    );
+
+CREATE POLICY "Owners can manage their teams"
+    ON public.teams FOR ALL
+    USING (owner_id = auth.uid());
+
+-- Policies para team_members
+CREATE POLICY "Users can view team members of their teams"
+    ON public.team_members FOR SELECT
+    USING (
+        EXISTS (
+            SELECT 1 FROM public.team_members tm2
+            WHERE tm2.team_id = team_id AND tm2.user_id = auth.uid()
+        )
+    );
+
+CREATE POLICY "Team admins can manage members"
+    ON public.team_members FOR ALL
+    USING (
+        EXISTS (
+            SELECT 1 FROM public.team_members tm
+            WHERE tm.team_id = team_id
+            AND tm.user_id = auth.uid()
+            AND tm.role IN ('owner', 'admin')
+        )
+    );
+
+-- Policies para team_invites
 CREATE POLICY "Team admins can manage invites"
     ON public.team_invites FOR ALL
     USING (
