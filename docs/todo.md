@@ -68,9 +68,9 @@
 - [x] Epic: Relatório simples
 
 ### 2.5 MVP - Experiência e Engajamento
-- [ ] Epic: Micro-recompensas visuais
+- [x] Epic: Micro-recompensas visuais
 - [ ] Epic: Widgets 1-toque
-- [ ] Epic: Celebrações de progresso
+- [x] Epic: Celebrações de progresso
 - [x] Epic: Modo crise
 
 ### 2.6 MVP - Perfil Adaptativo
@@ -188,6 +188,7 @@
 | 2026-01-23 | Schema do banco de dados criado | Dev |
 | 2026-01-23 | Sprint 4: Modo Crise e Perfil aprimorados | Dev |
 | 2026-01-23 | Sprint 5: Check-ins e Relatórios | Dev |
+| 2026-01-23 | Sprint 6: Micro-recompensas e Celebrações | Dev |
 
 ---
 
