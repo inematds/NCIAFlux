@@ -2,5 +2,5 @@
   "buildCommand": "pnpm turbo run build --filter=@nciaflux/web",
   "outputDirectory": "apps/web/.next",
   "framework": "nextjs",
-  "installCommand": "pnpm install"
+  "installCommand": "corepack enable && pnpm install"
 }
