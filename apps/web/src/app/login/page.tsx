@@ -1,0 +1,127 @@
+'use client';
+
+import { useState } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+
+export default function LoginPage() {
+  const router = useRouter();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setIsLoading(true);
+    setError('');
+
+    // Demo mode - simulate login
+    setTimeout(() => {
+      if (email && password) {
+        // In production, this would authenticate with Supabase
+        localStorage.setItem('nciaflux_demo_user', JSON.stringify({
+          id: 'demo-user',
+          email: email,
+          name: 'Usuário Demo',
+          role: 'manager',
+        }));
+        router.push('/dashboard');
+      } else {
+        setError('Por favor, preencha todos os campos.');
+      }
+      setIsLoading(false);
+    }, 1000);
+  }
+
+  return (
+    <div className="min-h-screen bg-neutral-background flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        {/* Logo */}
+        <div className="text-center mb-8">
+          <Link href="/" className="inline-block">
+            <h1 className="text-3xl font-bold text-primary-main">NCIAFlux</h1>
+          </Link>
+          <p className="text-neutral-textSecondary mt-2">
+            Entre na sua conta
+          </p>
+        </div>
+
+        {/* Form */}
+        <div className="bg-white rounded-2xl shadow-sm p-8">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {error && (
+              <div className="bg-accent-error/10 text-accent-error px-4 py-3 rounded-lg text-sm">
+                {error}
+              </div>
+            )}
+
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-neutral-textSecondary mb-2">
+                Email
+              </label>
+              <input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full px-4 py-3 rounded-lg border border-neutral-border focus:outline-none focus:ring-2 focus:ring-primary-main focus:border-transparent transition-all"
+                placeholder="seu@email.com"
+                required
+              />
+            </div>
+
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-neutral-textSecondary mb-2">
+                Senha
+              </label>
+              <input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full px-4 py-3 rounded-lg border border-neutral-border focus:outline-none focus:ring-2 focus:ring-primary-main focus:border-transparent transition-all"
+                placeholder="••••••••"
+                required
+              />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <label className="flex items-center">
+                <input type="checkbox" className="rounded border-neutral-border text-primary-main focus:ring-primary-main" />
+                <span className="ml-2 text-sm text-neutral-textSecondary">Lembrar de mim</span>
+              </label>
+              <Link href="/forgot-password" className="text-sm text-primary-main hover:underline">
+                Esqueceu a senha?
+              </Link>
+            </div>
+
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full bg-primary-main text-white py-3 rounded-lg font-semibold hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isLoading ? 'Entrando...' : 'Entrar'}
+            </button>
+          </form>
+
+          <div className="mt-6 text-center">
+            <p className="text-neutral-textSecondary">
+              Não tem uma conta?{' '}
+              <Link href="/register" className="text-primary-main font-medium hover:underline">
+                Criar conta
+              </Link>
+            </p>
+          </div>
+        </div>
+
+        {/* Demo Notice */}
+        <div className="mt-6 bg-secondary-main/20 rounded-xl p-4 text-center">
+          <p className="text-sm text-neutral-textSecondary">
+            <strong>Modo Demo:</strong> Use qualquer email e senha para testar.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}

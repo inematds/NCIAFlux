@@ -11,7 +11,7 @@ import {
 import { useNavigation } from '@react-navigation/native';
 
 import { COLORS, SPACING, BORDER_RADIUS, isValidEmail } from '@nciaflux/shared';
-import { supabase } from '../../services/supabase';
+import { supabase, isDemoMode } from '../../services/supabase';
 
 export function ForgotPasswordScreen() {
   const navigation = useNavigation();
@@ -22,6 +22,15 @@ export function ForgotPasswordScreen() {
   async function handleReset() {
     if (!isValidEmail(email)) {
       Alert.alert('Erro', 'Por favor, insira um email válido.');
+      return;
+    }
+
+    // In demo mode, just show success (no real email sent)
+    if (isDemoMode || !supabase) {
+      Alert.alert(
+        'Modo Demo',
+        'Em modo demo, a recuperação de senha não está disponível. Use qualquer email/senha para entrar.'
+      );
       return;
     }
 

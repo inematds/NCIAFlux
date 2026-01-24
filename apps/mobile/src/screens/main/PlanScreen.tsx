@@ -3,12 +3,14 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   ScrollView,
   TouchableOpacity,
   TextInput,
   Modal,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import {
   COLORS,
   SPACING,
@@ -17,6 +19,9 @@ import {
   TaskCategory,
   TaskStatus,
 } from '@nciaflux/shared';
+import { MainStackParamList } from '../../navigation/MainNavigator';
+
+type NavigationProp = NativeStackNavigationProp<MainStackParamList>;
 
 interface TaskItem {
   id: string;
@@ -118,6 +123,7 @@ const CATEGORY_CONFIG: Record<TaskCategory, { emoji: string; label: string }> = 
 };
 
 export function PlanScreen() {
+  const navigation = useNavigation<NavigationProp>();
   const [tasks, setTasks] = useState<TaskItem[]>(MOCK_TASKS);
   const [routines] = useState<RoutineItem[]>(MOCK_ROUTINES);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -125,6 +131,10 @@ export function PlanScreen() {
   const [newTaskPriority, setNewTaskPriority] = useState<TaskPriority>('medium');
   const [newTaskCategory, setNewTaskCategory] = useState<TaskCategory>('work');
   const [activeTab, setActiveTab] = useState<'tasks' | 'routines'>('tasks');
+
+  function openTaskDetail(taskId: string) {
+    navigation.navigate('TaskDetail', { taskId });
+  }
 
   const today = new Date();
   const dateString = today.toLocaleDateString('pt-BR', {
@@ -263,7 +273,11 @@ export function PlanScreen() {
                   </View>
                 </TouchableOpacity>
 
-                <View style={styles.taskContent}>
+                <TouchableOpacity
+                  style={styles.taskContent}
+                  onPress={() => openTaskDetail(task.id)}
+                  activeOpacity={0.7}
+                >
                   <View style={styles.taskHeader}>
                     <Text
                       style={[
@@ -303,7 +317,7 @@ export function PlanScreen() {
                       </Text>
                     )}
                   </View>
-                </View>
+                </TouchableOpacity>
               </View>
             ))}
 

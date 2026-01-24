@@ -2,13 +2,27 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import * as SecureStore from 'expo-secure-store';
 
 import { User, AuthSession, STORAGE_KEYS } from '@nciaflux/shared';
-import { supabase } from '../services/supabase';
+import { supabase, isDemoMode } from '../services/supabase';
+
+// Demo user for offline mode
+const DEMO_USER: User = {
+  id: 'demo-user-001',
+  email: 'demo@neurofluxo.app',
+  name: 'Usuario Demo',
+  avatar_url: null,
+  plan: 'basic',
+  role: 'user',
+  onboarding_completed: true,
+  created_at: new Date().toISOString(),
+  updated_at: new Date().toISOString(),
+};
 
 interface AuthContextType {
   user: User | null;
   session: AuthSession | null;
   isLoading: boolean;
   isAuthenticated: boolean;
+  isDemoMode: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, name?: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -23,7 +37,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    checkSession();
+    // Always initialize - demo mode or real mode
+    if (isDemoMode) {
+      initDemoMode();
+    } else if (supabase) {
+      checkSession();
+      const cleanup = setupAuthListener();
+      return cleanup;
+    } else {
+      // Fallback - shouldn't happen but handle gracefully
+      initDemoMode();
+    }
+  }, []);
+
+  function initDemoMode() {
+    console.log('Initializing demo mode...');
+    setUser(DEMO_USER);
+    setSession({
+      access_token: 'demo-token',
+      refresh_token: 'demo-refresh-token',
+      expires_at: Date.now() + 3600000,
+      user: DEMO_USER,
+    });
+    setIsLoading(false);
+  }
+
+  function setupAuthListener() {
+    if (!supabase) return () => {};
 
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
@@ -39,9 +79,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => {
       authListener.subscription.unsubscribe();
     };
-  }, []);
+  }
 
   async function checkSession() {
+    if (!supabase) {
+      setIsLoading(false);
+      return;
+    }
+
     try {
       const storedToken = await SecureStore.getItemAsync(STORAGE_KEYS.AUTH_TOKEN);
 
@@ -63,6 +108,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   async function fetchUser(userId: string) {
+    if (!supabase) return;
+
     try {
       const { data, error } = await supabase
         .from('users')
@@ -91,6 +138,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   async function login(email: string, password: string) {
+    if (isDemoMode || !supabase) {
+      // In demo mode, any login works
+      setUser({ ...DEMO_USER, email, name: email.split('@')[0] });
+      return;
+    }
+
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -105,6 +158,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   async function register(email: string, password: string, name?: string) {
+    if (isDemoMode || !supabase) {
+      // In demo mode, registration just logs in
+      setUser({ ...DEMO_USER, email, name: name || email.split('@')[0] });
+      return;
+    }
+
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -122,11 +181,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   async function logout() {
+    if (isDemoMode || !supabase) {
+      // In demo mode, logout re-initializes demo user
+      initDemoMode();
+      return;
+    }
+
     await supabase.auth.signOut();
     await clearSession();
   }
 
   async function refreshSession() {
+    if (isDemoMode || !supabase) {
+      // No-op in demo mode
+      return;
+    }
+
     const { data, error } = await supabase.auth.refreshSession();
 
     if (error) {
@@ -146,6 +216,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         session,
         isLoading,
         isAuthenticated: !!user,
+        isDemoMode,
         login,
         register,
         logout,

@@ -1,14 +1,14 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { Text } from 'react-native';
+import { Text, View } from 'react-native';
 
 import { COLORS, CheckInType } from '@nciaflux/shared';
 import { DashboardScreen } from '../screens/main/DashboardScreen';
 import { PlanScreen } from '../screens/main/PlanScreen';
 import { ChatScreen } from '../screens/main/ChatScreen';
 import { ProfileScreen } from '../screens/main/ProfileScreen';
-import { CrisisModeScreen } from '../screens/main/CrisisModeScreen';
 import { FocusBlockScreen } from '../screens/main/FocusBlockScreen';
+import { CrisisModeScreen } from '../screens/main/CrisisModeScreen';
 import { TaskDetailScreen } from '../screens/main/TaskDetailScreen';
 import { CheckInScreen } from '../screens/main/CheckInScreen';
 import { ReportsScreen } from '../screens/main/ReportsScreen';

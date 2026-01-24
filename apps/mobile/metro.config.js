@@ -16,7 +16,19 @@ config.resolver.nodeModulesPaths = [
   path.resolve(workspaceRoot, 'node_modules'),
 ];
 
-// Ensure we resolve from both locations
+// Ensure shared package is resolved correctly
+config.resolver.extraNodeModules = {
+  '@nciaflux/shared': path.resolve(workspaceRoot, 'packages/shared'),
+};
+
+// Disable hierarchical lookup to prevent resolving from wrong root
 config.resolver.disableHierarchicalLookup = true;
+
+// Explicitly set the project root and entry file
+config.projectRoot = projectRoot;
+config.server = {
+  ...config.server,
+  entryFile: path.resolve(projectRoot, 'index.js'),
+};
 
 module.exports = config;

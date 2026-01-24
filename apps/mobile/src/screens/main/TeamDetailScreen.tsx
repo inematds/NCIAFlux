@@ -1049,7 +1049,7 @@ const styles = StyleSheet.create({
   },
   challengeTimeLeft: {
     alignItems: 'center',
-    backgroundColor: COLORS.status.warning + '20',
+    backgroundColor: COLORS.accent.warning + '20',
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 8,
@@ -1057,11 +1057,11 @@ const styles = StyleSheet.create({
   timeLeftValue: {
     fontSize: 18,
     fontWeight: '700',
-    color: COLORS.status.warning,
+    color: COLORS.accent.warning,
   },
   timeLeftLabel: {
     fontSize: 10,
-    color: COLORS.status.warning,
+    color: COLORS.accent.warning,
   },
   challengeDescription: {
     fontSize: 14,
@@ -1080,7 +1080,7 @@ const styles = StyleSheet.create({
   },
   challengeProgressFill: {
     height: '100%',
-    backgroundColor: COLORS.status.success,
+    backgroundColor: COLORS.accent.success,
     borderRadius: 4,
   },
   challengeProgressText: {
@@ -1140,7 +1140,7 @@ const styles = StyleSheet.create({
   },
   pastChallengeResult: {
     fontSize: 12,
-    color: COLORS.status.success,
+    color: COLORS.accent.success,
     marginTop: 2,
   },
 });
