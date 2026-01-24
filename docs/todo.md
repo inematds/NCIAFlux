@@ -28,9 +28,10 @@
 - [x] Definir estrutura do projeto (source tree)
 
 ### 1.4 Sharding (Fragmentação)
-- [ ] Shard PRD em épicos
-- [ ] Shard épicos em stories
+- [x] Shard PRD em épicos (6 épicos criados)
+- [x] Shard épicos em stories (27 stories criadas)
 - [ ] Validar stories com checklist
+- [ ] **Aprovar stories para desenvolvimento** ← PRÓXIMO
 
 ---
 
