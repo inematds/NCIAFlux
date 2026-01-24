@@ -2,7 +2,7 @@
 
 **Projeto:** NCIAFlux (NeuroFluxo)
 **Início:** 23 de Janeiro de 2026
-**Status:** Em Planejamento
+**Status:** Em Desenvolvimento
 
 ---
 
@@ -38,10 +38,15 @@
 ## Fase 2: Desenvolvimento (Development Phase)
 
 ### 2.1 Infraestrutura Base
-- [ ] Setup do repositório
-- [ ] Configuração de ambiente de desenvolvimento
+- [x] Setup do repositório (monorepo com Turborepo)
+- [x] Configuração de ambiente de desenvolvimento
 - [ ] CI/CD básico
-- [ ] Estrutura de pastas do projeto
+- [x] Estrutura de pastas do projeto
+- [x] Tipos e constantes compartilhados (`packages/shared`)
+- [x] Schema do banco de dados (Supabase migrations)
+- [x] Navegação base do app mobile
+- [x] Telas de autenticação (Login, Registro, Esqueci senha)
+- [x] Hook de autenticação com Supabase
 
 ### 2.2 MVP - Módulo Descoberta (Gratuito)
 - [ ] Epic: Sistema de questionário
@@ -177,6 +182,10 @@
 | 2026-01-23 | PRD completo criado | PM |
 | 2026-01-23 | Especificação UX/UI criada | Sally (UX Expert) |
 | 2026-01-23 | Arquitetura técnica criada | Architect |
+| 2026-01-23 | Stories criadas (27 stories / 6 épicos) | PO |
+| 2026-01-23 | Setup do monorepo com Turborepo | Dev |
+| 2026-01-23 | Estrutura base do app mobile | Dev |
+| 2026-01-23 | Schema do banco de dados criado | Dev |
 
 ---
 

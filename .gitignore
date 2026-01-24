@@ -5,6 +5,7 @@ node_modules/
 .env
 .env.local
 .env.*.local
+*.local
 
 # IDE
 .idea/
@@ -24,6 +25,26 @@ npm-debug.log*
 dist/
 build/
 .cache/
+.next/
+.turbo/
+
+# Expo
+.expo/
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
+
+# Metro
+.metro-health-check*
+
+# Testing
+coverage/
 
 # AI/Debug
 .ai/
+
+# pnpm
+pnpm-lock.yaml
