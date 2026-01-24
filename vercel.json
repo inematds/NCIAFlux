@@ -1,6 +1,5 @@
 {
-  "buildCommand": "pnpm turbo run build --filter=@nciaflux/web",
-  "outputDirectory": ".next",
-  "framework": "nextjs",
+  "buildCommand": "npx pnpm@8.12.0 turbo run build --filter=@nciaflux/web",
+  "outputDirectory": "apps/web/.next",
   "installCommand": "npx pnpm@8.12.0 install"
 }
