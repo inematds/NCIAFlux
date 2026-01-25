@@ -19,27 +19,22 @@ const MODEL_INFO: Record<AIModelId, { name: string; icon: string; description: s
   'anthropic/claude-3.5-sonnet': {
     name: 'Claude 3.5',
     icon: '🧠',
-    description: 'Melhor para conversas empaticas',
+    description: 'Melhor qualidade',
   },
   'anthropic/claude-3-haiku': {
     name: 'Claude Haiku',
     icon: '⚡',
     description: 'Rapido e economico',
   },
-  'openai/gpt-4-turbo': {
-    name: 'GPT-4 Turbo',
+  'openai/gpt-4o-mini': {
+    name: 'GPT-4o Mini',
     icon: '🤖',
-    description: 'Alternativa poderosa',
+    description: 'Rapido e barato',
   },
-  'mistralai/mistral-large': {
-    name: 'Mistral',
-    icon: '🌬️',
-    description: 'Bom custo-beneficio',
-  },
-  'meta-llama/llama-3-70b-instruct': {
-    name: 'Llama 3',
+  'meta-llama/llama-3.3-70b-instruct:free': {
+    name: 'Llama 3.3',
     icon: '🦙',
-    description: 'Mais economico',
+    description: 'Gratuito!',
   },
 };
 

@@ -178,9 +178,8 @@ export interface RateLimitStatus {
 export type AIModelId =
   | 'anthropic/claude-3.5-sonnet'
   | 'anthropic/claude-3-haiku'
-  | 'openai/gpt-4-turbo'
-  | 'mistralai/mistral-large'
-  | 'meta-llama/llama-3-70b-instruct';
+  | 'openai/gpt-4o-mini'
+  | 'meta-llama/llama-3.3-70b-instruct:free';
 
 export interface AIModelConfig {
   id: AIModelId;
@@ -191,6 +190,7 @@ export interface AIModelConfig {
   maxTokens: number;
   supportsTools: boolean;
   recommended: boolean;
+  isFree?: boolean;
 }
 
 export const AI_MODELS: Record<string, AIModelConfig> = {
@@ -207,42 +207,33 @@ export const AI_MODELS: Record<string, AIModelConfig> = {
   'anthropic/claude-3-haiku': {
     id: 'anthropic/claude-3-haiku',
     name: 'Claude 3 Haiku',
-    description: 'Rapido e economico para respostas simples',
+    description: 'Rapido e economico',
     costPer1kInput: 0.00025,
     costPer1kOutput: 0.00125,
     maxTokens: 4096,
     supportsTools: true,
     recommended: false,
   },
-  'openai/gpt-4-turbo': {
-    id: 'openai/gpt-4-turbo',
-    name: 'GPT-4 Turbo',
-    description: 'Alternativa poderosa da OpenAI',
-    costPer1kInput: 0.01,
-    costPer1kOutput: 0.03,
+  'openai/gpt-4o-mini': {
+    id: 'openai/gpt-4o-mini',
+    name: 'GPT-4o Mini',
+    description: 'Rapido e muito barato',
+    costPer1kInput: 0.00015,
+    costPer1kOutput: 0.0006,
     maxTokens: 4096,
     supportsTools: true,
     recommended: false,
   },
-  'mistralai/mistral-large': {
-    id: 'mistralai/mistral-large',
-    name: 'Mistral Large',
-    description: 'Bom custo-beneficio',
-    costPer1kInput: 0.004,
-    costPer1kOutput: 0.012,
+  'meta-llama/llama-3.3-70b-instruct:free': {
+    id: 'meta-llama/llama-3.3-70b-instruct:free',
+    name: 'Llama 3.3 70B',
+    description: 'Gratuito!',
+    costPer1kInput: 0,
+    costPer1kOutput: 0,
     maxTokens: 4096,
     supportsTools: true,
     recommended: false,
-  },
-  'meta-llama/llama-3-70b-instruct': {
-    id: 'meta-llama/llama-3-70b-instruct',
-    name: 'Llama 3 70B',
-    description: 'Mais economico, tool use limitado',
-    costPer1kInput: 0.0005,
-    costPer1kOutput: 0.00075,
-    maxTokens: 4096,
-    supportsTools: false,
-    recommended: false,
+    isFree: true,
   },
 };
 
