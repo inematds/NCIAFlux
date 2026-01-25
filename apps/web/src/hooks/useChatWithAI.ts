@@ -358,6 +358,16 @@ export function useChatWithAI(): UseChatWithAIReturn {
         break;
       }
 
+      case 'create_event': {
+        const event = result.event as Record<string, unknown>;
+        if (event) {
+          const key = getStorageKey('nciaflux_events');
+          const existing = JSON.parse(localStorage.getItem(key) || '[]');
+          localStorage.setItem(key, JSON.stringify([...existing, event]));
+        }
+        break;
+      }
+
       case 'create_note': {
         const note = result.note as Record<string, unknown>;
         if (note) {

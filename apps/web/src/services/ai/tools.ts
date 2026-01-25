@@ -91,6 +91,25 @@ export const AI_TOOLS: AITool[] = [
     },
   },
 
+  // === AGENDA / CALENDARIO ===
+  {
+    name: 'create_event',
+    description: 'Cria um evento na agenda/calendario. Use para reunioes, compromissos, consultas, etc.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        title: { type: 'string', description: 'Titulo do evento' },
+        description: { type: 'string', description: 'Descricao opcional do evento' },
+        date: { type: 'string', description: 'Data do evento (YYYY-MM-DD)' },
+        startTime: { type: 'string', description: 'Hora de inicio (HH:MM, formato 24h)' },
+        endTime: { type: 'string', description: 'Hora de termino (HH:MM, formato 24h)' },
+        category: { type: 'string', enum: ['meeting', 'appointment', 'personal', 'work', 'health', 'other'], description: 'Categoria do evento' },
+        reminder: { type: 'number', description: 'Lembrete em minutos antes (ex: 15, 30, 60)' },
+      },
+      required: ['title', 'date', 'startTime'],
+    },
+  },
+
   // === BUSCA DE TAREFAS ===
   {
     name: 'search_tasks',
@@ -216,6 +235,8 @@ export async function executeToolCall(
         return await activateCrisisMode(args, userId);
       case 'record_checkin':
         return await recordCheckin(args, userId);
+      case 'create_event':
+        return await createEvent(args, userId);
       case 'search_tasks':
         return await searchTasks(args, userId);
       case 'list_today_tasks':
@@ -390,6 +411,51 @@ async function recordCheckin(
     success: true,
     result: { checkin, action: 'record_checkin' },
     message: `Registrei seu check-in: energia ${energyLevel}/5 ${energyEmoji}${moodText}. Obrigado por compartilhar como voce esta!`,
+  };
+}
+
+async function createEvent(
+  args: Record<string, unknown>,
+  userId: string
+): Promise<ToolExecutionResult> {
+  const title = args.title as string;
+  const description = args.description as string | undefined;
+  const date = args.date as string;
+  const startTime = args.startTime as string;
+  const endTime = args.endTime as string | undefined;
+  const category = (args.category as string) || 'other';
+  const reminder = args.reminder as number | undefined;
+
+  const event = {
+    id: `event_${Date.now()}`,
+    title,
+    description: description || '',
+    date,
+    startTime,
+    endTime: endTime || '',
+    category,
+    reminder: reminder || 15,
+    userId,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+
+  const categoryEmoji: Record<string, string> = {
+    meeting: '👥',
+    appointment: '📅',
+    personal: '🏠',
+    work: '💼',
+    health: '🏥',
+    other: '📌',
+  };
+
+  const emoji = categoryEmoji[category] || '📌';
+  const timeText = endTime ? `${startTime} - ${endTime}` : `${startTime}`;
+
+  return {
+    success: true,
+    result: { event, action: 'create_event' },
+    message: `${emoji} Agendei "${title}" para ${date} as ${timeText}.${reminder ? ` Vou te lembrar ${reminder} minutos antes.` : ''}`,
   };
 }
 
