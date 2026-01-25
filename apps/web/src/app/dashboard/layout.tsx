@@ -67,6 +67,7 @@ const baseMenuItems: MenuItem[] = [
 
   // Gestao (apenas para managers/admins)
   { icon: '👥', label: 'Equipes', href: '/dashboard/teams', section: 'Gestao', requiresRole: 'manager' },
+  { icon: '🏢', label: 'Admin', href: '/dashboard/admin', requiresRole: 'admin' },
 
   // Sistema
   { icon: '⚙️', label: 'Configuracoes', href: '/dashboard/settings', section: 'Sistema' },
