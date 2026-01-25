@@ -80,35 +80,80 @@ Porque acreditamos que cérebros neurodivergentes não são defeituosos - são d
 | **Storage Prefixado** | Dados isolados por usuario (nciaflux_${userId}_...) |
 | **Switcher de Perfis** | Troca rapida entre contas no sidebar |
 | **Visao Pessoal/Gestao** | Toggle para managers alternarem entre modos |
+| **Menu por Role** | Equipes visivel apenas para gestores/admins |
+| **Demo com 3 Perfis** | Teste como Usuario, Gestor ou Admin |
 | **Botao Chat IA** | Teaser da versao Pro com chat por texto/voz |
 | **Migracao Automatica** | Dados antigos migrados para novo formato |
 
-### Roadmap
+---
 
-| Feature | Status |
-|---------|--------|
-| PWA (instalável no celular) | Planejado |
-| Sincronização na nuvem | Planejado |
-| Notificações push | Planejado |
-| **Chat com IA (texto e voz)** | v2 - Pro |
-| App mobile nativo | Futuro |
-| Integração com terapeutas | Futuro |
+## Roadmap v2 - Versão Pro
 
-#### v2 - Versão Pro
+### v2.0 - Chat com IA
 
-**Chat com IA**
-- Converse com a IA para criar tarefas, fazer brain dump, ou pedir ajuda
-- Comandos por voz para criar e gerenciar tarefas
-- Sugestões personalizadas baseadas no seu perfil cognitivo
+| Feature | Descrição | Prioridade |
+|---------|-----------|------------|
+| **Chat por Texto** | Converse com a IA para criar tarefas, brain dump, pedir ajuda | Alta |
+| **Comandos de Voz** | Fale para criar e gerenciar tarefas | Alta |
+| **Assistente Contextual** | Sugestões baseadas no seu perfil cognitivo e cronotipo | Alta |
+| **Brain Dump por Voz** | Fale seus pensamentos, IA organiza automaticamente | Média |
+| **Resumo Diário** | IA resume seu dia e sugere próximos passos | Média |
 
-**Gestão de Equipes (Plano Empresarial)**
-- **Admin**: Cria organizações e empresas, define permissões para gestores
-- **Gestor**: Convida membros via email/ID, gerencia equipes
-- **Convites**: Aparecem na tela de chat da equipe (não por email externo)
-- **Toggle de Visão**: Gestores alternam entre visão pessoal e gestão de equipe
-- **Dados Isolados**: Cada membro tem seus dados separados e privados
+### v2.1 - Sincronização na Nuvem
 
-> Nota: Na versão atual, a Demo simula os 3 perfis (usuario/gestor/admin) para demonstração. O login normal cria apenas usuários comuns com tela limpa.
+| Feature | Descrição | Prioridade |
+|---------|-----------|------------|
+| **Backend Supabase** | Migração de localStorage para banco de dados | Alta |
+| **Autenticação Real** | Login com email/senha, OAuth (Google, Apple) | Alta |
+| **Sync Multi-Dispositivo** | Acesse seus dados em qualquer dispositivo | Alta |
+| **Backup Automático** | Seus dados sempre seguros na nuvem | Média |
+| **Modo Offline** | Funciona sem internet, sincroniza quando conectar | Média |
+
+### v2.2 - Gestão de Equipes (Plano Empresarial)
+
+| Feature | Descrição | Prioridade |
+|---------|-----------|------------|
+| **Organizações** | Admin cria empresas e organizações | Alta |
+| **Hierarquia de Roles** | Admin → Gestor → Membro | Alta |
+| **Convites por ID/Email** | Gestor convida membros para equipe | Alta |
+| **Chat de Equipe** | Convites e comunicação aparecem no chat | Alta |
+| **Dashboard do Gestor** | Visão geral da produtividade da equipe | Média |
+| **Relatórios de Equipe** | Estatísticas agregadas (anonimizadas) | Média |
+| **Dados Isolados** | Privacidade: cada membro controla seus dados | Alta |
+
+### v2.3 - PWA e Mobile
+
+| Feature | Descrição | Prioridade |
+|---------|-----------|------------|
+| **PWA Instalável** | Instale no celular como app nativo | Alta |
+| **Notificações Push** | Lembretes de tarefas, rotinas, check-in | Alta |
+| **Modo Escuro** | Tema escuro para uso noturno | Média |
+| **Widgets** | Widgets para tela inicial (Android/iOS) | Baixa |
+
+### Futuro (v3+)
+
+| Feature | Descrição |
+|---------|-----------|
+| **App Mobile Nativo** | React Native para iOS e Android |
+| **Integração com Terapeutas** | Compartilhe progresso com profissionais |
+| **Wearables** | Integração com smartwatches |
+| **Gamificação Avançada** | Conquistas, streaks, recompensas |
+| **Comunidade** | Grupos de apoio entre usuários |
+| **API Pública** | Integrações com outros apps |
+
+### Status do Desenvolvimento
+
+```
+v1.0 ████████████████████ 100% - Base completa
+v1.1 ████████████████████ 100% - Storage local aprimorado
+v1.2 ████████████████████ 100% - Multi-perfil ← ATUAL
+v2.0 ░░░░░░░░░░░░░░░░░░░░   0% - Chat com IA
+v2.1 ░░░░░░░░░░░░░░░░░░░░   0% - Sincronização
+v2.2 ░░░░░░░░░░░░░░░░░░░░   0% - Gestão de equipes
+v2.3 ░░░░░░░░░░░░░░░░░░░░   0% - PWA e Mobile
+```
+
+> **Nota:** Na versão atual (v1.2), a Demo simula os 3 perfis (Usuario/Gestor/Admin) para demonstração. O login normal cria apenas usuários comuns com experiência limpa.
 
 ---
 
@@ -270,13 +315,35 @@ O projeto está configurado para deploy automático no Vercel:
 
 ## Planos de Uso
 
-| Plano | Features | Storage | Preço |
-|-------|----------|---------|-------|
-| **Gratuito** | Todas as funcionalidades | Local (dispositivo) | R$ 0 |
-| **Premium** | + Sync na nuvem + Multi-dispositivo | Cloud | Futuro |
-| **Empresarial** | + Gestão de equipes + Integrações | Cloud | Futuro |
+| Plano | Features | Storage | Status |
+|-------|----------|---------|--------|
+| **Gratuito** | Todas funcionalidades pessoais | Local (dispositivo) | Disponível |
+| **Pro** | + Chat IA + Voz + Sync nuvem | Cloud | v2.0 - Em breve |
+| **Empresarial** | + Gestão de equipes + Relatórios | Cloud | v2.2 - Planejado |
 
-> O plano gratuito oferece acesso completo. A diferença será sincronização entre dispositivos.
+### Detalhamento dos Planos
+
+**Gratuito (Atual)**
+- Todas as funcionalidades de produtividade pessoal
+- Dados salvos localmente no navegador
+- Multi-perfil no mesmo dispositivo
+- Sem limite de uso
+
+**Pro (v2.0)**
+- Tudo do Gratuito +
+- Chat com IA por texto e voz
+- Sincronização na nuvem
+- Acesso em múltiplos dispositivos
+- Backup automático
+- Modo offline com sync
+
+**Empresarial (v2.2)**
+- Tudo do Pro +
+- Criação de organizações
+- Gestão de equipes
+- Dashboard do gestor
+- Relatórios de produtividade
+- Convites e chat de equipe
 
 ---
 
