@@ -43,20 +43,20 @@ const MODEL_INFO: Record<AIModelId, { name: string; icon: string; description: s
   'mistralai/mistral-small-3.1-24b-instruct:free': {
     name: 'Mistral Small',
     icon: '🌀',
-    description: 'Gratuito com tools',
-    supportsTools: true,
+    description: 'Gratuito (conversa)',
+    supportsTools: false,
   },
-  'meta-llama/llama-4-maverick:free': {
-    name: 'Llama 4',
+  'deepseek/deepseek-r1-0528:free': {
+    name: 'DeepSeek R1',
+    icon: '🔮',
+    description: 'Gratuito (conversa)',
+    supportsTools: false,
+  },
+  'meta-llama/llama-3.3-70b-instruct:free': {
+    name: 'Llama 3.3',
     icon: '🦙',
-    description: 'Gratuito multimodal',
-    supportsTools: true,
-  },
-  'google/gemini-2.5-pro-exp-03-25:free': {
-    name: 'Gemini 2.5',
-    icon: '💎',
-    description: 'Gratuito experimental',
-    supportsTools: true,
+    description: 'Gratuito (conversa)',
+    supportsTools: false,
   },
 };
 

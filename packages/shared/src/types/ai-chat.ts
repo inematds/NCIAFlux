@@ -181,8 +181,8 @@ export type AIModelId =
   | 'openai/gpt-4o-mini'
   | 'openai/gpt-5-mini'
   | 'mistralai/mistral-small-3.1-24b-instruct:free'
-  | 'meta-llama/llama-4-maverick:free'
-  | 'google/gemini-2.5-pro-exp-03-25:free';
+  | 'deepseek/deepseek-r1-0528:free'
+  | 'meta-llama/llama-3.3-70b-instruct:free';
 
 export interface AIModelConfig {
   id: AIModelId;
@@ -240,33 +240,33 @@ export const AI_MODELS: Record<string, AIModelConfig> = {
   'mistralai/mistral-small-3.1-24b-instruct:free': {
     id: 'mistralai/mistral-small-3.1-24b-instruct:free',
     name: 'Mistral Small 3.1',
-    description: 'Gratuito com tools',
+    description: 'Gratuito (conversa)',
     costPer1kInput: 0,
     costPer1kOutput: 0,
     maxTokens: 4096,
-    supportsTools: true,
+    supportsTools: false,
     recommended: false,
     isFree: true,
   },
-  'meta-llama/llama-4-maverick:free': {
-    id: 'meta-llama/llama-4-maverick:free',
-    name: 'Llama 4 Maverick',
-    description: 'Gratuito multimodal',
+  'deepseek/deepseek-r1-0528:free': {
+    id: 'deepseek/deepseek-r1-0528:free',
+    name: 'DeepSeek R1',
+    description: 'Gratuito (conversa)',
     costPer1kInput: 0,
     costPer1kOutput: 0,
     maxTokens: 4096,
-    supportsTools: true,
+    supportsTools: false,
     recommended: false,
     isFree: true,
   },
-  'google/gemini-2.5-pro-exp-03-25:free': {
-    id: 'google/gemini-2.5-pro-exp-03-25:free',
-    name: 'Gemini 2.5 Pro',
-    description: 'Gratuito experimental',
+  'meta-llama/llama-3.3-70b-instruct:free': {
+    id: 'meta-llama/llama-3.3-70b-instruct:free',
+    name: 'Llama 3.3 70B',
+    description: 'Gratuito (conversa)',
     costPer1kInput: 0,
     costPer1kOutput: 0,
     maxTokens: 4096,
-    supportsTools: true,
+    supportsTools: false,
     recommended: false,
     isFree: true,
   },
