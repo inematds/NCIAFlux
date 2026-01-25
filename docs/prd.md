@@ -1,7 +1,7 @@
 # NCIAFlux Product Requirements Document (PRD)
 
-**Versão:** 1.2
-**Data:** 24 de Janeiro de 2026
+**Versão:** 1.2.1
+**Data:** 25 de Janeiro de 2026
 **Status:** Draft
 **Umbrella Brand:** MentesBrilhantes
 
@@ -14,7 +14,7 @@
 - Criar uma experiência de descoberta isolada que entrega valor imediato em 5-7 minutos
 - Desenvolver um sistema de plano diário adaptativo que respeita o fluxo real do cérebro ADHD
 - Implementar acompanhamento gentil sem cobrança de métricas ou performance
-- Oferecer estrutura de planos escalável (Gratuito Local → Premium Cloud → Empresarial)
+- Oferecer estrutura de planos escalável (Free Local → Team Central+P2P → Premium Cloud → Empresarial)
 - Posicionar o NCIAFlux como alternativa acessível no mercado brasileiro de apps ADHD
 - Garantir que o sistema evolua com o usuário sem exigir redescoberta constante
 
@@ -31,6 +31,8 @@ O NCIAFlux diferencia-se por três pilares: **Autoconhecimento** (descoberta do 
 | 2026-01-23 | 1.0 | Criação inicial do PRD | PM (BMad) |
 | 2026-01-24 | 1.1 | Adição de módulos: Brain Dump, Cronotipos, Planner Diário, Rotinas, Revisões | PM (Claude) |
 | 2026-01-24 | 1.2 | Arquitetura MentesBrilhantes (multi-perfil), Gestão de Projetos, Agenda, Notas | Architect (Winston) |
+| 2026-01-25 | 1.2.1 | Roadmap atualizado: v1.5 Times, v1.6 PWA, v1.7 Notificacoes, v2.0 IA, v2.5 Testes, v3.0 Nativo. Planos: Free, Team, Premium, Empresarial | PM (Claude) |
+| 2026-01-25 | 1.3.0 | Adicionado v1.3 Chat Input (OpenRouter), v1.8 Voice Output. Epic 15 criado | PM (Claude) |
 
 ### 1.4 MentesBrilhantes - Visão do Produto
 
@@ -265,9 +267,11 @@ Em vez de perfis fixos, o usuário **personaliza** sua experiência:
 
 #### Gestao de Planos
 
-- **FR54**: O sistema deve suportar 3 niveis de plano: Gratuito (local), Premium (cloud), Empresarial
-- **FR55**: O plano Gratuito inclui TODAS as funcionalidades com dados armazenados localmente no dispositivo
-- **FR56**: O plano Premium adiciona sincronizacao na nuvem, multiplos dispositivos e gestao de equipes
+- **FR54**: O sistema deve suportar 4 niveis de plano: Free (local), Team (central+P2P), Premium (cloud+IA), Empresarial (nativo)
+- **FR55**: O plano Free inclui TODAS as funcionalidades pessoais com dados armazenados localmente no dispositivo
+- **FR56**: O plano Team adiciona times com central de descoberta, chat de equipe e comunicacao P2P
+- **FR56.1**: O plano Premium adiciona chat com IA por texto/voz, sincronizacao na nuvem e integracao com terapeutas
+- **FR56.2**: O plano Empresarial adiciona apps nativos iOS/Android, widgets, wearables, organizacoes e API publica
 - **FR57**: O upgrade/downgrade deve ser fluido sem perda de dados
 - **FR58**: Dados locais podem ser migrados para nuvem ao fazer upgrade
 
@@ -447,6 +451,8 @@ Interface minimalista, acolhedora e não-clínica que respeita cérebros neurodi
 
 ### Visão Geral dos Épicos
 
+#### v1.0-v1.2 - Base (Free) - ATUAL
+
 | Epic | Título | Objetivo |
 |------|--------|----------|
 | 1 | Fundação e Descoberta | Setup do projeto + módulo de descoberta completo (entrega valor isolado) |
@@ -458,7 +464,71 @@ Interface minimalista, acolhedora e não-clínica que respeita cérebros neurodi
 | 7 | Sistema de Produtividade TDAH | Brain Dump, Cronotipos, Planner Diário, Rotinas e Revisões |
 | 8 | Organização Avançada | Gestão de Projetos, Agenda/Calendário e Sistema de Notas |
 
-### Features V2 (Futuras)
+#### v1.5 - Times (Plano Team)
+
+| Epic | Título | Objetivo |
+|------|--------|----------|
+| 9 | Interação entre Usuários | Usuários locais podem interagir dentro do time |
+| 10 | Central de Descoberta | Servidor central para usuários se encontrarem |
+| 11 | Sistema de Convites | Gestor convida membros via ID único |
+| 12 | Chat de Equipe | Comunicação entre membros do time |
+| 13 | Comunicação P2P | Após descoberta, comunicação direta peer-to-peer |
+| 14 | Dashboard do Gestor | Visão geral da equipe (dados anonimizados) |
+
+#### v1.6 - PWA e Testes
+
+| Epic | Título | Objetivo |
+|------|--------|----------|
+| 15 | PWA Instalável | Instale no celular como app nativo |
+| 16 | Modo Offline | Funciona sem internet, sincroniza depois |
+| 17 | Testes Automatizados | Cobertura de testes unitários e E2E |
+| 18 | CI/CD Pipeline | Integração e deploy contínuos |
+| 19 | Modo Escuro | Tema escuro para uso noturno |
+
+#### v1.7 - Notificações e Terapeutas
+
+| Epic | Título | Objetivo |
+|------|--------|----------|
+| 20 | Notificações Locais | Lembretes de tarefas, rotinas, check-in |
+| 21 | Notificações de Time | Alertas de mensagens e convites |
+| 22 | Integração Terapeutas | Compartilhe progresso com profissionais |
+| 23 | Relatórios para Terapeuta | Exportar dados de humor, energia, produtividade |
+| 24 | Modo Acompanhamento | Terapeuta visualiza progresso (com permissão) |
+
+#### v2.0 - Chat com IA (Plano Premium)
+
+| Epic | Título | Objetivo |
+|------|--------|----------|
+| 25 | Chat por Texto com IA | Converse com IA para criar tarefas, brain dump, pedir ajuda |
+| 26 | Comandos de Voz | Fale para criar e gerenciar tarefas |
+| 27 | Assistente Contextual | Sugestões baseadas no perfil cognitivo e cronotipo |
+| 28 | Brain Dump por Voz | Fale pensamentos, IA organiza automaticamente |
+| 29 | Resumo Diário | IA resume seu dia e sugere próximos passos |
+| 30 | Sync na Nuvem | Dados sincronizados para usuários Premium |
+
+#### v2.5 - Testes e Estabilização
+
+| Epic | Título | Objetivo |
+|------|--------|----------|
+| 31 | Testes de Carga | Performance sob alta demanda |
+| 32 | Testes de Segurança | Auditoria de segurança completa |
+| 33 | Testes de Acessibilidade | WCAG 2.1 compliance |
+| 34 | Beta Testing | Programa de beta testers |
+| 35 | Documentação API | Documentação completa para integrações |
+
+#### v3.0 - App Nativo (Plano Empresarial)
+
+| Epic | Título | Objetivo |
+|------|--------|----------|
+| 36 | App iOS Nativo | Swift/SwiftUI para melhor performance |
+| 37 | App Android Nativo | Kotlin para melhor performance |
+| 38 | Widgets Nativos | Widgets para tela inicial |
+| 39 | Wearables | Apple Watch e Wear OS |
+| 40 | Biometria | Face ID, Touch ID, impressão digital |
+| 41 | Organizações | Admin cria empresas e organizações |
+| 42 | API Pública | Integrações com outros apps |
+
+### Features Adicionais (Futuras)
 
 | Feature | Descrição |
 |---------|-----------|
@@ -473,6 +543,32 @@ Interface minimalista, acolhedora e não-clínica que respeita cérebros neurodi
 | **Integrações de Calendário** | Google Calendar, Apple Calendar, Outlook (OAuth/CalDAV/Graph API) |
 | **Sincronização de Notas** | Integração com Notion, Obsidian, Apple Notes |
 | **Projetos Colaborativos** | Compartilhar projetos com outros usuários |
+
+### Roadmap e Status
+
+```
+v1.0 ████████████████████ 100% - Base completa
+v1.1 ████████████████████ 100% - Storage local aprimorado
+v1.2 ████████████████████ 100% - Multi-perfil ← ATUAL
+─────────────────────────────────────────────────
+v1.3 ░░░░░░░░░░░░░░░░░░░░   0% - Chat Input (Texto + Voz via OpenRouter)
+v1.5 ░░░░░░░░░░░░░░░░░░░░   0% - Times (Plano Team)
+v1.6 ░░░░░░░░░░░░░░░░░░░░   0% - PWA e Testes
+v1.7 ░░░░░░░░░░░░░░░░░░░░   0% - Notificações e Terapeutas
+v1.8 ░░░░░░░░░░░░░░░░░░░░   0% - Voice Output (TTS)
+v2.0 ░░░░░░░░░░░░░░░░░░░░   0% - Sync Cloud + IA Avancada (Premium)
+v2.5 ░░░░░░░░░░░░░░░░░░░░   0% - Testes e Estabilização
+v3.0 ░░░░░░░░░░░░░░░░░░░░   0% - App Nativo (Plano Empresarial)
+```
+
+### Planos de Uso
+
+| Plano | Features | Storage | Versão |
+|-------|----------|---------|--------|
+| **Free** | Funcionalidades pessoais + Chat IA (limitado) | Local | v1.3 |
+| **Team** | + Times + Chat equipe + P2P | Central + P2P | v1.5 |
+| **Premium** | + Voice Output + Sync nuvem + IA ilimitada | Cloud | v2.0 |
+| **Empresarial** | + Organizações + Apps nativos | Cloud | v3.0 |
 
 ---
 
@@ -1206,6 +1302,165 @@ Interface minimalista, acolhedora e não-clínica que respeita cérebros neurodi
 4. Nota original é marcada como "Processada"
 5. Triagem do Brain Dump funciona normalmente com notas enviadas
 6. Link bidirecional entre nota e item do Brain Dump
+
+---
+
+### Epic 15: Chat com IA (Input)
+
+**Objetivo**: Implementar chat com IA que permite ao usuário interagir com toda a aplicação através de linguagem natural (texto e voz). Utiliza OpenRouter como gateway para escolher entre diferentes LLMs.
+
+**Versão Target**: v1.3
+
+#### Story 15.1: Infraestrutura OpenRouter
+
+**Como** desenvolvedor,
+**Quero** ter a integração básica com OpenRouter configurada,
+**Para que** possamos enviar mensagens para diferentes LLMs.
+
+**Acceptance Criteria:**
+1. Cliente OpenRouter implementado em `apps/web/src/services/ai/openrouter-client.ts`
+2. Types de chat exportados do `packages/shared/src/types/ai-chat.ts`
+3. Variáveis de ambiente configuradas (OPENROUTER_API_KEY, OPENROUTER_DEFAULT_MODEL)
+4. Suporte a streaming de respostas
+5. Testes unitários para o cliente
+
+#### Story 15.2: API Route /api/chat
+
+**Como** desenvolvedor,
+**Quero** ter um endpoint para processar mensagens de chat,
+**Para que** o frontend possa enviar mensagens e receber respostas.
+
+**Acceptance Criteria:**
+1. POST /api/chat aceita { message, userId, model? }
+2. Contexto do usuário incluído no system prompt (energia, humor, tarefas)
+3. Streaming de resposta funcionando
+4. Rate limiting básico implementado
+5. Erros tratados adequadamente com mensagens amigáveis
+
+#### Story 15.3: Tool System Base
+
+**Como** usuário,
+**Quero** que o chat execute ações na aplicação,
+**Para que** eu possa criar tarefas, ativar modo crise, etc. por conversa.
+
+**Acceptance Criteria:**
+1. 5 tools iniciais implementadas: create_task, add_to_brain_dump, complete_task, activate_crisis_mode, record_checkin
+2. ToolExecutor processa tool calls do LLM
+3. Ações executadas no localStorage
+4. Feedback de sucesso/erro retornado ao chat
+5. Testes para cada tool
+
+#### Story 15.4: Chat Widget UI
+
+**Como** usuário,
+**Quero** um widget de chat flutuante no dashboard,
+**Para que** eu possa conversar com o assistente a qualquer momento.
+
+**Acceptance Criteria:**
+1. Componente ChatWidget flutuante no canto inferior direito
+2. Histórico de mensagens exibido corretamente
+3. Scroll automático para novas mensagens
+4. Loading state durante resposta do LLM
+5. Store Zustand para gerenciar estado do chat
+6. Persistência do histórico na sessão
+
+#### Story 15.5: Voice Input
+
+**Como** usuário,
+**Quero** poder falar em vez de digitar,
+**Para que** seja mais rápido e natural interagir com o chat.
+
+**Acceptance Criteria:**
+1. Botão de microfone no ChatInput
+2. Web Speech API para reconhecimento de voz em PT-BR
+3. Transcript exibido em tempo real enquanto fala
+4. Mensagem enviada ao parar gravação
+5. Fallback visual para browsers não suportados
+6. Tratamento de erros de permissão de microfone
+
+#### Story 15.6: Tools Adicionais
+
+**Como** usuário,
+**Quero** mais comandos disponíveis no chat,
+**Para que** possa fazer consultas e criar notas, projetos, etc.
+
+**Acceptance Criteria:**
+1. Tools de consulta: search_tasks, get_user_stats, get_energy_history
+2. Tools de criação: create_note, create_project
+3. Tools de triagem: triage_brain_dump_item
+4. Tool deactivate_crisis_mode
+5. Todas as tools testadas
+
+#### Story 15.7: Rate Limiting por Plano
+
+**Como** sistema,
+**Quero** limitar uso do chat por plano,
+**Para que** controlemos custos e incentivemos upgrade.
+
+**Acceptance Criteria:**
+1. Plano Free: 10 mensagens/hora, 50/dia
+2. Plano Premium: 100 mensagens/hora, ilimitado/dia
+3. Contador visível para usuário Free
+4. Mensagem amigável ao atingir limite
+5. Reset automático do contador
+
+#### Story 15.8: Seleção de Modelo
+
+**Como** admin/usuário premium,
+**Quero** escolher qual modelo LLM usar,
+**Para que** eu possa balancear custo e qualidade.
+
+**Acceptance Criteria:**
+1. Configuração de modelo padrão nas preferências
+2. Seleção automática por tipo de tarefa (simples → haiku, complexo → sonnet)
+3. UI para escolher modelo (apenas Premium)
+4. Fallback para modelo alternativo se principal falhar
+
+---
+
+### Epic 18: Voice Output (TTS)
+
+**Objetivo**: Implementar saída por voz (Text-to-Speech) para que o assistente possa responder falando, não apenas com texto.
+
+**Versão Target**: v1.8
+
+#### Story 18.1: Text-to-Speech Básico
+
+**Como** usuário,
+**Quero** ouvir as respostas do assistente,
+**Para que** eu possa usar o app sem olhar para a tela.
+
+**Acceptance Criteria:**
+1. Hook useTextToSpeech implementado
+2. Web Speech API para TTS em PT-BR
+3. Botão de "ler em voz alta" nas mensagens
+4. Controle de velocidade da fala
+5. Funciona em Chrome, Firefox, Edge, Safari
+
+#### Story 18.2: Configurações de Voz
+
+**Como** usuário,
+**Quero** personalizar a voz do assistente,
+**Para que** seja mais agradável de ouvir.
+
+**Acceptance Criteria:**
+1. Lista de vozes disponíveis em PT-BR
+2. Seleção de voz preferida nas configurações
+3. Ajuste de velocidade (0.5x - 2x)
+4. Ajuste de tom (pitch)
+5. Preferências persistidas
+
+#### Story 18.3: Auto-Read e Modo Crise
+
+**Como** usuário,
+**Quero** respostas lidas automaticamente no Modo Crise,
+**Para que** eu não precise ler quando estou sobrecarregado.
+
+**Acceptance Criteria:**
+1. Opção de auto-read nas configurações
+2. Auto-read ativado automaticamente no Modo Crise
+3. Voz mais lenta e calma no Modo Crise
+4. Botão para parar a fala a qualquer momento
 
 ---
 

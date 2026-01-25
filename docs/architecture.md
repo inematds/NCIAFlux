@@ -1,7 +1,7 @@
 # NCIAFlux Architecture Document
 
-**Versão:** 1.0
-**Data:** 23 de Janeiro de 2026
+**Versão:** 1.1
+**Data:** 25 de Janeiro de 2026
 **Status:** Draft
 
 ---
@@ -22,6 +22,8 @@ A especificação de UI/UX está documentada em `docs/front-end-spec.md` e deve 
 | Data | Versão | Descrição | Autor |
 |------|--------|-----------|-------|
 | 2026-01-23 | 1.0 | Criação inicial | Architect (BMad) |
+| 2026-01-25 | 1.1 | Roadmap atualizado: v1.5 Times, v1.6 PWA, v1.7 Notificacoes, v2.0 IA, v2.5 Testes, v3.0 Nativo. Planos: Free, Team, Premium, Empresarial | Architect (Claude) |
+| 2026-01-25 | 1.2 | Adicionado v1.3 Chat Input (OpenRouter) e v1.8 Voice Output. Arquitetura do chat com IA | Architect (Claude) |
 
 ---
 
@@ -201,10 +203,18 @@ graph TB
 
 **Key Attributes:**
 - `id`: UUID - Identificador único
-- `name`: enum - Nome do plano (free, basic, advanced, professional)
+- `name`: enum - Nome do plano (free, team, premium, enterprise)
 - `features`: jsonb - Features habilitadas
 - `price_brl`: decimal - Preço em reais
 - `billing_period`: enum - Período (monthly, yearly)
+
+**Planos Disponíveis:**
+| Plano | Versão | Storage | Features Principais |
+|-------|--------|---------|---------------------|
+| free | v1.2 | Local | Funcionalidades pessoais completas |
+| team | v1.5 | Central + P2P | Times, chat equipe, descoberta central |
+| premium | v2.0 | Cloud | Chat IA, voz, sync nuvem, terapeutas |
+| enterprise | v3.0 | Cloud | Apps nativos, organizações, API pública |
 
 **Relationships:**
 - Has many Users
@@ -972,7 +982,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "pg_trgm"; -- for text search
 
 -- Enums
-CREATE TYPE plan_type AS ENUM ('free', 'basic', 'advanced', 'professional');
+CREATE TYPE plan_type AS ENUM ('free', 'team', 'premium', 'enterprise');
 CREATE TYPE task_status AS ENUM ('pending', 'in_progress', 'completed', 'skipped');
 CREATE TYPE execution_style AS ENUM ('sequential', 'parallel', 'burst');
 CREATE TYPE checkin_type AS ENUM ('energy', 'mood', 'task_feedback', 'daily_summary');
@@ -1591,26 +1601,99 @@ Gradual Rollout (10% → 50% → 100%)
 
 ---
 
-## 16. Checklist Results Report
+## 16. Roadmap Técnico
+
+### 16.1 Versões e Arquitetura
+
+```
+v1.0-v1.2 (Free)
+├── Storage: localStorage (browser)
+├── Auth: Local + Supabase stats
+├── Multi-perfil: Prefixo por userId
+└── Deploy: Vercel (estático)
+
+v1.3 (Chat Input) ← PRÓXIMO
+├── Chat IA: OpenRouter (gateway multi-LLM)
+├── Voice Input: Web Speech API (STT)
+├── Tool Use: 12+ tools para ações na app
+├── Modelos: Claude Sonnet/Haiku, GPT-4, Mistral
+└── Rate Limiting: Free (limitado) + Premium (ilimitado)
+
+v1.5 (Team)
+├── Storage: Central server + P2P
+├── Times: WebSocket/SignalR para descoberta
+├── P2P: WebRTC para comunicação direta
+└── Deploy: Supabase + TURN servers
+
+v1.6 (PWA + Testes)
+├── PWA: Service Worker, manifest
+├── Offline: IndexedDB + sync queue
+├── Testes: Vitest + Playwright
+└── CI/CD: GitHub Actions completo
+
+v1.7 (Notificações + Terapeutas)
+├── Push: OneSignal/FCM
+├── Permissões: Compartilhamento seletivo
+├── Dashboard: Visão do terapeuta
+└── Relatórios: PDF export
+
+v1.8 (Voice Output)
+├── TTS: Web Speech API (Text-to-Speech)
+├── Vozes: Seleção de vozes PT-BR
+├── Modo Crise: Auto-read com voz calma
+└── Premium: ElevenLabs opcional
+
+v2.0 (Premium Cloud)
+├── Cloud Sync: Supabase Realtime
+├── Assistente: Contexto avançado por cronotipo
+├── IA Ilimitada: Sem rate limiting
+└── Backup: Automático na nuvem
+
+v2.5 (Testes + Estabilização)
+├── Load Testing: k6
+├── Security: OWASP ZAP + Pentest
+├── Accessibility: axe-core
+└── Beta: Feature flags graduais
+
+v3.0 (Empresarial)
+├── iOS: Swift/SwiftUI
+├── Android: Kotlin/Jetpack
+├── Widgets: WidgetKit + Glance
+├── Wearables: WatchOS + WearOS
+└── API: OpenAPI + SDK público
+```
+
+### 16.2 Considerações de Migração
+
+| De → Para | Estratégia |
+|-----------|------------|
+| Free → Team | Dados locais replicados para central |
+| Team → Premium | Migração P2P para cloud sync |
+| Premium → Enterprise | Provisioning de organização |
+| Downgrade | Dados cloud exportados para local |
+
+---
+
+## 17. Checklist Results Report
 
 *A ser preenchido após execução do architect-checklist*
 
 ---
 
-## 17. Next Steps
+## 18. Next Steps
 
-### 17.1 Para o PO (Product Owner)
+### 18.1 Para o PO (Product Owner)
 
 > Com a arquitetura definida, o próximo passo é fragmentar o PRD em épicos e stories detalhadas. Use o documento `docs/prd.md` seção 6 como base e crie stories com acceptance criteria claros, considerando a arquitetura técnica descrita aqui.
 
-### 17.2 Para o Dev Agent
+### 18.2 Para o Dev Agent
 
 > Ao iniciar desenvolvimento, siga estes documentos na ordem:
 > 1. Este documento (`docs/architecture.md`) para decisões técnicas
 > 2. `docs/front-end-spec.md` para UI/UX
 > 3. Stories do PO para requisitos específicos
 
-### 17.3 Immediate Actions
+### 18.3 Immediate Actions
 
 1. **Configurar Supabase Project** - Criar projeto, rodar migrations
 2. **Setup Monorepo** - Turborepo + pnpm workspaces

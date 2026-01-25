@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { userStorage, clearAllStorage, StoredUser, getStorageKey, profileManager, LocalProfile, ViewMode } from '@/lib/storage';
 import { storageModeService } from '@/lib/hybrid-storage';
+import { ChatWidget } from '@/components/chat';
+import { useChatStore } from '@/stores/chatStore';
 
 // Status bar types
 interface DayStatus {
@@ -93,7 +95,7 @@ export default function DashboardLayout({
   const [profiles, setProfiles] = useState<LocalProfile[]>([]);
   const [viewMode, setViewMode] = useState<ViewMode>('personal');
   const [showProfileMenu, setShowProfileMenu] = useState(false);
-  const [showChatModal, setShowChatModal] = useState(false);
+  const openChat = useChatStore((state) => state.openChat);
 
   // Load day status from localStorage (uses user-prefixed keys)
   const loadDayStatus = useCallback(() => {
@@ -536,7 +538,7 @@ export default function DashboardLayout({
 
             {/* Chat Button */}
             <button
-              onClick={() => setShowChatModal(true)}
+              onClick={openChat}
               className="flex items-center gap-2 px-3 py-1 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-lg hover:from-purple-500/20 hover:to-pink-500/20 transition-colors border border-purple-500/20"
               title="Chat com IA"
             >
@@ -545,50 +547,6 @@ export default function DashboardLayout({
             </button>
           </div>
         </div>
-
-        {/* Chat Modal (Pro Version) */}
-        {showChatModal && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl">
-              <div className="text-center">
-                <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <span className="text-3xl">💬</span>
-                </div>
-                <h3 className="text-xl font-bold text-neutral-textPrimary mb-2">
-                  Chat com IA
-                </h3>
-                <p className="text-neutral-textSecondary mb-4">
-                  Converse com a IA para criar tarefas, fazer anotacoes, ou pedir ajuda - tudo por texto ou voz!
-                </p>
-                <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-xl p-4 mb-6">
-                  <p className="text-sm text-purple-600 font-medium mb-2">
-                    Disponivel na versao Pro
-                  </p>
-                  <ul className="text-sm text-neutral-textSecondary space-y-1 text-left">
-                    <li>• Criar tarefas por comando de voz</li>
-                    <li>• Fazer brain dump falando</li>
-                    <li>• Perguntar sobre seus dados</li>
-                    <li>• Receber sugestoes personalizadas</li>
-                  </ul>
-                </div>
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => setShowChatModal(false)}
-                    className="flex-1 px-4 py-2 rounded-xl border border-neutral-border text-neutral-textSecondary hover:bg-neutral-background transition-colors"
-                  >
-                    Fechar
-                  </button>
-                  <button
-                    onClick={() => setShowChatModal(false)}
-                    className="flex-1 px-4 py-2 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 text-white font-medium hover:opacity-90 transition-opacity"
-                  >
-                    Saber mais
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
 
         <div className="flex-1 overflow-auto">
           {children}
@@ -600,6 +558,9 @@ export default function DashboardLayout({
             NeuroFluxo Mentes Brilhantes v1.2
           </p>
         </div>
+
+        {/* AI Chat Widget */}
+        <ChatWidget />
       </main>
     </div>
   );

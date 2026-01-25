@@ -87,58 +87,89 @@ Porque acreditamos que cérebros neurodivergentes não são defeituosos - são d
 
 ---
 
-## Roadmap v2 - Versão Pro
+## Roadmap
 
-### v2.0 - Chat com IA
-
-| Feature | Descrição | Prioridade |
-|---------|-----------|------------|
-| **Chat por Texto** | Converse com a IA para criar tarefas, brain dump, pedir ajuda | Alta |
-| **Comandos de Voz** | Fale para criar e gerenciar tarefas | Alta |
-| **Assistente Contextual** | Sugestões baseadas no seu perfil cognitivo e cronotipo | Alta |
-| **Brain Dump por Voz** | Fale seus pensamentos, IA organiza automaticamente | Média |
-| **Resumo Diário** | IA resume seu dia e sugere próximos passos | Média |
-
-### v2.1 - Sincronização na Nuvem
-
-| Feature | Descrição | Prioridade |
-|---------|-----------|------------|
-| **Backend Supabase** | Migração de localStorage para banco de dados | Alta |
-| **Autenticação Real** | Login com email/senha, OAuth (Google, Apple) | Alta |
-| **Sync Multi-Dispositivo** | Acesse seus dados em qualquer dispositivo | Alta |
-| **Backup Automático** | Seus dados sempre seguros na nuvem | Média |
-| **Modo Offline** | Funciona sem internet, sincroniza quando conectar | Média |
-
-### v2.2 - Gestão de Equipes (Plano Empresarial)
-
-| Feature | Descrição | Prioridade |
-|---------|-----------|------------|
-| **Organizações** | Admin cria empresas e organizações | Alta |
-| **Hierarquia de Roles** | Admin → Gestor → Membro | Alta |
-| **Convites por ID/Email** | Gestor convida membros para equipe | Alta |
-| **Chat de Equipe** | Convites e comunicação aparecem no chat | Alta |
-| **Dashboard do Gestor** | Visão geral da produtividade da equipe | Média |
-| **Relatórios de Equipe** | Estatísticas agregadas (anonimizadas) | Média |
-| **Dados Isolados** | Privacidade: cada membro controla seus dados | Alta |
-
-### v2.3 - PWA e Mobile
-
-| Feature | Descrição | Prioridade |
-|---------|-----------|------------|
-| **PWA Instalável** | Instale no celular como app nativo | Alta |
-| **Notificações Push** | Lembretes de tarefas, rotinas, check-in | Alta |
-| **Modo Escuro** | Tema escuro para uso noturno | Média |
-| **Widgets** | Widgets para tela inicial (Android/iOS) | Baixa |
-
-### Futuro (v3+)
+### v1.3 - Chat com IA (Input)
 
 | Feature | Descrição |
 |---------|-----------|
-| **App Mobile Nativo** | React Native para iOS e Android |
-| **Integração com Terapeutas** | Compartilhe progresso com profissionais |
-| **Wearables** | Integração com smartwatches |
-| **Gamificação Avançada** | Conquistas, streaks, recompensas |
-| **Comunidade** | Grupos de apoio entre usuários |
+| **Chat por Texto** | Converse com IA para criar tarefas, brain dump, pedir ajuda |
+| **Comandos de Voz** | Fale para criar e gerenciar tarefas (Web Speech API) |
+| **OpenRouter** | Gateway para escolher entre LLMs (Claude, GPT-4, Mistral) |
+| **Tool Use** | IA executa ações na app (criar tarefas, ativar modo crise) |
+| **Assistente Contextual** | Sugestões baseadas no perfil cognitivo e cronotipo |
+| **Brain Dump por Voz** | Fale pensamentos, IA organiza automaticamente |
+
+### v1.5 - Times (Plano Team)
+
+| Feature | Descrição |
+|---------|-----------|
+| **Interação entre Usuários** | Usuários locais podem interagir dentro do time |
+| **Central de Descoberta** | Servidor central para usuários se encontrarem |
+| **Convites por ID** | Gestor convida membros via ID único |
+| **Chat de Equipe** | Comunicação entre membros do time |
+| **Peer-to-Peer** | Após descoberta, comunicação direta P2P |
+| **Dashboard do Gestor** | Visão geral da equipe (dados anonimizados) |
+| **Sincronização de Time** | Dados do time sincronizados via central |
+
+### v1.6 - PWA e Testes
+
+| Feature | Descrição |
+|---------|-----------|
+| **PWA Instalável** | Instale no celular como app nativo |
+| **Modo Offline** | Funciona sem internet, sincroniza depois |
+| **Testes Automatizados** | Cobertura de testes unitários e E2E |
+| **CI/CD Pipeline** | Integração e deploy contínuos |
+| **Modo Escuro** | Tema escuro para uso noturno |
+
+### v1.7 - Notificações e Terapeutas
+
+| Feature | Descrição |
+|---------|-----------|
+| **Notificações Locais** | Lembretes de tarefas, rotinas, check-in |
+| **Notificações de Time** | Alertas de mensagens e convites |
+| **Integração Terapeutas** | Compartilhe progresso com profissionais |
+| **Relatórios para Terapeuta** | Exportar dados de humor, energia, produtividade |
+| **Modo Acompanhamento** | Terapeuta visualiza progresso (com permissão) |
+
+### v1.8 - Voice Output (TTS)
+
+| Feature | Descrição |
+|---------|-----------|
+| **Text-to-Speech** | Assistente responde por voz (Web Speech API) |
+| **Vozes em PT-BR** | Escolha de vozes disponíveis |
+| **Auto-Read Modo Crise** | Leitura automática quando sobrecarregado |
+| **Controles de Voz** | Ajuste de velocidade e tom |
+
+### v2.0 - Sync Cloud (Plano Premium)
+
+| Feature | Descrição |
+|---------|-----------|
+| **Sync na Nuvem** | Dados sincronizados para usuários Premium |
+| **IA Ilimitada** | Sem limite de mensagens no chat |
+| **Resumo Diário** | IA resume seu dia e sugere próximos passos |
+| **Backup Automático** | Dados salvos automaticamente na nuvem |
+
+### v2.5 - Testes e Estabilização
+
+| Feature | Descrição |
+|---------|-----------|
+| **Testes de Carga** | Performance sob alta demanda |
+| **Testes de Segurança** | Auditoria de segurança completa |
+| **Testes de Acessibilidade** | WCAG 2.1 compliance |
+| **Beta Testing** | Programa de beta testers |
+| **Documentação API** | Documentação completa para integrações |
+
+### v3.0 - App Nativo (Plano Empresarial)
+
+| Feature | Descrição |
+|---------|-----------|
+| **App iOS Nativo** | Swift/SwiftUI para melhor performance |
+| **App Android Nativo** | Kotlin para melhor performance |
+| **Widgets Nativos** | Widgets para tela inicial |
+| **Wearables** | Apple Watch e Wear OS |
+| **Biometria** | Face ID, Touch ID, impressão digital |
+| **Organizações** | Admin cria empresas e organizações |
 | **API Pública** | Integrações com outros apps |
 
 ### Status do Desenvolvimento
@@ -147,10 +178,15 @@ Porque acreditamos que cérebros neurodivergentes não são defeituosos - são d
 v1.0 ████████████████████ 100% - Base completa
 v1.1 ████████████████████ 100% - Storage local aprimorado
 v1.2 ████████████████████ 100% - Multi-perfil ← ATUAL
-v2.0 ░░░░░░░░░░░░░░░░░░░░   0% - Chat com IA
-v2.1 ░░░░░░░░░░░░░░░░░░░░   0% - Sincronização
-v2.2 ░░░░░░░░░░░░░░░░░░░░   0% - Gestão de equipes
-v2.3 ░░░░░░░░░░░░░░░░░░░░   0% - PWA e Mobile
+─────────────────────────────────────────────────
+v1.3 ░░░░░░░░░░░░░░░░░░░░   0% - Chat com IA (Input)
+v1.5 ░░░░░░░░░░░░░░░░░░░░   0% - Times
+v1.6 ░░░░░░░░░░░░░░░░░░░░   0% - PWA e Testes
+v1.7 ░░░░░░░░░░░░░░░░░░░░   0% - Notificações e Terapeutas
+v1.8 ░░░░░░░░░░░░░░░░░░░░   0% - Voice Output (TTS)
+v2.0 ░░░░░░░░░░░░░░░░░░░░   0% - Sync Cloud (Premium)
+v2.5 ░░░░░░░░░░░░░░░░░░░░   0% - Testes e Estabilização
+v3.0 ░░░░░░░░░░░░░░░░░░░░   0% - App Nativo (Empresarial)
 ```
 
 > **Nota:** Na versão atual (v1.2), a Demo simula os 3 perfis (Usuario/Gestor/Admin) para demonstração. O login normal cria apenas usuários comuns com experiência limpa.
@@ -315,35 +351,49 @@ O projeto está configurado para deploy automático no Vercel:
 
 ## Planos de Uso
 
-| Plano | Features | Storage | Status |
+| Plano | Features | Storage | Versão |
 |-------|----------|---------|--------|
-| **Gratuito** | Todas funcionalidades pessoais | Local (dispositivo) | Disponível |
-| **Pro** | + Chat IA + Voz + Sync nuvem | Cloud | v2.0 - Em breve |
-| **Empresarial** | + Gestão de equipes + Relatórios | Cloud | v2.2 - Planejado |
+| **Free** | Funcionalidades pessoais | Local | v1.2 ✓ |
+| **Team** | + Times + Chat equipe + P2P | Central + P2P | v1.5 |
+| **Premium** | + Chat IA + Voz + Sync nuvem | Cloud | v2.0 |
+| **Empresarial** | + Organizações + Apps nativos | Cloud | v3.0 |
 
 ### Detalhamento dos Planos
 
-**Gratuito (Atual)**
+**Free (Disponível)**
 - Todas as funcionalidades de produtividade pessoal
 - Dados salvos localmente no navegador
 - Multi-perfil no mesmo dispositivo
+- PWA instalável (v1.6)
+- Notificações locais (v1.7)
 - Sem limite de uso
 
-**Pro (v2.0)**
-- Tudo do Gratuito +
-- Chat com IA por texto e voz
-- Sincronização na nuvem
-- Acesso em múltiplos dispositivos
-- Backup automático
-- Modo offline com sync
+**Team (v1.5)**
+- Tudo do Free +
+- Criação e gestão de times
+- Chat entre membros da equipe
+- Convites por ID
+- Central de descoberta de usuários
+- Comunicação P2P após conexão
+- Dashboard do gestor (dados anonimizados)
 
-**Empresarial (v2.2)**
-- Tudo do Pro +
+**Premium (v2.0)**
+- Tudo do Team +
+- Chat com IA por texto e voz
+- Assistente contextual inteligente
+- Brain dump por voz
+- Sincronização na nuvem
+- Backup automático
+- Integração com terapeutas (v1.7)
+
+**Empresarial (v3.0)**
+- Tudo do Premium +
+- Apps nativos iOS e Android
+- Widgets e wearables
 - Criação de organizações
-- Gestão de equipes
-- Dashboard do gestor
-- Relatórios de produtividade
-- Convites e chat de equipe
+- API pública para integrações
+- Suporte prioritário
+- SLA garantido
 
 ---
 
