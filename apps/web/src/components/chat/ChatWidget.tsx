@@ -43,8 +43,8 @@ const MODEL_INFO: Record<AIModelId, { name: string; icon: string; description: s
   'meta-llama/llama-3.3-70b-instruct:free': {
     name: 'Llama 3.3',
     icon: '🦙',
-    description: 'Gratuito (sem acoes)',
-    supportsTools: false,
+    description: 'Gratuito',
+    supportsTools: true,
   },
 };
 

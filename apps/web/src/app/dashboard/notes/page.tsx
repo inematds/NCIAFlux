@@ -67,15 +67,29 @@ export default function NotesPage() {
 
   // Load data
   useEffect(() => {
-    const savedNotes = localStorage.getItem(getStorageKey('nciaflux_notes'));
-    if (savedNotes) {
-      setNotes(JSON.parse(savedNotes));
+    function loadData() {
+      const savedNotes = localStorage.getItem(getStorageKey('nciaflux_notes'));
+      if (savedNotes) {
+        setNotes(JSON.parse(savedNotes));
+      }
+
+      const savedFolders = localStorage.getItem(getStorageKey('nciaflux_note_folders'));
+      if (savedFolders) {
+        setFolders(JSON.parse(savedFolders));
+      }
     }
 
-    const savedFolders = localStorage.getItem(getStorageKey('nciaflux_note_folders'));
-    if (savedFolders) {
-      setFolders(JSON.parse(savedFolders));
-    }
+    loadData();
+
+    // Listen for refresh events from chat
+    const handleRefresh = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail.type === 'all') {
+        loadData();
+      }
+    };
+    window.addEventListener('nciaflux-data-refresh', handleRefresh);
+    return () => window.removeEventListener('nciaflux-data-refresh', handleRefresh);
   }, []);
 
   // Save notes

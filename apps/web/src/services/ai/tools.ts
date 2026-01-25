@@ -762,18 +762,30 @@ async function listTodayTasks(
 
 async function createNote(
   args: Record<string, unknown>,
-  userId: string
+  _userId: string
 ): Promise<ToolExecutionResult> {
   const title = args.title as string | undefined;
   const content = args.content as string;
   const category = args.category as string | undefined;
 
+  // Map category to folderId
+  const folderMap: Record<string, string> = {
+    'ideias': 'ideas',
+    'ideas': 'ideas',
+    'referencias': 'reference',
+    'referencia': 'reference',
+    'reference': 'reference',
+    'arquivo': 'archive',
+    'archive': 'archive',
+  };
+
   const note = {
     id: `note_${Date.now()}`,
-    title: title || 'Nota rapida',
+    title: title || content.split('\n')[0].slice(0, 50) || 'Nota rapida',
     content,
-    category: category || 'geral',
-    userId,
+    folderId: folderMap[category?.toLowerCase() || ''] || 'inbox',
+    tags: [] as string[],
+    isPinned: false,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };

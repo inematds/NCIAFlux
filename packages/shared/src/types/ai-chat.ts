@@ -238,11 +238,11 @@ export const AI_MODELS: Record<string, AIModelConfig> = {
   'meta-llama/llama-3.3-70b-instruct:free': {
     id: 'meta-llama/llama-3.3-70b-instruct:free',
     name: 'Llama 3.3 70B',
-    description: 'Gratuito (sem acoes)',
+    description: 'Gratuito',
     costPer1kInput: 0,
     costPer1kOutput: 0,
     maxTokens: 4096,
-    supportsTools: false, // Free models often have tool limitations
+    supportsTools: true,
     recommended: false,
     isFree: true,
   },
