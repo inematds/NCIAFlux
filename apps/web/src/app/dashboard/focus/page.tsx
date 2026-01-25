@@ -1,9 +1,27 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
+import Link from 'next/link';
 
 type FocusMode = 'pomodoro' | 'deep_work' | 'timeboxing' | 'free_flow';
-type FocusState = 'idle' | 'focusing' | 'break' | 'paused';
+type FocusState = 'idle' | 'selecting' | 'focusing' | 'break' | 'paused' | 'completed';
+
+interface Task {
+  id: string;
+  title?: string;
+  content?: string;
+  status: string;
+  priority: 'high' | 'medium' | 'low';
+  dueDate?: string;
+  projectId?: string;
+  isTop1?: boolean;
+}
+
+interface Project {
+  id: string;
+  name: string;
+  emoji: string;
+}
 
 const FOCUS_MODES = [
   {
@@ -40,7 +58,16 @@ const FOCUS_MODES = [
   },
 ];
 
+const PRIORITY_CONFIG = {
+  high: { label: 'Alta', color: 'text-accent-error', bg: 'bg-accent-error/10', emoji: '🔴' },
+  medium: { label: 'Media', color: 'text-secondary-dark', bg: 'bg-secondary-main/10', emoji: '🟡' },
+  low: { label: 'Baixa', color: 'text-accent-success', bg: 'bg-accent-success/10', emoji: '🟢' },
+};
+
 export default function FocusPage() {
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [selectedMode, setSelectedMode] = useState<FocusMode>('pomodoro');
   const [focusState, setFocusState] = useState<FocusState>('idle');
   const [timeLeft, setTimeLeft] = useState(0);
@@ -50,20 +77,50 @@ export default function FocusPage() {
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const currentMode = FOCUS_MODES.find((m) => m.id === selectedMode)!;
+  const today = new Date().toISOString().split('T')[0];
 
-  // Load stats from localStorage
+  // Load tasks and stats
   useEffect(() => {
-    const today = new Date().toISOString().split('T')[0];
+    // Load tasks
+    const savedTasks = localStorage.getItem('nciaflux_tasks');
+    if (savedTasks) {
+      const allTasks: Task[] = JSON.parse(savedTasks);
+      // Filter: pending/in_progress tasks, sorted by priority and due date
+      const priorityOrder = { high: 0, medium: 1, low: 2 };
+      const filteredTasks = allTasks
+        .filter(t => t.status === 'pending' || t.status === 'in_progress')
+        .sort((a, b) => {
+          // Top1 first
+          if (a.isTop1 && !b.isTop1) return -1;
+          if (!a.isTop1 && b.isTop1) return 1;
+          // Then by priority
+          const priorityDiff = priorityOrder[a.priority] - priorityOrder[b.priority];
+          if (priorityDiff !== 0) return priorityDiff;
+          // Then by due date
+          if (a.dueDate && b.dueDate) return a.dueDate.localeCompare(b.dueDate);
+          if (a.dueDate) return -1;
+          if (b.dueDate) return 1;
+          return 0;
+        });
+      setTasks(filteredTasks);
+    }
+
+    // Load projects
+    const savedProjects = localStorage.getItem('nciaflux_projects');
+    if (savedProjects) {
+      setProjects(JSON.parse(savedProjects));
+    }
+
+    // Load focus stats
     const stats = JSON.parse(localStorage.getItem('nciaflux_focus_stats') || '{}');
     if (stats[today]) {
       setTotalFocusTime(stats[today].totalMinutes || 0);
       setSessionsCompleted(stats[today].sessions || 0);
     }
-  }, []);
+  }, [today]);
 
   // Save stats to localStorage
   const saveStats = useCallback((addMinutes: number, addSession: boolean) => {
-    const today = new Date().toISOString().split('T')[0];
     const stats = JSON.parse(localStorage.getItem('nciaflux_focus_stats') || '{}');
     if (!stats[today]) {
       stats[today] = { totalMinutes: 0, sessions: 0 };
@@ -75,7 +132,7 @@ export default function FocusPage() {
     localStorage.setItem('nciaflux_focus_stats', JSON.stringify(stats));
     setTotalFocusTime(stats[today].totalMinutes);
     setSessionsCompleted(stats[today].sessions);
-  }, []);
+  }, [today]);
 
   // Timer logic
   useEffect(() => {
@@ -86,19 +143,17 @@ export default function FocusPage() {
         } else {
           setTimeLeft((prev) => {
             if (prev <= 1) {
-              // Timer completed
               if (focusState === 'focusing') {
                 saveStats(currentMode.focusTime, true);
                 if (currentMode.breakTime > 0) {
                   setFocusState('break');
                   return currentMode.breakTime * 60;
                 } else {
-                  setFocusState('idle');
+                  setFocusState('completed');
                   return 0;
                 }
               } else {
-                // Break completed
-                setFocusState('idle');
+                setFocusState('completed');
                 return 0;
               }
             }
@@ -115,6 +170,21 @@ export default function FocusPage() {
     };
   }, [focusState, selectedMode, currentMode, saveStats]);
 
+  function getProjectName(projectId?: string): string {
+    if (!projectId) return '';
+    const project = projects.find(p => p.id === projectId);
+    return project ? `${project.emoji} ${project.name}` : '';
+  }
+
+  function getTaskTitle(task: Task): string {
+    return task.title || task.content || 'Sem titulo';
+  }
+
+  function selectTask(task: Task) {
+    setSelectedTask(task);
+    setFocusState('selecting');
+  }
+
   function startFocus() {
     if (selectedMode === 'free_flow') {
       setFreeFlowTime(0);
@@ -122,6 +192,11 @@ export default function FocusPage() {
     } else {
       setTimeLeft(currentMode.focusTime * 60);
       setFocusState('focusing');
+    }
+
+    // Mark task as in_progress
+    if (selectedTask) {
+      updateTaskStatus(selectedTask.id, 'in_progress');
     }
   }
 
@@ -146,8 +221,39 @@ export default function FocusPage() {
       }
     }
     setFocusState('idle');
+    setSelectedTask(null);
     setTimeLeft(0);
     setFreeFlowTime(0);
+  }
+
+  function completeTask() {
+    if (selectedTask) {
+      updateTaskStatus(selectedTask.id, 'completed');
+      // Remove from local list
+      setTasks(prev => prev.filter(t => t.id !== selectedTask.id));
+    }
+    setFocusState('idle');
+    setSelectedTask(null);
+    setTimeLeft(0);
+    setFreeFlowTime(0);
+  }
+
+  function continueWorking() {
+    setFocusState('idle');
+    setSelectedTask(null);
+    setTimeLeft(0);
+    setFreeFlowTime(0);
+  }
+
+  function updateTaskStatus(taskId: string, newStatus: string) {
+    const savedTasks = localStorage.getItem('nciaflux_tasks');
+    if (savedTasks) {
+      const allTasks = JSON.parse(savedTasks);
+      const updated = allTasks.map((t: Task) =>
+        t.id === taskId ? { ...t, status: newStatus, completed: newStatus === 'completed' } : t
+      );
+      localStorage.setItem('nciaflux_tasks', JSON.stringify(updated));
+    }
   }
 
   function formatTime(seconds: number): string {
@@ -164,170 +270,389 @@ export default function FocusPage() {
     return ((totalSeconds - timeLeft) / totalSeconds) * 100;
   }
 
-  return (
-    <div className="p-6 lg:p-8">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-2xl lg:text-3xl font-bold text-neutral-textPrimary">
-          Timer de Foco
-        </h1>
-        <p className="text-neutral-textSecondary mt-1">
-          Escolha uma tecnica e concentre-se
-        </p>
-      </div>
+  function isOverdue(dueDate?: string): boolean {
+    if (!dueDate) return false;
+    return dueDate < today;
+  }
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 gap-4 mb-8">
-        <div className="bg-white rounded-xl p-5 shadow-sm">
-          <p className="text-sm text-neutral-textSecondary">Tempo focado hoje</p>
-          <p className="text-3xl font-bold text-primary-main mt-1">{totalFocusTime} min</p>
-        </div>
-        <div className="bg-white rounded-xl p-5 shadow-sm">
-          <p className="text-sm text-neutral-textSecondary">Sessoes completas</p>
-          <p className="text-3xl font-bold text-accent-success mt-1">{sessionsCompleted}</p>
-        </div>
-      </div>
+  function isDueToday(dueDate?: string): boolean {
+    return dueDate === today;
+  }
 
-      {focusState === 'idle' ? (
-        <>
-          {/* Mode Selection */}
-          <div className="mb-8">
-            <h2 className="text-lg font-semibold text-neutral-textPrimary mb-4">
-              Escolha uma tecnica
+  // Idle state - show tasks
+  if (focusState === 'idle') {
+    const highPriorityTasks = tasks.filter(t => t.priority === 'high' || t.isTop1);
+    const otherTasks = tasks.filter(t => t.priority !== 'high' && !t.isTop1);
+
+    return (
+      <div className="p-6 lg:p-8">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-2xl lg:text-3xl font-bold text-neutral-textPrimary">
+            Timer de Foco
+          </h1>
+          <p className="text-neutral-textSecondary mt-1">
+            Escolha uma tarefa para focar
+          </p>
+        </div>
+
+        {/* Stats */}
+        <div className="grid grid-cols-2 gap-4 mb-8">
+          <div className="bg-white rounded-xl p-5 shadow-sm">
+            <p className="text-sm text-neutral-textSecondary">Tempo focado hoje</p>
+            <p className="text-3xl font-bold text-primary-main mt-1">{totalFocusTime} min</p>
+          </div>
+          <div className="bg-white rounded-xl p-5 shadow-sm">
+            <p className="text-sm text-neutral-textSecondary">Sessoes completas</p>
+            <p className="text-3xl font-bold text-accent-success mt-1">{sessionsCompleted}</p>
+          </div>
+        </div>
+
+        {tasks.length === 0 ? (
+          <div className="bg-white rounded-2xl p-8 shadow-sm text-center">
+            <span className="text-6xl block mb-4">🎯</span>
+            <h2 className="text-xl font-semibold text-neutral-textPrimary mb-2">
+              Nenhuma tarefa pendente
             </h2>
-            <div className="grid sm:grid-cols-2 gap-4">
-              {FOCUS_MODES.map((mode) => (
-                <button
-                  key={mode.id}
-                  onClick={() => setSelectedMode(mode.id)}
-                  className={`p-5 rounded-xl border-2 text-left transition-all ${
-                    selectedMode === mode.id
-                      ? 'border-primary-main bg-primary-main/5'
-                      : 'border-transparent bg-white shadow-sm hover:shadow-md'
-                  }`}
-                >
-                  <div className="flex items-center gap-3 mb-2">
-                    <span className="text-3xl">{mode.emoji}</span>
-                    <span className={`text-lg font-semibold ${
-                      selectedMode === mode.id ? 'text-primary-main' : 'text-neutral-textPrimary'
-                    }`}>
-                      {mode.name}
-                    </span>
-                  </div>
-                  <p className="text-sm text-neutral-textSecondary">{mode.description}</p>
-                </button>
-              ))}
+            <p className="text-neutral-textSecondary mb-6">
+              Adicione tarefas no Planner ou na pagina de Tarefas
+            </p>
+            <div className="flex gap-4 justify-center">
+              <Link
+                href="/dashboard/planner"
+                className="px-6 py-3 rounded-xl bg-primary-main text-white font-semibold hover:bg-primary-dark transition-colors"
+              >
+                Ir para Planner
+              </Link>
+              <Link
+                href="/dashboard/tasks"
+                className="px-6 py-3 rounded-xl border border-primary-main text-primary-main font-semibold hover:bg-primary-main/5 transition-colors"
+              >
+                Ver Tarefas
+              </Link>
             </div>
           </div>
-
-          {/* Start Button */}
-          <button
-            onClick={startFocus}
-            className="w-full py-4 rounded-xl bg-primary-main text-white font-semibold text-lg hover:bg-primary-dark transition-colors"
-          >
-            Iniciar Foco
-          </button>
-        </>
-      ) : (
-        /* Timer Display */
-        <div className="bg-white rounded-2xl p-8 shadow-sm text-center">
-          <div className="mb-6">
-            <span className="text-6xl">{currentMode.emoji}</span>
-          </div>
-
-          <p className={`text-lg font-medium mb-2 ${
-            focusState === 'break' ? 'text-accent-success' : 'text-primary-main'
-          }`}>
-            {focusState === 'break' ? 'Pausa' : focusState === 'paused' ? 'Pausado' : 'Focando'}
-          </p>
-
-          {selectedMode === 'free_flow' ? (
-            <p className="text-6xl font-bold text-neutral-textPrimary mb-8">
-              {formatTime(freeFlowTime)}
-            </p>
-          ) : (
-            <>
-              <p className="text-6xl font-bold text-neutral-textPrimary mb-4">
-                {formatTime(timeLeft)}
-              </p>
-
-              {/* Progress Ring */}
-              <div className="w-48 h-48 mx-auto mb-8 relative">
-                <svg className="w-full h-full transform -rotate-90">
-                  <circle
-                    cx="96"
-                    cy="96"
-                    r="88"
-                    fill="none"
-                    stroke="#E5E7EB"
-                    strokeWidth="8"
-                  />
-                  <circle
-                    cx="96"
-                    cy="96"
-                    r="88"
-                    fill="none"
-                    stroke={focusState === 'break' ? '#10B981' : '#6366F1'}
-                    strokeWidth="8"
-                    strokeLinecap="round"
-                    strokeDasharray={2 * Math.PI * 88}
-                    strokeDashoffset={2 * Math.PI * 88 * (1 - getProgressPercentage() / 100)}
-                    className="transition-all duration-1000"
-                  />
-                </svg>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-4xl font-bold text-neutral-textPrimary">
-                    {Math.ceil(getProgressPercentage())}%
-                  </span>
+        ) : (
+          <>
+            {/* Priority Tasks */}
+            {highPriorityTasks.length > 0 && (
+              <div className="mb-6">
+                <h2 className="text-lg font-semibold text-neutral-textPrimary mb-3 flex items-center gap-2">
+                  <span>🔥</span> Prioridade Alta
+                </h2>
+                <div className="space-y-3">
+                  {highPriorityTasks.map((task) => (
+                    <button
+                      key={task.id}
+                      onClick={() => selectTask(task)}
+                      className="w-full p-4 bg-white rounded-xl shadow-sm hover:shadow-md transition-all text-left border-l-4 border-accent-error"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            {task.isTop1 && <span className="text-lg">⭐</span>}
+                            <span className="font-medium text-neutral-textPrimary">
+                              {getTaskTitle(task)}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-3 text-sm">
+                            {task.projectId && (
+                              <span className="text-neutral-textMuted">
+                                {getProjectName(task.projectId)}
+                              </span>
+                            )}
+                            {task.dueDate && (
+                              <span className={`${isOverdue(task.dueDate) ? 'text-accent-error' : isDueToday(task.dueDate) ? 'text-secondary-dark' : 'text-neutral-textMuted'}`}>
+                                {isOverdue(task.dueDate) ? '⚠️ Atrasada' : isDueToday(task.dueDate) ? '📅 Hoje' : `📅 ${task.dueDate}`}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <span className="text-2xl">▶️</span>
+                      </div>
+                    </button>
+                  ))}
                 </div>
               </div>
-            </>
-          )}
-
-          {/* Controls */}
-          <div className="flex gap-4 justify-center">
-            {focusState === 'paused' ? (
-              <button
-                onClick={resumeFocus}
-                className="px-8 py-3 rounded-xl bg-primary-main text-white font-semibold hover:bg-primary-dark transition-colors"
-              >
-                Continuar
-              </button>
-            ) : (
-              <button
-                onClick={pauseFocus}
-                className="px-8 py-3 rounded-xl bg-secondary-main/20 text-secondary-dark font-semibold hover:bg-secondary-main/30 transition-colors"
-              >
-                Pausar
-              </button>
             )}
-            <button
-              onClick={stopFocus}
-              className="px-8 py-3 rounded-xl border border-accent-error text-accent-error font-semibold hover:bg-accent-error/10 transition-colors"
-            >
-              Parar
-            </button>
-          </div>
 
-          {focusState !== 'paused' && selectedMode !== 'free_flow' && (
-            <p className="text-sm text-neutral-textMuted mt-6">
-              {focusState === 'break'
-                ? 'Descanse um pouco, voce merece!'
-                : 'Mantenha o foco, voce consegue!'}
+            {/* Other Tasks */}
+            {otherTasks.length > 0 && (
+              <div>
+                <h2 className="text-lg font-semibold text-neutral-textPrimary mb-3 flex items-center gap-2">
+                  <span>📋</span> Outras Tarefas
+                </h2>
+                <div className="space-y-3">
+                  {otherTasks.slice(0, 5).map((task) => (
+                    <button
+                      key={task.id}
+                      onClick={() => selectTask(task)}
+                      className={`w-full p-4 bg-white rounded-xl shadow-sm hover:shadow-md transition-all text-left border-l-4 ${
+                        task.priority === 'medium' ? 'border-secondary-main' : 'border-accent-success'
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1">
+                          <span className="font-medium text-neutral-textPrimary">
+                            {getTaskTitle(task)}
+                          </span>
+                          <div className="flex items-center gap-3 text-sm mt-1">
+                            <span className={PRIORITY_CONFIG[task.priority].color}>
+                              {PRIORITY_CONFIG[task.priority].emoji} {PRIORITY_CONFIG[task.priority].label}
+                            </span>
+                            {task.projectId && (
+                              <span className="text-neutral-textMuted">
+                                {getProjectName(task.projectId)}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <span className="text-2xl">▶️</span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+                {otherTasks.length > 5 && (
+                  <Link
+                    href="/dashboard/tasks"
+                    className="block text-center text-primary-main font-medium mt-4 hover:underline"
+                  >
+                    Ver todas as {otherTasks.length} tarefas
+                  </Link>
+                )}
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    );
+  }
+
+  // Selecting technique
+  if (focusState === 'selecting' && selectedTask) {
+    return (
+      <div className="p-6 lg:p-8">
+        {/* Header */}
+        <div className="mb-8">
+          <button
+            onClick={() => { setFocusState('idle'); setSelectedTask(null); }}
+            className="text-neutral-textSecondary hover:text-neutral-textPrimary mb-2 flex items-center gap-1"
+          >
+            ← Voltar
+          </button>
+          <h1 className="text-2xl lg:text-3xl font-bold text-neutral-textPrimary">
+            Escolha a Tecnica
+          </h1>
+        </div>
+
+        {/* Selected Task */}
+        <div className="bg-primary-main/10 rounded-xl p-5 mb-8 border border-primary-main/20">
+          <p className="text-sm text-primary-main font-medium mb-1">Tarefa selecionada:</p>
+          <p className="text-lg font-semibold text-neutral-textPrimary flex items-center gap-2">
+            {selectedTask.isTop1 && <span>⭐</span>}
+            {getTaskTitle(selectedTask)}
+          </p>
+          {selectedTask.projectId && (
+            <p className="text-sm text-neutral-textMuted mt-1">
+              {getProjectName(selectedTask.projectId)}
             </p>
           )}
+        </div>
+
+        {/* Mode Selection */}
+        <div className="mb-8">
+          <h2 className="text-lg font-semibold text-neutral-textPrimary mb-4">
+            Quanto tempo quer focar?
+          </h2>
+          <div className="grid sm:grid-cols-2 gap-4">
+            {FOCUS_MODES.map((mode) => (
+              <button
+                key={mode.id}
+                onClick={() => setSelectedMode(mode.id)}
+                className={`p-5 rounded-xl border-2 text-left transition-all ${
+                  selectedMode === mode.id
+                    ? 'border-primary-main bg-primary-main/5'
+                    : 'border-transparent bg-white shadow-sm hover:shadow-md'
+                }`}
+              >
+                <div className="flex items-center gap-3 mb-2">
+                  <span className="text-3xl">{mode.emoji}</span>
+                  <span className={`text-lg font-semibold ${
+                    selectedMode === mode.id ? 'text-primary-main' : 'text-neutral-textPrimary'
+                  }`}>
+                    {mode.name}
+                  </span>
+                </div>
+                <p className="text-sm text-neutral-textSecondary">{mode.description}</p>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Start Button */}
+        <button
+          onClick={startFocus}
+          className="w-full py-4 rounded-xl bg-primary-main text-white font-semibold text-lg hover:bg-primary-dark transition-colors flex items-center justify-center gap-2"
+        >
+          <span>▶️</span> Iniciar Foco
+        </button>
+      </div>
+    );
+  }
+
+  // Completed state
+  if (focusState === 'completed' && selectedTask) {
+    return (
+      <div className="p-6 lg:p-8">
+        <div className="bg-white rounded-2xl p-8 shadow-sm text-center">
+          <span className="text-6xl block mb-4">🎉</span>
+          <h2 className="text-2xl font-bold text-neutral-textPrimary mb-2">
+            Sessao Completa!
+          </h2>
+          <p className="text-neutral-textSecondary mb-6">
+            Voce focou em: <strong>{getTaskTitle(selectedTask)}</strong>
+          </p>
+
+          <div className="bg-accent-success/10 rounded-xl p-4 mb-8">
+            <p className="text-accent-success font-medium">
+              +{currentMode.focusTime || Math.floor(freeFlowTime / 60)} minutos de foco!
+            </p>
+          </div>
+
+          <p className="text-lg font-medium text-neutral-textPrimary mb-4">
+            Voce terminou essa tarefa?
+          </p>
+
+          <div className="flex gap-4 justify-center">
+            <button
+              onClick={completeTask}
+              className="px-8 py-3 rounded-xl bg-accent-success text-white font-semibold hover:bg-accent-success/90 transition-colors flex items-center gap-2"
+            >
+              <span>✅</span> Sim, concluir!
+            </button>
+            <button
+              onClick={continueWorking}
+              className="px-8 py-3 rounded-xl bg-secondary-main/20 text-secondary-dark font-semibold hover:bg-secondary-main/30 transition-colors"
+            >
+              Ainda nao
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Timer Display (focusing, break, paused)
+  return (
+    <div className="p-6 lg:p-8">
+      {/* Selected Task Banner */}
+      {selectedTask && (
+        <div className="bg-primary-main/10 rounded-xl p-4 mb-6 border border-primary-main/20">
+          <p className="text-sm text-primary-main font-medium mb-1">Focando em:</p>
+          <p className="text-lg font-semibold text-neutral-textPrimary flex items-center gap-2">
+            {selectedTask.isTop1 && <span>⭐</span>}
+            {getTaskTitle(selectedTask)}
+          </p>
         </div>
       )}
 
+      {/* Timer */}
+      <div className="bg-white rounded-2xl p-8 shadow-sm text-center">
+        <div className="mb-6">
+          <span className="text-6xl">{currentMode.emoji}</span>
+        </div>
+
+        <p className={`text-lg font-medium mb-2 ${
+          focusState === 'break' ? 'text-accent-success' : 'text-primary-main'
+        }`}>
+          {focusState === 'break' ? '☕ Pausa' : focusState === 'paused' ? '⏸️ Pausado' : '🎯 Focando'}
+        </p>
+
+        {selectedMode === 'free_flow' ? (
+          <p className="text-6xl font-bold text-neutral-textPrimary mb-8">
+            {formatTime(freeFlowTime)}
+          </p>
+        ) : (
+          <>
+            <p className="text-6xl font-bold text-neutral-textPrimary mb-4">
+              {formatTime(timeLeft)}
+            </p>
+
+            {/* Progress Ring */}
+            <div className="w-48 h-48 mx-auto mb-8 relative">
+              <svg className="w-full h-full transform -rotate-90">
+                <circle
+                  cx="96"
+                  cy="96"
+                  r="88"
+                  fill="none"
+                  stroke="#E5E7EB"
+                  strokeWidth="8"
+                />
+                <circle
+                  cx="96"
+                  cy="96"
+                  r="88"
+                  fill="none"
+                  stroke={focusState === 'break' ? '#10B981' : '#6366F1'}
+                  strokeWidth="8"
+                  strokeLinecap="round"
+                  strokeDasharray={2 * Math.PI * 88}
+                  strokeDashoffset={2 * Math.PI * 88 * (1 - getProgressPercentage() / 100)}
+                  className="transition-all duration-1000"
+                />
+              </svg>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-4xl font-bold text-neutral-textPrimary">
+                  {Math.ceil(getProgressPercentage())}%
+                </span>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* Controls */}
+        <div className="flex gap-4 justify-center">
+          {focusState === 'paused' ? (
+            <button
+              onClick={resumeFocus}
+              className="px-8 py-3 rounded-xl bg-primary-main text-white font-semibold hover:bg-primary-dark transition-colors"
+            >
+              Continuar
+            </button>
+          ) : (
+            <button
+              onClick={pauseFocus}
+              className="px-8 py-3 rounded-xl bg-secondary-main/20 text-secondary-dark font-semibold hover:bg-secondary-main/30 transition-colors"
+            >
+              Pausar
+            </button>
+          )}
+          <button
+            onClick={stopFocus}
+            className="px-8 py-3 rounded-xl border border-accent-error text-accent-error font-semibold hover:bg-accent-error/10 transition-colors"
+          >
+            Parar
+          </button>
+        </div>
+
+        {focusState !== 'paused' && selectedMode !== 'free_flow' && (
+          <p className="text-sm text-neutral-textMuted mt-6">
+            {focusState === 'break'
+              ? 'Descanse um pouco, voce merece!'
+              : 'Mantenha o foco, voce consegue!'}
+          </p>
+        )}
+      </div>
+
       {/* Tips */}
-      {focusState === 'idle' && (
+      {focusState === 'focusing' && (
         <div className="mt-8 bg-secondary-main/10 rounded-xl p-6">
-          <h3 className="font-semibold text-neutral-textPrimary mb-3">Dicas para focar melhor:</h3>
+          <h3 className="font-semibold text-neutral-textPrimary mb-3">Dicas:</h3>
           <ul className="space-y-2 text-sm text-neutral-textSecondary">
             <li>• Silencie notificacoes do celular</li>
-            <li>• Use fones de ouvido com musica instrumental</li>
-            <li>• Tenha agua por perto</li>
-            <li>• Defina uma unica tarefa antes de comecar</li>
+            <li>• Se distrair, anote e volte ao foco</li>
+            <li>• Respire fundo se sentir ansiedade</li>
           </ul>
         </div>
       )}
