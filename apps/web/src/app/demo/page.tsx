@@ -10,16 +10,32 @@ function generateSampleData() {
   const today = new Date();
   const todayStr = today.toISOString().split('T')[0];
 
-  // Sample Tasks
+  // Sample Tasks - more complete with status and dates
+  const tomorrow = new Date(Date.now() + 1 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+  const dayAfter = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+  const nextWeek = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
   const tasks = [
-    { id: 'task_1', content: 'Revisar relatorio mensal', completed: true, projectId: 'proj_1', priority: 'high' as const, createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), dueDate: todayStr },
-    { id: 'task_2', content: 'Preparar apresentacao para cliente', completed: false, projectId: 'proj_1', priority: 'high' as const, createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), dueDate: todayStr },
-    { id: 'task_3', content: 'Responder emails pendentes', completed: true, projectId: undefined, priority: 'medium' as const, createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString() },
-    { id: 'task_4', content: 'Agendar reuniao com equipe', completed: false, projectId: 'proj_2', priority: 'medium' as const, createdAt: new Date().toISOString() },
-    { id: 'task_5', content: 'Atualizar documentacao do projeto', completed: false, projectId: 'proj_1', priority: 'low' as const, createdAt: new Date().toISOString() },
-    { id: 'task_6', content: 'Fazer backup dos arquivos', completed: true, projectId: undefined, priority: 'low' as const, createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString() },
-    { id: 'task_7', content: 'Ligar para fornecedor', completed: false, projectId: 'proj_3', priority: 'medium' as const, createdAt: new Date().toISOString() },
-    { id: 'task_8', content: 'Revisar orcamento trimestral', completed: false, projectId: 'proj_2', priority: 'high' as const, createdAt: new Date().toISOString() },
+    // Hoje
+    { id: 'task_1', title: 'Revisar relatorio mensal', content: 'Revisar relatorio mensal', status: 'completed' as const, completed: true, projectId: 'proj_1', priority: 'high' as const, createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), dueDate: todayStr, period: 'morning' as const },
+    { id: 'task_2', title: 'Preparar apresentacao para cliente', content: 'Preparar apresentacao para cliente', status: 'in_progress' as const, completed: false, projectId: 'proj_1', priority: 'high' as const, createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), dueDate: todayStr, period: 'morning' as const, isTop1: true },
+    { id: 'task_3', title: 'Responder emails pendentes', content: 'Responder emails pendentes', status: 'completed' as const, completed: true, projectId: undefined, priority: 'medium' as const, createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), dueDate: todayStr, period: 'morning' as const },
+    { id: 'task_4', title: 'Agendar reuniao com equipe', content: 'Agendar reuniao com equipe', status: 'pending' as const, completed: false, projectId: 'proj_2', priority: 'medium' as const, createdAt: new Date().toISOString(), dueDate: todayStr, period: 'afternoon' as const },
+    { id: 'task_5', title: 'Atualizar documentacao do projeto', content: 'Atualizar documentacao do projeto', status: 'pending' as const, completed: false, projectId: 'proj_1', priority: 'low' as const, createdAt: new Date().toISOString(), dueDate: todayStr, period: 'evening' as const },
+    { id: 'task_6', title: 'Fazer backup dos arquivos', content: 'Fazer backup dos arquivos', status: 'completed' as const, completed: true, projectId: undefined, priority: 'low' as const, createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), dueDate: todayStr },
+    { id: 'task_7', title: 'Ligar para fornecedor', content: 'Ligar para fornecedor', status: 'pending' as const, completed: false, projectId: 'proj_3', priority: 'medium' as const, createdAt: new Date().toISOString(), dueDate: todayStr, period: 'afternoon' as const },
+    { id: 'task_8', title: 'Revisar orcamento trimestral', content: 'Revisar orcamento trimestral', status: 'pending' as const, completed: false, projectId: 'proj_2', priority: 'high' as const, createdAt: new Date().toISOString(), dueDate: todayStr },
+    // Amanha
+    { id: 'task_9', title: 'Reuniao de kickoff projeto Beta', content: 'Reuniao de kickoff projeto Beta', status: 'pending' as const, completed: false, projectId: 'proj_1', priority: 'high' as const, createdAt: new Date().toISOString(), dueDate: tomorrow, period: 'morning' as const },
+    { id: 'task_10', title: 'Enviar proposta comercial', content: 'Enviar proposta comercial', status: 'pending' as const, completed: false, projectId: 'proj_3', priority: 'high' as const, createdAt: new Date().toISOString(), dueDate: tomorrow },
+    { id: 'task_11', title: 'Revisar codigo da feature X', content: 'Revisar codigo da feature X', status: 'pending' as const, completed: false, projectId: 'proj_1', priority: 'medium' as const, createdAt: new Date().toISOString(), dueDate: tomorrow, period: 'afternoon' as const },
+    // Depois de amanha
+    { id: 'task_12', title: 'Apresentacao para diretoria', content: 'Apresentacao para diretoria', status: 'pending' as const, completed: false, projectId: 'proj_2', priority: 'high' as const, createdAt: new Date().toISOString(), dueDate: dayAfter, period: 'morning' as const },
+    { id: 'task_13', title: 'Entrevistar candidato', content: 'Entrevistar candidato', status: 'pending' as const, completed: false, projectId: undefined, priority: 'medium' as const, createdAt: new Date().toISOString(), dueDate: dayAfter, period: 'afternoon' as const },
+    // Proxima semana
+    { id: 'task_14', title: 'Deadline Projeto Alpha', content: 'Deadline Projeto Alpha', status: 'pending' as const, completed: false, projectId: 'proj_1', priority: 'high' as const, createdAt: new Date().toISOString(), dueDate: nextWeek },
+    { id: 'task_15', title: 'Review mensal de performance', content: 'Review mensal de performance', status: 'pending' as const, completed: false, projectId: undefined, priority: 'medium' as const, createdAt: new Date().toISOString(), dueDate: nextWeek },
+    { id: 'task_16', title: 'Planejar sprint do proximo mes', content: 'Planejar sprint do proximo mes', status: 'pending' as const, completed: false, projectId: 'proj_1', priority: 'medium' as const, createdAt: new Date().toISOString(), dueDate: nextWeek },
   ];
 
   // Sample Projects
@@ -49,12 +65,29 @@ function generateSampleData() {
     bigGoal: 'Aumentar vendas em 20% este trimestre',
   };
 
-  // Sample Calendar Events
+  // Sample Calendar Events - full month
   const calendarEvents = [
+    // Hoje
     { id: 'event_1', title: 'Reuniao de Equipe', date: todayStr, startTime: '09:00', endTime: '10:00', color: 'blue', isAllDay: false, repeat: 'weekly' as const },
-    { id: 'event_2', title: 'Call com Cliente', date: todayStr, startTime: '14:00', endTime: '15:00', color: 'green', isAllDay: false, repeat: 'none' as const },
-    { id: 'event_3', title: 'Deadline Projeto Alpha', date: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], startTime: undefined, endTime: undefined, color: 'red', isAllDay: true, repeat: 'none' as const },
-    { id: 'event_4', title: 'Review Mensal', date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], startTime: '16:00', endTime: '17:30', color: 'purple', isAllDay: false, repeat: 'monthly' as const },
+    { id: 'event_2', title: 'Call com Cliente XYZ', date: todayStr, startTime: '14:00', endTime: '15:00', color: 'green', isAllDay: false, repeat: 'none' as const },
+    { id: 'event_3', title: 'Daily Standup', date: todayStr, startTime: '09:30', endTime: '09:45', color: 'purple', isAllDay: false, repeat: 'daily' as const },
+    // Amanha
+    { id: 'event_4', title: 'Kickoff Projeto Beta', date: tomorrow, startTime: '10:00', endTime: '11:30', color: 'blue', isAllDay: false, repeat: 'none' as const },
+    { id: 'event_5', title: 'Almoco com parceiro', date: tomorrow, startTime: '12:30', endTime: '14:00', color: 'orange', isAllDay: false, repeat: 'none' as const },
+    // Depois de amanha
+    { id: 'event_6', title: 'Apresentacao Diretoria', date: dayAfter, startTime: '09:00', endTime: '10:30', color: 'red', isAllDay: false, repeat: 'none' as const },
+    { id: 'event_7', title: 'Entrevista candidato Dev Sr', date: dayAfter, startTime: '15:00', endTime: '16:00', color: 'teal', isAllDay: false, repeat: 'none' as const },
+    // Proxima semana
+    { id: 'event_8', title: 'Deadline Projeto Alpha', date: nextWeek, startTime: undefined, endTime: undefined, color: 'red', isAllDay: true, repeat: 'none' as const },
+    { id: 'event_9', title: 'Review Mensal', date: nextWeek, startTime: '16:00', endTime: '17:30', color: 'purple', isAllDay: false, repeat: 'monthly' as const },
+    { id: 'event_10', title: 'Sprint Planning', date: nextWeek, startTime: '10:00', endTime: '12:00', color: 'blue', isAllDay: false, repeat: 'biweekly' as const },
+    // Eventos passados (para mostrar historico)
+    { id: 'event_11', title: 'Retrospectiva Sprint', date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], startTime: '15:00', endTime: '16:00', color: 'purple', isAllDay: false, repeat: 'none' as const },
+    { id: 'event_12', title: 'Workshop Design Thinking', date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], startTime: '09:00', endTime: '12:00', color: 'orange', isAllDay: false, repeat: 'none' as const },
+    { id: 'event_13', title: 'Treinamento Equipe', date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], startTime: '14:00', endTime: '17:00', color: 'green', isAllDay: false, repeat: 'none' as const },
+    // Mais eventos no mes
+    { id: 'event_14', title: 'Aniversario da Empresa', date: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], startTime: undefined, endTime: undefined, color: 'pink', isAllDay: true, repeat: 'none' as const },
+    { id: 'event_15', title: 'Webinar: Produtividade', date: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], startTime: '19:00', endTime: '20:30', color: 'teal', isAllDay: false, repeat: 'none' as const },
   ];
 
   // Sample Notes
@@ -92,10 +125,10 @@ function generateSampleData() {
     expectedRating: 8,
     top1: 'Preparar apresentacao para cliente',
     tasks: [
-      { id: 'pt_1', content: 'Preparar apresentacao para cliente', period: 'morning' as const, completed: false, isTop1: true },
-      { id: 'pt_2', content: 'Agendar reuniao com equipe', period: 'afternoon' as const, completed: false, isTop1: false },
-      { id: 'pt_3', content: 'Ligar para fornecedor', period: 'afternoon' as const, completed: false, isTop1: false },
-      { id: 'pt_4', content: 'Atualizar documentacao do projeto', period: 'evening' as const, completed: false, isTop1: false },
+      { id: 'pt_1', content: 'Preparar apresentacao para cliente', period: 'morning' as const, completed: false, isTop1: true, status: 'in_progress' as const, priority: 'high' as const, dueDate: todayStr, projectId: 'proj_1', createdAt: new Date().toISOString() },
+      { id: 'pt_2', content: 'Agendar reuniao com equipe', period: 'afternoon' as const, completed: false, isTop1: false, status: 'pending' as const, priority: 'medium' as const, dueDate: todayStr, projectId: 'proj_2', createdAt: new Date().toISOString() },
+      { id: 'pt_3', content: 'Ligar para fornecedor', period: 'afternoon' as const, completed: false, isTop1: false, status: 'pending' as const, priority: 'medium' as const, dueDate: todayStr, projectId: 'proj_3', createdAt: new Date().toISOString() },
+      { id: 'pt_4', content: 'Atualizar documentacao do projeto', period: 'evening' as const, completed: false, isTop1: false, status: 'pending' as const, priority: 'low' as const, dueDate: todayStr, projectId: 'proj_1', createdAt: new Date().toISOString() },
     ],
     morningRoutineCompleted: true,
     eveningRoutineCompleted: false,
@@ -126,6 +159,111 @@ function generateSampleData() {
   // Chronotype
   const chronotype = 'bear';
 
+  // Note folders
+  const noteFolders = [
+    { id: 'inbox', name: 'Inbox', emoji: '📥', color: 'blue' },
+    { id: 'ideas', name: 'Ideias', emoji: '💡', color: 'yellow' },
+    { id: 'reference', name: 'Referencia', emoji: '📚', color: 'purple' },
+    { id: 'archive', name: 'Arquivo', emoji: '📦', color: 'gray' },
+    { id: 'work', name: 'Trabalho', emoji: '💼', color: 'green' },
+  ];
+
+  // Check-in history (last 7 days)
+  const checkins: Record<string, { mood: string; energy: number; notes: string; createdAt: string }> = {};
+  for (let i = 0; i < 7; i++) {
+    const date = new Date(Date.now() - i * 24 * 60 * 60 * 1000);
+    const dateStr = date.toISOString().split('T')[0];
+    const moods = ['great', 'good', 'good', 'okay', 'good', 'great', 'good'];
+    const energies = [4, 3, 4, 3, 5, 4, 3];
+    checkins[dateStr] = {
+      mood: moods[i],
+      energy: energies[i],
+      notes: i === 0 ? 'Dia produtivo!' : '',
+      createdAt: date.toISOString(),
+    };
+  }
+
+  // Focus stats (last 7 days)
+  const focusStats: Record<string, { totalMinutes: number; sessions: number }> = {};
+  for (let i = 0; i < 7; i++) {
+    const date = new Date(Date.now() - i * 24 * 60 * 60 * 1000);
+    const dateStr = date.toISOString().split('T')[0];
+    focusStats[dateStr] = {
+      totalMinutes: Math.floor(Math.random() * 120) + 30, // 30-150 min
+      sessions: Math.floor(Math.random() * 5) + 1, // 1-5 sessions
+    };
+  }
+
+  // Cognitive profile from discovery
+  const cognitiveProfile = {
+    chronotype: 'bear',
+    executionStyle: 'structured',
+    focusPattern: 'deep_blocks',
+    energyPattern: 'morning_peak',
+    strengths: ['Foco em blocos', 'Rotina consistente', 'Organizacao'],
+    challenges: ['Sonolencia pos-almoco', 'Dificuldade com interrupcoes'],
+    recommendations: [
+      'Agende tarefas importantes para o periodo da manha',
+      'Use tecnica Pomodoro para manter foco',
+      'Faca pausas ativas apos o almoco',
+    ],
+    completedAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+  };
+
+  // Discovery answers
+  const discoveryAnswers = [
+    { questionId: 1, answer: 'bear' },
+    { questionId: 2, answer: 'bear' },
+    { questionId: 3, answer: 'bear' },
+    { questionId: 4, answer: 'bear' },
+    { questionId: 5, answer: 'bear' },
+  ];
+
+  // Monthly reviews
+  const monthlyReviews = [
+    {
+      id: 'monthly_1',
+      month: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 7),
+      biggestWin: 'Lancamento do projeto Alpha com sucesso',
+      mainChallenge: 'Equilibrar reunioes com tempo de foco',
+      lessonsLearned: 'Bloquear horarios no calendario para trabalho profundo',
+      goalsAchieved: ['Fechar 3 novos clientes', 'Implementar nova feature'],
+      goalsNotAchieved: ['Terminar curso online'],
+      nextMonthFocus: 'Melhorar rotina de exercicios',
+      overallSatisfaction: 4,
+      completedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+    },
+  ];
+
+  // Teams (for manager view)
+  const teams = [
+    {
+      id: 'team_1',
+      name: 'Desenvolvimento',
+      description: 'Equipe de desenvolvimento de software',
+      ownerId: 'demo_user',
+      createdAt: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString(),
+      members: [
+        { id: 'demo_user', name: 'Usuario Demo', email: 'demo@mentesbrilhantes.app', role: 'Líder', status: 'active' as const, productivity: 85, lastCheckIn: 'Agora' },
+        { id: 'member_1', name: 'Ana Silva', email: 'ana@email.com', role: 'Desenvolvedor', status: 'active' as const, productivity: 92, lastCheckIn: '10 min' },
+        { id: 'member_2', name: 'Carlos Santos', email: 'carlos@email.com', role: 'Desenvolvedor', status: 'active' as const, productivity: 78, lastCheckIn: '30 min' },
+        { id: 'member_3', name: 'Maria Oliveira', email: 'maria@email.com', role: 'QA', status: 'away' as const, productivity: 88, lastCheckIn: '2h' },
+      ],
+    },
+    {
+      id: 'team_2',
+      name: 'Design',
+      description: 'Equipe de UX/UI Design',
+      ownerId: 'demo_user',
+      createdAt: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000).toISOString(),
+      members: [
+        { id: 'demo_user', name: 'Usuario Demo', email: 'demo@mentesbrilhantes.app', role: 'Gestor', status: 'active' as const, productivity: 85, lastCheckIn: 'Agora' },
+        { id: 'member_4', name: 'Fernanda Costa', email: 'fernanda@email.com', role: 'UX Designer', status: 'active' as const, productivity: 90, lastCheckIn: '15 min' },
+        { id: 'member_5', name: 'Joao Pereira', email: 'joao@email.com', role: 'UI Designer', status: 'offline' as const, productivity: 75, lastCheckIn: '1 dia' },
+      ],
+    },
+  ];
+
   return {
     tasks,
     projects,
@@ -138,6 +276,13 @@ function generateSampleData() {
     morningRoutine,
     eveningRoutine,
     chronotype,
+    noteFolders,
+    checkins,
+    focusStats,
+    cognitiveProfile,
+    discoveryAnswers,
+    monthlyReviews,
+    teams,
   };
 }
 
@@ -163,6 +308,13 @@ function loadSampleData() {
   localStorage.setItem('nciaflux_morning_routine', JSON.stringify(data.morningRoutine));
   localStorage.setItem('nciaflux_evening_routine', JSON.stringify(data.eveningRoutine));
   localStorage.setItem('nciaflux_chronotype', data.chronotype);
+  localStorage.setItem('nciaflux_note_folders', JSON.stringify(data.noteFolders));
+  localStorage.setItem('nciaflux_checkins', JSON.stringify(data.checkins));
+  localStorage.setItem('nciaflux_focus_stats', JSON.stringify(data.focusStats));
+  localStorage.setItem('nciaflux_cognitive_profile', JSON.stringify(data.cognitiveProfile));
+  localStorage.setItem('nciaflux_discovery_answers', JSON.stringify(data.discoveryAnswers));
+  localStorage.setItem('nciaflux_monthly_reviews', JSON.stringify(data.monthlyReviews));
+  localStorage.setItem('nciaflux_teams', JSON.stringify(data.teams));
   localStorage.setItem('nciaflux_demo_mode', 'true');
 }
 
