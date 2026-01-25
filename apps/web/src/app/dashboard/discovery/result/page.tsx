@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { getStorageKey } from '@/lib/storage';
 
 interface CognitiveProfile {
   id: string;
@@ -206,7 +207,7 @@ export default function DiscoveryResultPage() {
 
   useEffect(() => {
     // Get answers from localStorage
-    const answersStr = localStorage.getItem('nciaflux_discovery_answers');
+    const answersStr = localStorage.getItem(getStorageKey('nciaflux_discovery_answers'));
     if (!answersStr) {
       router.push('/dashboard/discovery');
       return;
@@ -220,7 +221,7 @@ export default function DiscoveryResultPage() {
       setProfile(generatedProfile);
 
       // Save profile to localStorage
-      localStorage.setItem('nciaflux_cognitive_profile', JSON.stringify(generatedProfile));
+      localStorage.setItem(getStorageKey('nciaflux_cognitive_profile'), JSON.stringify(generatedProfile));
 
       setIsLoading(false);
     }, 1500);

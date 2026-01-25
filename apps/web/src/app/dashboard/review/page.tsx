@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { getStorageKey } from '@/lib/storage';
 
 interface WeeklyReview {
   id: string;
@@ -94,12 +95,12 @@ export default function ReviewPage() {
 
   // Load data
   useEffect(() => {
-    const savedWeekly = localStorage.getItem('nciaflux_weekly_reviews');
+    const savedWeekly = localStorage.getItem(getStorageKey('nciaflux_weekly_reviews'));
     if (savedWeekly) {
       setWeeklyReviews(JSON.parse(savedWeekly));
     }
 
-    const savedMonthly = localStorage.getItem('nciaflux_monthly_reviews');
+    const savedMonthly = localStorage.getItem(getStorageKey('nciaflux_monthly_reviews'));
     if (savedMonthly) {
       setMonthlyReviews(JSON.parse(savedMonthly));
     }
@@ -107,12 +108,12 @@ export default function ReviewPage() {
 
   function saveWeeklyReviews(reviews: WeeklyReview[]) {
     setWeeklyReviews(reviews);
-    localStorage.setItem('nciaflux_weekly_reviews', JSON.stringify(reviews));
+    localStorage.setItem(getStorageKey('nciaflux_weekly_reviews'), JSON.stringify(reviews));
   }
 
   function saveMonthlyReviews(reviews: MonthlyReview[]) {
     setMonthlyReviews(reviews);
-    localStorage.setItem('nciaflux_monthly_reviews', JSON.stringify(reviews));
+    localStorage.setItem(getStorageKey('nciaflux_monthly_reviews'), JSON.stringify(reviews));
   }
 
   // Start new review

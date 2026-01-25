@@ -1,12 +1,37 @@
 /**
  * Storage Service - Centralized localStorage management for demo mode
+ * Supports multiple user profiles with prefixed storage keys
  */
+
+import { profileManager, getUserStorageKey, migrateToUserPrefixedStorage } from './profile-manager';
 
 const STORAGE_KEYS = {
   USER: 'nciaflux_demo_user',
   TASKS: 'nciaflux_tasks',
   SETTINGS: 'nciaflux_settings',
   TEAMS: 'nciaflux_teams',
+} as const;
+
+// Base keys for user-prefixed storage (without nciaflux_ prefix)
+export const USER_STORAGE_KEYS = {
+  TASKS: 'tasks',
+  SETTINGS: 'settings',
+  TEAMS: 'teams',
+  PROJECTS: 'projects',
+  NOTES: 'notes',
+  CHECKINS: 'checkins',
+  FOCUS_STATS: 'focus_stats',
+  CALENDAR_EVENTS: 'calendar_events',
+  WEEKLY_REVIEWS: 'weekly_reviews',
+  MONTHLY_REVIEWS: 'monthly_reviews',
+  CHRONOTYPE: 'chronotype',
+  COGNITIVE_PROFILE: 'cognitive_profile',
+  CRISIS_EVENTS: 'crisis_events',
+  MORNING_ROUTINE: 'morning_routine',
+  EVENING_ROUTINE: 'evening_routine',
+  BRAIN_DUMP: 'brain_dump',
+  DISCOVERY_ANSWERS: 'discovery_answers',
+  SUGGESTED_ROUTINE: 'suggested_routine',
 } as const;
 
 // Types
@@ -84,7 +109,7 @@ const DEFAULT_SETTINGS: StoredSettings = {
 // Helper to check if we're in browser
 const isBrowser = typeof window !== 'undefined';
 
-// User Storage
+// User Storage - now integrates with profile manager
 export const userStorage = {
   get(): StoredUser | null {
     if (!isBrowser) return null;
@@ -95,25 +120,33 @@ export const userStorage = {
   set(user: StoredUser): void {
     if (!isBrowser) return;
     localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(user));
+    // Also update profile manager
+    profileManager.initializeOnLogin(user);
+    // Migrate old data to user-prefixed storage
+    migrateToUserPrefixedStorage(user.id);
   },
 
   remove(): void {
     if (!isBrowser) return;
     localStorage.removeItem(STORAGE_KEYS.USER);
+    profileManager.logout();
   },
 
   isAuthenticated(): boolean {
     return this.get() !== null;
   },
+
+  // Get current user ID from profile manager
+  getCurrentUserId(): string | null {
+    return profileManager.getActiveProfileId();
+  },
 };
 
-// Tasks Storage
+// Tasks Storage - uses user-prefixed keys
 export const tasksStorage = {
   getAll(): StoredTask[] {
     if (!isBrowser) return [];
-    const user = userStorage.get();
-    // Tasks are stored per user
-    const key = user ? `${STORAGE_KEYS.TASKS}_${user.id}` : STORAGE_KEYS.TASKS;
+    const key = getUserStorageKey('nciaflux_tasks');
     const data = localStorage.getItem(key);
     if (!data) {
       return []; // Start with empty tasks for new users
@@ -123,8 +156,7 @@ export const tasksStorage = {
 
   setAll(tasks: StoredTask[]): void {
     if (!isBrowser) return;
-    const user = userStorage.get();
-    const key = user ? `${STORAGE_KEYS.TASKS}_${user.id}` : STORAGE_KEYS.TASKS;
+    const key = getUserStorageKey('nciaflux_tasks');
     localStorage.setItem(key, JSON.stringify(tasks));
   },
 
@@ -169,11 +201,12 @@ export const tasksStorage = {
   },
 };
 
-// Settings Storage
+// Settings Storage - uses user-prefixed keys
 export const settingsStorage = {
   get(): StoredSettings {
     if (!isBrowser) return DEFAULT_SETTINGS;
-    const data = localStorage.getItem(STORAGE_KEYS.SETTINGS);
+    const key = getUserStorageKey('nciaflux_settings');
+    const data = localStorage.getItem(key);
     if (!data) {
       this.set(DEFAULT_SETTINGS);
       return DEFAULT_SETTINGS;
@@ -183,7 +216,8 @@ export const settingsStorage = {
 
   set(settings: StoredSettings): void {
     if (!isBrowser) return;
-    localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(settings));
+    const key = getUserStorageKey('nciaflux_settings');
+    localStorage.setItem(key, JSON.stringify(settings));
   },
 
   update(updates: Partial<StoredSettings>): StoredSettings {
@@ -194,17 +228,19 @@ export const settingsStorage = {
   },
 };
 
-// Teams Storage
+// Teams Storage - uses user-prefixed keys
 export const teamsStorage = {
   getAll(): StoredTeam[] {
     if (!isBrowser) return [];
-    const data = localStorage.getItem(STORAGE_KEYS.TEAMS);
+    const key = getUserStorageKey('nciaflux_teams');
+    const data = localStorage.getItem(key);
     return data ? JSON.parse(data) : [];
   },
 
   setAll(teams: StoredTeam[]): void {
     if (!isBrowser) return;
-    localStorage.setItem(STORAGE_KEYS.TEAMS, JSON.stringify(teams));
+    const key = getUserStorageKey('nciaflux_teams');
+    localStorage.setItem(key, JSON.stringify(teams));
   },
 
   add(team: Omit<StoredTeam, 'id' | 'createdAt'>): StoredTeam {
@@ -255,10 +291,29 @@ export const teamsStorage = {
   },
 };
 
-// Clear all data (for logout)
+// Clear current user's session (for logout - keeps profile data)
 export function clearAllStorage(): void {
   if (!isBrowser) return;
-  Object.values(STORAGE_KEYS).forEach((key) => {
-    localStorage.removeItem(key);
-  });
+  // Only clear the current user session, not all profiles
+  localStorage.removeItem(STORAGE_KEYS.USER);
+  localStorage.removeItem('nciaflux_demo_mode');
+  profileManager.logout();
 }
+
+// Clear ALL data including all profiles (full reset)
+export function clearAllDataCompletely(): void {
+  if (!isBrowser) return;
+  // Clear all nciaflux keys
+  const keysToRemove = Object.keys(localStorage).filter(k => k.startsWith('nciaflux_'));
+  keysToRemove.forEach(key => localStorage.removeItem(key));
+  profileManager.clearAll();
+}
+
+// Helper to get user-prefixed key for direct localStorage access
+export function getStorageKey(baseKey: string): string {
+  return getUserStorageKey(baseKey);
+}
+
+// Re-export profile manager for convenience
+export { profileManager, getUserStorageKey } from './profile-manager';
+export type { LocalProfile, ViewMode } from './profile-manager';

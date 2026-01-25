@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import { getStorageKey } from '@/lib/storage';
 
 type CrisisStep = 'initial' | 'breathing' | 'grounding' | 'action' | 'game_bubbles' | 'game_colors' | 'game_clicks' | 'game_breathing' | 'complete';
 
@@ -237,13 +238,14 @@ export default function CrisisPage() {
   }
 
   function handleComplete() {
-    const events = JSON.parse(localStorage.getItem('nciaflux_crisis_events') || '[]');
+    const crisisKey = getStorageKey('nciaflux_crisis_events');
+    const events = JSON.parse(localStorage.getItem(crisisKey) || '[]');
     events.push({
       id: `crisis_${Date.now()}`,
       action: selectedAction,
       createdAt: new Date().toISOString(),
     });
-    localStorage.setItem('nciaflux_crisis_events', JSON.stringify(events));
+    localStorage.setItem(crisisKey, JSON.stringify(events));
     router.push('/dashboard');
   }
 

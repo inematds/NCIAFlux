@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { getStorageKey } from '@/lib/storage';
 
 interface RoutineStep {
   id: string;
@@ -53,7 +54,7 @@ export default function MorningRoutinePage() {
 
   // Load routine from localStorage
   useEffect(() => {
-    const saved = localStorage.getItem('nciaflux_morning_routine');
+    const saved = localStorage.getItem(getStorageKey('nciaflux_morning_routine'));
     if (saved) {
       setSteps(JSON.parse(saved));
     } else {
@@ -73,7 +74,7 @@ export default function MorningRoutinePage() {
   // Save routine
   useEffect(() => {
     if (steps.length > 0) {
-      localStorage.setItem('nciaflux_morning_routine', JSON.stringify(steps));
+      localStorage.setItem(getStorageKey('nciaflux_morning_routine'), JSON.stringify(steps));
     }
   }, [steps]);
 
@@ -103,11 +104,11 @@ export default function MorningRoutinePage() {
         (step.type === 'condition' && !step.conditionYes && !step.conditionNo)) {
       // Mark routine as completed in today's planner
       const today = getToday();
-      const planData = localStorage.getItem(`nciaflux_planner_${today}`);
+      const planData = localStorage.getItem(getStorageKey(`nciaflux_planner_${today}`));
       if (planData) {
         const plan = JSON.parse(planData);
         plan.morningRoutineCompleted = true;
-        localStorage.setItem(`nciaflux_planner_${today}`, JSON.stringify(plan));
+        localStorage.setItem(getStorageKey(`nciaflux_planner_${today}`), JSON.stringify(plan));
       }
     }
   }

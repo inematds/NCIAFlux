@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { userStorage, clearAllStorage, StoredUser } from '@/lib/storage';
+import { userStorage, clearAllStorage, StoredUser, getStorageKey, profileManager, LocalProfile, ViewMode } from '@/lib/storage';
 import { storageModeService } from '@/lib/hybrid-storage';
 
 // Status bar types
@@ -86,13 +86,18 @@ export default function DashboardLayout({
     pendingTasks: 0,
     completedTasks: 0,
   });
+  const [profiles, setProfiles] = useState<LocalProfile[]>([]);
+  const [viewMode, setViewMode] = useState<ViewMode>('personal');
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [showChatModal, setShowChatModal] = useState(false);
 
-  // Load day status from localStorage
+  // Load day status from localStorage (uses user-prefixed keys)
   const loadDayStatus = useCallback(() => {
     const today = new Date().toISOString().split('T')[0];
 
-    // Get planner data for mood/energy
-    const plannerData = localStorage.getItem(`nciaflux_planner_${today}`);
+    // Get planner data for mood/energy (user-prefixed)
+    const plannerKey = getStorageKey(`nciaflux_planner_${today}`);
+    const plannerData = localStorage.getItem(plannerKey);
     let mood = null;
     let energy = null;
     if (plannerData) {
@@ -101,8 +106,9 @@ export default function DashboardLayout({
       energy = planner.sleepQuality ? Math.min(5, Math.ceil(planner.sleepQuality / 2)) : null;
     }
 
-    // Get check-in data (alternative source)
-    const checkinsData = localStorage.getItem('nciaflux_checkins');
+    // Get check-in data (alternative source, user-prefixed)
+    const checkinsKey = getStorageKey('nciaflux_checkins');
+    const checkinsData = localStorage.getItem(checkinsKey);
     if (checkinsData && (!mood || !energy)) {
       const checkins = JSON.parse(checkinsData);
       if (checkins[today]) {
@@ -111,8 +117,9 @@ export default function DashboardLayout({
       }
     }
 
-    // Get focus stats
-    const focusData = localStorage.getItem('nciaflux_focus_stats');
+    // Get focus stats (user-prefixed)
+    const focusKey = getStorageKey('nciaflux_focus_stats');
+    const focusData = localStorage.getItem(focusKey);
     let focusMinutes = 0;
     let focusSessions = 0;
     if (focusData) {
@@ -123,8 +130,9 @@ export default function DashboardLayout({
       }
     }
 
-    // Get tasks
-    const tasksData = localStorage.getItem('nciaflux_tasks');
+    // Get tasks (user-prefixed)
+    const tasksKey = getStorageKey('nciaflux_tasks');
+    const tasksData = localStorage.getItem(tasksKey);
     let pendingTasks = 0;
     let completedTasks = 0;
     if (tasksData) {
@@ -155,8 +163,16 @@ export default function DashboardLayout({
     setUser(storedUser);
     setIsLoading(false);
 
+    // Load profiles
+    const allProfiles = profileManager.getProfiles();
+    setProfiles(allProfiles);
+
+    // Load view mode
+    const currentViewMode = profileManager.getViewMode();
+    setViewMode(currentViewMode);
+
     // Check if in demo mode
-    const demoMode = localStorage.getItem('nciaflux_demo_mode');
+    const demoMode = localStorage.getItem(getStorageKey('nciaflux_demo_mode'));
     setIsDemoMode(demoMode === 'true');
 
     // Load day status
@@ -180,6 +196,39 @@ export default function DashboardLayout({
     clearAllStorage();
     router.push('/');
   }
+
+  function handleSwitchProfile(profileId: string) {
+    const profile = profileManager.switchProfile(profileId);
+    if (profile) {
+      // Update user storage with new profile
+      userStorage.set({
+        id: profile.id,
+        email: profile.email,
+        name: profile.name,
+        role: profile.role,
+        company: profile.company,
+        avatar_url: profile.avatar_url,
+      });
+      setUser({
+        id: profile.id,
+        email: profile.email,
+        name: profile.name,
+        role: profile.role,
+        company: profile.company,
+        avatar_url: profile.avatar_url,
+      });
+      setViewMode('personal');
+      setShowProfileMenu(false);
+      loadDayStatus(); // Reload data for new profile
+    }
+  }
+
+  function handleAddProfile() {
+    setShowProfileMenu(false);
+    router.push('/login?add_profile=true');
+  }
+
+  const canAccessManagement = user?.role === 'manager' || user?.role === 'admin';
 
   // Show loading while checking auth
   if (isLoading) {
@@ -265,30 +314,104 @@ export default function DashboardLayout({
           </div>
         )}
 
-        {/* User */}
-        <div className="p-4 border-t border-neutral-border">
-          <div className="flex items-center gap-3">
+        {/* User & Profile Switcher */}
+        <div className="p-4 border-t border-neutral-border relative">
+          <button
+            onClick={() => setShowProfileMenu(!showProfileMenu)}
+            className="w-full flex items-center gap-3 hover:bg-neutral-background rounded-lg p-1 -m-1 transition-colors"
+          >
             <div className="w-10 h-10 bg-primary-light rounded-full flex items-center justify-center text-white font-semibold">
               {user?.name?.charAt(0) || 'U'}
             </div>
             {sidebarOpen && (
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-neutral-textPrimary truncate">
-                  {user?.name}
-                </p>
-                <p className="text-xs text-neutral-textMuted truncate">
-                  {user?.email}
-                </p>
-              </div>
+              <>
+                <div className="flex-1 min-w-0 text-left">
+                  <p className="text-sm font-medium text-neutral-textPrimary truncate">
+                    {user?.name}
+                  </p>
+                  <p className="text-xs text-neutral-textMuted truncate">
+                    {viewMode === 'management' ? 'Visao Gestao' : 'Visao Pessoal'}
+                  </p>
+                </div>
+                <span className="text-neutral-textMuted">
+                  {showProfileMenu ? '▲' : '▼'}
+                </span>
+              </>
             )}
-          </div>
-          {sidebarOpen && (
-            <button
-              onClick={handleLogout}
-              className="w-full mt-4 text-sm text-neutral-textSecondary hover:text-accent-error transition-colors text-left"
-            >
-              Sair
-            </button>
+          </button>
+
+          {/* Profile Menu Dropdown */}
+          {showProfileMenu && sidebarOpen && (
+            <div className="absolute bottom-full left-0 right-0 mb-2 mx-4 bg-white rounded-xl shadow-lg border border-neutral-border overflow-hidden z-50">
+              {/* View Mode Toggle (for managers) */}
+              {canAccessManagement && (
+                <div className="p-3 border-b border-neutral-border">
+                  <p className="text-xs text-neutral-textMuted mb-2">Modo de Visualizacao</p>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => { profileManager.setViewMode('personal'); setViewMode('personal'); }}
+                      className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        viewMode === 'personal'
+                          ? 'bg-primary-main text-white'
+                          : 'bg-neutral-background text-neutral-textSecondary hover:bg-neutral-border'
+                      }`}
+                    >
+                      Pessoal
+                    </button>
+                    <button
+                      onClick={() => { profileManager.setViewMode('management'); setViewMode('management'); }}
+                      className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        viewMode === 'management'
+                          ? 'bg-secondary-main text-white'
+                          : 'bg-neutral-background text-neutral-textSecondary hover:bg-neutral-border'
+                      }`}
+                    >
+                      Gestao
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Profiles List */}
+              {profiles.length > 1 && (
+                <div className="p-2 border-b border-neutral-border">
+                  <p className="text-xs text-neutral-textMuted px-2 mb-1">Trocar Perfil</p>
+                  {profiles.filter(p => p.id !== user?.id).map((profile) => (
+                    <button
+                      key={profile.id}
+                      onClick={() => handleSwitchProfile(profile.id)}
+                      className="w-full flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-neutral-background transition-colors"
+                    >
+                      <div className="w-8 h-8 bg-secondary-main rounded-full flex items-center justify-center text-white text-sm font-semibold">
+                        {profile.name.charAt(0)}
+                      </div>
+                      <div className="flex-1 text-left">
+                        <p className="text-sm font-medium text-neutral-textPrimary">{profile.name}</p>
+                        <p className="text-xs text-neutral-textMuted">{profile.email}</p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {/* Actions */}
+              <div className="p-2">
+                <button
+                  onClick={handleAddProfile}
+                  className="w-full flex items-center gap-2 px-2 py-2 rounded-lg text-sm text-neutral-textSecondary hover:bg-neutral-background transition-colors"
+                >
+                  <span>➕</span>
+                  <span>Adicionar Perfil</span>
+                </button>
+                <button
+                  onClick={handleLogout}
+                  className="w-full flex items-center gap-2 px-2 py-2 rounded-lg text-sm text-accent-error hover:bg-accent-error/10 transition-colors"
+                >
+                  <span>🚪</span>
+                  <span>Sair</span>
+                </button>
+              </div>
+            </div>
           )}
         </div>
 
@@ -392,8 +515,62 @@ export default function DashboardLayout({
                 <span>{dayStatus.completedTasks}</span>
               </div>
             )}
+
+            {/* Chat Button */}
+            <button
+              onClick={() => setShowChatModal(true)}
+              className="flex items-center gap-2 px-3 py-1 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-lg hover:from-purple-500/20 hover:to-pink-500/20 transition-colors border border-purple-500/20"
+              title="Chat com IA"
+            >
+              <span className="text-xl">💬</span>
+              <span className="text-sm font-medium text-purple-600">Chat</span>
+            </button>
           </div>
         </div>
+
+        {/* Chat Modal (Pro Version) */}
+        {showChatModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl">
+              <div className="text-center">
+                <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-3xl">💬</span>
+                </div>
+                <h3 className="text-xl font-bold text-neutral-textPrimary mb-2">
+                  Chat com IA
+                </h3>
+                <p className="text-neutral-textSecondary mb-4">
+                  Converse com a IA para criar tarefas, fazer anotacoes, ou pedir ajuda - tudo por texto ou voz!
+                </p>
+                <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-xl p-4 mb-6">
+                  <p className="text-sm text-purple-600 font-medium mb-2">
+                    Disponivel na versao Pro
+                  </p>
+                  <ul className="text-sm text-neutral-textSecondary space-y-1 text-left">
+                    <li>• Criar tarefas por comando de voz</li>
+                    <li>• Fazer brain dump falando</li>
+                    <li>• Perguntar sobre seus dados</li>
+                    <li>• Receber sugestoes personalizadas</li>
+                  </ul>
+                </div>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setShowChatModal(false)}
+                    className="flex-1 px-4 py-2 rounded-xl border border-neutral-border text-neutral-textSecondary hover:bg-neutral-background transition-colors"
+                  >
+                    Fechar
+                  </button>
+                  <button
+                    onClick={() => setShowChatModal(false)}
+                    className="flex-1 px-4 py-2 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 text-white font-medium hover:opacity-90 transition-opacity"
+                  >
+                    Saber mais
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="flex-1 overflow-auto">
           {children}

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { userStorage, tasksStorage, StoredUser, StoredTask } from '@/lib/storage';
+import { userStorage, tasksStorage, StoredUser, StoredTask, getStorageKey } from '@/lib/storage';
 
 // Mock data for managers
 const MOCK_TEAM_MEMBERS = [
@@ -41,7 +41,7 @@ export default function DashboardPage() {
     setTasks(tasksStorage.getAll());
 
     // Check if user has completed discovery
-    const profile = localStorage.getItem('nciaflux_cognitive_profile');
+    const profile = localStorage.getItem(getStorageKey('nciaflux_cognitive_profile'));
     setHasProfile(!!profile);
   }, []);
 

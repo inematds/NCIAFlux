@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { userStorage } from '@/lib/storage';
+import { userStorage, getStorageKey } from '@/lib/storage';
 import { userStatsService } from '@/lib/hybrid-storage';
 
 type TaskStatus = 'pending' | 'in_progress' | 'completed' | 'skipped';
@@ -66,7 +66,7 @@ export default function TasksPage() {
   }, []);
 
   function loadTasks() {
-    const saved = localStorage.getItem('nciaflux_tasks');
+    const saved = localStorage.getItem(getStorageKey('nciaflux_tasks'));
     if (saved) {
       const rawTasks = JSON.parse(saved);
       // Normalize tasks to unified format
@@ -82,14 +82,14 @@ export default function TasksPage() {
   }
 
   function loadProjects() {
-    const saved = localStorage.getItem('nciaflux_projects');
+    const saved = localStorage.getItem(getStorageKey('nciaflux_projects'));
     if (saved) {
       setProjects(JSON.parse(saved));
     }
   }
 
   function saveTasks(newTasks: UnifiedTask[]) {
-    localStorage.setItem('nciaflux_tasks', JSON.stringify(newTasks));
+    localStorage.setItem(getStorageKey('nciaflux_tasks'), JSON.stringify(newTasks));
     setTasks(newTasks);
   }
 

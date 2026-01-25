@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { getStorageKey } from '@/lib/storage';
 
 interface RoutineStep {
   id: string;
@@ -54,7 +55,7 @@ export default function EveningRoutinePage() {
 
   // Load routine
   useEffect(() => {
-    const saved = localStorage.getItem('nciaflux_evening_routine');
+    const saved = localStorage.getItem(getStorageKey('nciaflux_evening_routine'));
     if (saved) {
       setSteps(JSON.parse(saved));
     } else {
@@ -73,7 +74,7 @@ export default function EveningRoutinePage() {
 
   useEffect(() => {
     if (steps.length > 0) {
-      localStorage.setItem('nciaflux_evening_routine', JSON.stringify(steps));
+      localStorage.setItem(getStorageKey('nciaflux_evening_routine'), JSON.stringify(steps));
     }
   }, [steps]);
 
@@ -101,11 +102,11 @@ export default function EveningRoutinePage() {
     if ((step.type === 'action' && !step.nextStep) ||
         (step.type === 'condition' && !step.conditionYes && !step.conditionNo)) {
       const today = getToday();
-      const planData = localStorage.getItem(`nciaflux_planner_${today}`);
+      const planData = localStorage.getItem(getStorageKey(`nciaflux_planner_${today}`));
       if (planData) {
         const plan = JSON.parse(planData);
         plan.eveningRoutineCompleted = true;
-        localStorage.setItem(`nciaflux_planner_${today}`, JSON.stringify(plan));
+        localStorage.setItem(getStorageKey(`nciaflux_planner_${today}`), JSON.stringify(plan));
       }
 
       // Save tomorrow's Top 1 if set
@@ -113,14 +114,14 @@ export default function EveningRoutinePage() {
         const tomorrow = new Date();
         tomorrow.setDate(tomorrow.getDate() + 1);
         const tomorrowStr = tomorrow.toISOString().split('T')[0];
-        const tomorrowPlan = localStorage.getItem(`nciaflux_planner_${tomorrowStr}`);
+        const tomorrowPlan = localStorage.getItem(getStorageKey(`nciaflux_planner_${tomorrowStr}`));
 
         if (tomorrowPlan) {
           const plan = JSON.parse(tomorrowPlan);
           plan.top1 = tomorrowTop1;
-          localStorage.setItem(`nciaflux_planner_${tomorrowStr}`, JSON.stringify(plan));
+          localStorage.setItem(getStorageKey(`nciaflux_planner_${tomorrowStr}`), JSON.stringify(plan));
         } else {
-          localStorage.setItem(`nciaflux_planner_${tomorrowStr}`, JSON.stringify({
+          localStorage.setItem(getStorageKey(`nciaflux_planner_${tomorrowStr}`), JSON.stringify({
             date: tomorrowStr,
             top1: tomorrowTop1,
             tasks: [{

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { getStorageKey } from '@/lib/storage';
 
 interface Project {
   id: string;
@@ -54,7 +55,7 @@ export default function ProjectDetailPage() {
 
   // Load data
   useEffect(() => {
-    const savedProjects = localStorage.getItem('nciaflux_projects');
+    const savedProjects = localStorage.getItem(getStorageKey('nciaflux_projects'));
     if (savedProjects) {
       const projects: Project[] = JSON.parse(savedProjects);
       const found = projects.find(p => p.id === projectId);
@@ -65,7 +66,7 @@ export default function ProjectDetailPage() {
       }
     }
 
-    const savedTasks = localStorage.getItem('nciaflux_tasks');
+    const savedTasks = localStorage.getItem(getStorageKey('nciaflux_tasks'));
     if (savedTasks) {
       setTasks(JSON.parse(savedTasks));
     }
@@ -74,7 +75,7 @@ export default function ProjectDetailPage() {
   // Save tasks
   function saveTasks(newTasks: Task[]) {
     setTasks(newTasks);
-    localStorage.setItem('nciaflux_tasks', JSON.stringify(newTasks));
+    localStorage.setItem(getStorageKey('nciaflux_tasks'), JSON.stringify(newTasks));
   }
 
   function addTask() {

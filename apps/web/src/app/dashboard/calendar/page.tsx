@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { getStorageKey } from '@/lib/storage';
 
 interface CalendarEvent {
   id: string;
@@ -105,12 +106,12 @@ export default function CalendarPage() {
 
   // Load data
   useEffect(() => {
-    const savedEvents = localStorage.getItem('nciaflux_calendar_events');
+    const savedEvents = localStorage.getItem(getStorageKey('nciaflux_calendar_events'));
     if (savedEvents) {
       setEvents(JSON.parse(savedEvents));
     }
 
-    const savedTasks = localStorage.getItem('nciaflux_tasks');
+    const savedTasks = localStorage.getItem(getStorageKey('nciaflux_tasks'));
     if (savedTasks) {
       setTasks(JSON.parse(savedTasks));
     }
@@ -119,7 +120,7 @@ export default function CalendarPage() {
   // Save events
   function saveEvents(newEvents: CalendarEvent[]) {
     setEvents(newEvents);
-    localStorage.setItem('nciaflux_calendar_events', JSON.stringify(newEvents));
+    localStorage.setItem(getStorageKey('nciaflux_calendar_events'), JSON.stringify(newEvents));
   }
 
   function openNewEvent(date?: Date) {

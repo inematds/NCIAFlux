@@ -68,8 +68,15 @@ Porque acreditamos que cérebros neurodivergentes não são defeituosos - são d
 | PWA (instalável no celular) | Planejado |
 | Sincronização na nuvem | Planejado |
 | Notificações push | Planejado |
+| **Chat com IA (texto e voz)** | v2 - Pro |
 | App mobile nativo | Futuro |
 | Integração com terapeutas | Futuro |
+
+#### v2 - Versão Pro
+
+- **Chat com IA**: Converse com a IA para criar tarefas, fazer brain dump, ou pedir ajuda
+- **Suporte a voz**: Comandos por voz para criar e gerenciar tarefas
+- **Assistente inteligente**: Sugestões personalizadas baseadas no seu perfil cognitivo
 
 ---
 

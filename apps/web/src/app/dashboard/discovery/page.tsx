@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { getStorageKey } from '@/lib/storage';
 
 type QuestionType = 'single_choice' | 'multiple_choice' | 'slider';
 
@@ -274,7 +275,7 @@ export default function DiscoveryPage() {
           : answers[currentQuestion.id],
       };
 
-      localStorage.setItem('nciaflux_discovery_answers', JSON.stringify(finalAnswers));
+      localStorage.setItem(getStorageKey('nciaflux_discovery_answers'), JSON.stringify(finalAnswers));
 
       // Navigate to results
       router.push('/dashboard/discovery/result');

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { userStorage } from '@/lib/storage';
+import { userStorage, getStorageKey } from '@/lib/storage';
 
 type CheckInStep = 'mood' | 'energy' | 'notes' | 'complete';
 
@@ -47,7 +47,7 @@ export default function CheckInPage() {
 
   // Load tasks on mount
   useEffect(() => {
-    const tasksData = localStorage.getItem('nciaflux_tasks');
+    const tasksData = localStorage.getItem(getStorageKey('nciaflux_tasks'));
     if (tasksData) {
       const allTasks: Task[] = JSON.parse(tasksData);
       // Filter to pending/in_progress tasks only
@@ -86,7 +86,8 @@ export default function CheckInPage() {
   function handleSubmit() {
     // Save check-in to localStorage with today's date as key
     const today = new Date().toISOString().split('T')[0];
-    const checkinsData = localStorage.getItem('nciaflux_checkins');
+    const checkinsKey = getStorageKey('nciaflux_checkins');
+    const checkinsData = localStorage.getItem(checkinsKey);
     const checkins = checkinsData ? JSON.parse(checkinsData) : {};
 
     checkins[today] = {
@@ -99,7 +100,7 @@ export default function CheckInPage() {
       createdAt: new Date().toISOString(),
     };
 
-    localStorage.setItem('nciaflux_checkins', JSON.stringify(checkins));
+    localStorage.setItem(checkinsKey, JSON.stringify(checkins));
     animateTransition(() => setStep('complete'));
   }
 

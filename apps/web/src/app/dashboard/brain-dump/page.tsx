@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { getStorageKey } from '@/lib/storage';
 
 interface BrainDumpItem {
   id: string;
@@ -32,7 +33,7 @@ export default function BrainDumpPage() {
 
   // Load from localStorage
   useEffect(() => {
-    const saved = localStorage.getItem('nciaflux_brain_dump');
+    const saved = localStorage.getItem(getStorageKey('nciaflux_brain_dump'));
     if (saved) {
       const data = JSON.parse(saved);
       setItems(data.items || []);
@@ -42,7 +43,7 @@ export default function BrainDumpPage() {
 
   // Save to localStorage
   useEffect(() => {
-    localStorage.setItem('nciaflux_brain_dump', JSON.stringify({ items, bigGoal }));
+    localStorage.setItem(getStorageKey('nciaflux_brain_dump'), JSON.stringify({ items, bigGoal }));
   }, [items, bigGoal]);
 
   function addItem() {

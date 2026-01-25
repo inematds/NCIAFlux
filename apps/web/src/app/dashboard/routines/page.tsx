@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
+import { getStorageKey } from '@/lib/storage';
 
 interface RoutineStats {
   morningCompletedDays: number;
@@ -19,7 +20,7 @@ export default function RoutinesPage() {
 
   useEffect(() => {
     // Load chronotype
-    const savedChronotype = localStorage.getItem('nciaflux_chronotype');
+    const savedChronotype = localStorage.getItem(getStorageKey('nciaflux_chronotype'));
     setChronotype(savedChronotype);
 
     // Calculate stats from planner data
@@ -32,7 +33,7 @@ export default function RoutinesPage() {
       const date = new Date(today);
       date.setDate(date.getDate() - i);
       const dateStr = date.toISOString().split('T')[0];
-      const planData = localStorage.getItem(`nciaflux_planner_${dateStr}`);
+      const planData = localStorage.getItem(getStorageKey(`nciaflux_planner_${dateStr}`));
 
       if (planData) {
         const plan = JSON.parse(planData);

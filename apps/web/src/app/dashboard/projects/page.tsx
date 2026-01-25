@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { getStorageKey } from '@/lib/storage';
 
 interface Project {
   id: string;
@@ -49,12 +50,12 @@ export default function ProjectsPage() {
 
   // Load data
   useEffect(() => {
-    const savedProjects = localStorage.getItem('nciaflux_projects');
+    const savedProjects = localStorage.getItem(getStorageKey('nciaflux_projects'));
     if (savedProjects) {
       setProjects(JSON.parse(savedProjects));
     }
 
-    const savedTasks = localStorage.getItem('nciaflux_tasks');
+    const savedTasks = localStorage.getItem(getStorageKey('nciaflux_tasks'));
     if (savedTasks) {
       setTasks(JSON.parse(savedTasks));
     }
@@ -62,7 +63,7 @@ export default function ProjectsPage() {
 
   // Save projects
   useEffect(() => {
-    localStorage.setItem('nciaflux_projects', JSON.stringify(projects));
+    localStorage.setItem(getStorageKey('nciaflux_projects'), JSON.stringify(projects));
   }, [projects]);
 
   function createProject() {
@@ -118,7 +119,7 @@ export default function ProjectsPage() {
     setProjects(projects.filter(p => p.id !== projectId));
     // Remove project from tasks
     setTasks(tasks.map(t => t.projectId === projectId ? { ...t, projectId: undefined } : t));
-    localStorage.setItem('nciaflux_tasks', JSON.stringify(
+    localStorage.setItem(getStorageKey('nciaflux_tasks'), JSON.stringify(
       tasks.map(t => t.projectId === projectId ? { ...t, projectId: undefined } : t)
     ));
   }

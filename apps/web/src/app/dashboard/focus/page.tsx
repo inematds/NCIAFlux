@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
+import { getStorageKey } from '@/lib/storage';
 
 type FocusMode = 'pomodoro' | 'deep_work' | 'timeboxing' | 'free_flow';
 type FocusState = 'idle' | 'selecting_task' | 'focusing' | 'break' | 'paused' | 'completed';
@@ -82,7 +83,7 @@ export default function FocusPage() {
   // Load tasks and stats
   useEffect(() => {
     // Load tasks
-    const savedTasks = localStorage.getItem('nciaflux_tasks');
+    const savedTasks = localStorage.getItem(getStorageKey('nciaflux_tasks'));
     if (savedTasks) {
       const allTasks: Task[] = JSON.parse(savedTasks);
       const priorityOrder = { high: 0, medium: 1, low: 2 };
@@ -102,13 +103,13 @@ export default function FocusPage() {
     }
 
     // Load projects
-    const savedProjects = localStorage.getItem('nciaflux_projects');
+    const savedProjects = localStorage.getItem(getStorageKey('nciaflux_projects'));
     if (savedProjects) {
       setProjects(JSON.parse(savedProjects));
     }
 
     // Load focus stats
-    const stats = JSON.parse(localStorage.getItem('nciaflux_focus_stats') || '{}');
+    const stats = JSON.parse(localStorage.getItem(getStorageKey('nciaflux_focus_stats')) || '{}');
     if (stats[today]) {
       setTotalFocusTime(stats[today].totalMinutes || 0);
       setSessionsCompleted(stats[today].sessions || 0);
@@ -117,7 +118,7 @@ export default function FocusPage() {
 
   // Save stats to localStorage
   const saveStats = useCallback((addMinutes: number, addSession: boolean) => {
-    const stats = JSON.parse(localStorage.getItem('nciaflux_focus_stats') || '{}');
+    const stats = JSON.parse(localStorage.getItem(getStorageKey('nciaflux_focus_stats')) || '{}');
     if (!stats[today]) {
       stats[today] = { totalMinutes: 0, sessions: 0 };
     }
@@ -125,7 +126,7 @@ export default function FocusPage() {
     if (addSession) {
       stats[today].sessions += 1;
     }
-    localStorage.setItem('nciaflux_focus_stats', JSON.stringify(stats));
+    localStorage.setItem(getStorageKey('nciaflux_focus_stats'), JSON.stringify(stats));
     setTotalFocusTime(stats[today].totalMinutes);
     setSessionsCompleted(stats[today].sessions);
   }, [today]);
@@ -186,24 +187,14 @@ export default function FocusPage() {
     startFocus(task);
   }
 
-  function startWithoutTask() {
-    setSelectedTask(null);
-    startFocus(null);
-  }
-
-  function startFocus(task: Task | null) {
+  function startFocus(task: Task) {
     if (selectedMode === 'free_flow') {
       setFreeFlowTime(0);
-      setFocusState('focusing');
     } else {
       setTimeLeft(currentMode.focusTime * 60);
-      setFocusState('focusing');
     }
-
-    // Mark task as in_progress
-    if (task) {
-      updateTaskStatus(task.id, 'in_progress');
-    }
+    setFocusState('focusing');
+    updateTaskStatus(task.id, 'in_progress');
   }
 
   function pauseFocus() {
@@ -250,13 +241,13 @@ export default function FocusPage() {
   }
 
   function updateTaskStatus(taskId: string, newStatus: string) {
-    const savedTasks = localStorage.getItem('nciaflux_tasks');
+    const savedTasks = localStorage.getItem(getStorageKey('nciaflux_tasks'));
     if (savedTasks) {
       const allTasks = JSON.parse(savedTasks);
       const updated = allTasks.map((t: Task) =>
         t.id === taskId ? { ...t, status: newStatus, completed: newStatus === 'completed' } : t
       );
-      localStorage.setItem('nciaflux_tasks', JSON.stringify(updated));
+      localStorage.setItem(getStorageKey('nciaflux_tasks'), JSON.stringify(updated));
     }
   }
 
@@ -381,25 +372,20 @@ export default function FocusPage() {
           </button>
         </div>
 
-        {/* Start without task */}
-        <button
-          onClick={startWithoutTask}
-          className="w-full p-4 mb-6 rounded-xl bg-gradient-to-r from-secondary-main to-purple-500 text-white font-semibold hover:opacity-90 transition-opacity flex items-center justify-center gap-3"
-        >
-          <span className="text-2xl">🧘</span>
-          Iniciar Foco Livre (sem tarefa)
-        </button>
-
         {tasks.length === 0 ? (
-          <div className="bg-white rounded-xl p-6 shadow-sm text-center">
-            <p className="text-neutral-textSecondary mb-4">
-              Nenhuma tarefa pendente. Voce pode focar livremente ou adicionar tarefas.
+          <div className="bg-white rounded-xl p-8 shadow-sm text-center">
+            <span className="text-5xl block mb-4">📝</span>
+            <h3 className="text-xl font-semibold text-neutral-textPrimary mb-2">
+              Nenhuma tarefa pendente
+            </h3>
+            <p className="text-neutral-textSecondary mb-6">
+              Crie uma tarefa para poder focar nela
             </p>
             <Link
               href="/dashboard/tasks"
-              className="text-primary-main font-medium hover:underline"
+              className="inline-block px-6 py-3 rounded-xl bg-primary-main text-white font-semibold hover:bg-primary-dark transition-colors"
             >
-              Ir para Tarefas →
+              Criar Tarefa
             </Link>
           </div>
         ) : (
@@ -499,7 +485,7 @@ export default function FocusPage() {
   }
 
   // ========== COMPLETED STATE ==========
-  if (focusState === 'completed') {
+  if (focusState === 'completed' && selectedTask) {
     return (
       <div className="p-6 lg:p-8">
         <div className="bg-white rounded-2xl p-8 shadow-sm text-center">
@@ -507,15 +493,9 @@ export default function FocusPage() {
           <h2 className="text-2xl font-bold text-neutral-textPrimary mb-2">
             Sessao Completa!
           </h2>
-          {selectedTask ? (
-            <p className="text-neutral-textSecondary mb-6">
-              Voce focou em: <strong>{getTaskTitle(selectedTask)}</strong>
-            </p>
-          ) : (
-            <p className="text-neutral-textSecondary mb-6">
-              Excelente sessao de foco!
-            </p>
-          )}
+          <p className="text-neutral-textSecondary mb-6">
+            Voce focou em: <strong>{getTaskTitle(selectedTask)}</strong>
+          </p>
 
           <div className="bg-accent-success/10 rounded-xl p-4 mb-8">
             <p className="text-accent-success font-medium">
@@ -523,42 +503,23 @@ export default function FocusPage() {
             </p>
           </div>
 
-          {selectedTask ? (
-            <>
-              <p className="text-lg font-medium text-neutral-textPrimary mb-4">
-                Voce terminou essa tarefa?
-              </p>
-              <div className="flex gap-4 justify-center">
-                <button
-                  onClick={completeTask}
-                  className="px-8 py-3 rounded-xl bg-accent-success text-white font-semibold hover:bg-accent-success/90 transition-colors flex items-center gap-2"
-                >
-                  <span>✅</span> Sim, concluir!
-                </button>
-                <button
-                  onClick={continueWorking}
-                  className="px-8 py-3 rounded-xl bg-secondary-main/20 text-secondary-dark font-semibold hover:bg-secondary-main/30 transition-colors"
-                >
-                  Ainda nao
-                </button>
-              </div>
-            </>
-          ) : (
-            <div className="flex gap-4 justify-center">
-              <button
-                onClick={continueWorking}
-                className="px-8 py-3 rounded-xl bg-primary-main text-white font-semibold hover:bg-primary-dark transition-colors"
-              >
-                Nova Sessao
-              </button>
-              <Link
-                href="/dashboard"
-                className="px-8 py-3 rounded-xl bg-secondary-main/20 text-secondary-dark font-semibold hover:bg-secondary-main/30 transition-colors"
-              >
-                Voltar ao Dashboard
-              </Link>
-            </div>
-          )}
+          <p className="text-lg font-medium text-neutral-textPrimary mb-4">
+            Voce terminou essa tarefa?
+          </p>
+          <div className="flex gap-4 justify-center">
+            <button
+              onClick={completeTask}
+              className="px-8 py-3 rounded-xl bg-accent-success text-white font-semibold hover:bg-accent-success/90 transition-colors flex items-center gap-2"
+            >
+              <span>✅</span> Sim, concluir!
+            </button>
+            <button
+              onClick={continueWorking}
+              className="px-8 py-3 rounded-xl bg-secondary-main/20 text-secondary-dark font-semibold hover:bg-secondary-main/30 transition-colors"
+            >
+              Ainda nao
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -567,20 +528,13 @@ export default function FocusPage() {
   // ========== TIMER DISPLAY (focusing, break, paused) ==========
   return (
     <div className="p-6 lg:p-8">
-      {/* Task/Mode Banner */}
-      {selectedTask ? (
+      {/* Task Banner */}
+      {selectedTask && (
         <div className="bg-primary-main/10 rounded-xl p-4 mb-6 border border-primary-main/20">
           <p className="text-sm text-primary-main font-medium mb-1">Focando em:</p>
           <p className="text-lg font-semibold text-neutral-textPrimary flex items-center gap-2">
             {selectedTask.isTop1 && <span>⭐</span>}
             {getTaskTitle(selectedTask)}
-          </p>
-        </div>
-      ) : (
-        <div className="bg-secondary-main/10 rounded-xl p-4 mb-6 border border-secondary-main/20">
-          <p className="text-sm text-secondary-dark font-medium mb-1">Modo:</p>
-          <p className="text-lg font-semibold text-neutral-textPrimary">
-            🧘 Foco livre - {currentMode.name}
           </p>
         </div>
       )}

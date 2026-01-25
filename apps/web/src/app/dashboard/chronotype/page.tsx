@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { getStorageKey } from '@/lib/storage';
 
 type Chronotype = 'bear' | 'dolphin' | 'owl' | 'lion' | null;
 
@@ -140,7 +141,7 @@ export default function ChronotypePage() {
 
   // Load from localStorage
   useEffect(() => {
-    const saved = localStorage.getItem('nciaflux_chronotype');
+    const saved = localStorage.getItem(getStorageKey('nciaflux_chronotype'));
     if (saved) {
       setCurrentChronotype(saved as Chronotype);
     }
@@ -162,7 +163,7 @@ export default function ChronotypePage() {
       const result = Object.entries(counts).sort((a, b) => b[1] - a[1])[0][0] as Chronotype;
       setCurrentChronotype(result);
       if (result) {
-        localStorage.setItem('nciaflux_chronotype', result);
+        localStorage.setItem(getStorageKey('nciaflux_chronotype'), result);
       }
       setShowQuiz(false);
     }
@@ -177,7 +178,7 @@ export default function ChronotypePage() {
   function selectChronotype(type: Chronotype) {
     setCurrentChronotype(type);
     if (type) {
-      localStorage.setItem('nciaflux_chronotype', type);
+      localStorage.setItem(getStorageKey('nciaflux_chronotype'), type);
     }
   }
 
@@ -394,7 +395,7 @@ export default function ChronotypePage() {
               onClick={() => {
                 // Save routine to planner
                 const routine = chronotypeInfo.routine;
-                localStorage.setItem('nciaflux_suggested_routine', JSON.stringify(routine));
+                localStorage.setItem(getStorageKey('nciaflux_suggested_routine'), JSON.stringify(routine));
                 alert('Rotina salva! Acesse o Planner Diario para ver.');
               }}
               className="flex-1 py-3 rounded-xl bg-primary-main text-white font-semibold hover:bg-primary-dark transition-colors"

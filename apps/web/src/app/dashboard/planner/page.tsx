@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { getStorageKey } from '@/lib/storage';
 
 interface DayPlan {
   date: string;
@@ -93,12 +94,12 @@ export default function PlannerPage() {
 
   function loadData(date: string) {
     // Load plan
-    const savedPlan = localStorage.getItem(`nciaflux_planner_${date}`);
+    const savedPlan = localStorage.getItem(getStorageKey(`nciaflux_planner_${date}`));
     if (savedPlan) {
       setPlan(JSON.parse(savedPlan));
     } else {
       // Create new plan
-      const brainDumpData = localStorage.getItem('nciaflux_brain_dump');
+      const brainDumpData = localStorage.getItem(getStorageKey('nciaflux_brain_dump'));
       let top1 = null;
       if (brainDumpData) {
         const { items } = JSON.parse(brainDumpData);
@@ -126,7 +127,7 @@ export default function PlannerPage() {
     }
 
     // Load tasks for this date from global tasks storage
-    const savedTasks = localStorage.getItem('nciaflux_tasks');
+    const savedTasks = localStorage.getItem(getStorageKey('nciaflux_tasks'));
     if (savedTasks) {
       const allTasks: PlannerTask[] = JSON.parse(savedTasks);
       const dayTasks = allTasks.filter(t => t.dueDate === date);
@@ -136,7 +137,7 @@ export default function PlannerPage() {
     }
 
     // Load projects
-    const savedProjects = localStorage.getItem('nciaflux_projects');
+    const savedProjects = localStorage.getItem(getStorageKey('nciaflux_projects'));
     if (savedProjects) {
       const projectsList = JSON.parse(savedProjects);
       setProjects(projectsList.filter((p: { status: string }) => p.status === 'active'));
@@ -144,12 +145,13 @@ export default function PlannerPage() {
   }
 
   function savePlan(planToSave: DayPlan) {
-    localStorage.setItem(`nciaflux_planner_${planToSave.date}`, JSON.stringify(planToSave));
+    localStorage.setItem(getStorageKey(`nciaflux_planner_${planToSave.date}`), JSON.stringify(planToSave));
   }
 
   function saveTasksToStorage(updatedTasks: PlannerTask[]) {
     // Get all tasks
-    const savedTasks = localStorage.getItem('nciaflux_tasks');
+    const tasksKey = getStorageKey('nciaflux_tasks');
+    const savedTasks = localStorage.getItem(tasksKey);
     let allTasks: PlannerTask[] = savedTasks ? JSON.parse(savedTasks) : [];
 
     // Remove tasks for this date
@@ -158,7 +160,7 @@ export default function PlannerPage() {
     // Add updated tasks
     allTasks = [...allTasks, ...updatedTasks];
 
-    localStorage.setItem('nciaflux_tasks', JSON.stringify(allTasks));
+    localStorage.setItem(tasksKey, JSON.stringify(allTasks));
     setTasks(updatedTasks);
   }
 

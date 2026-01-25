@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { getStorageKey } from '@/lib/storage';
 
 interface Note {
   id: string;
@@ -66,12 +67,12 @@ export default function NotesPage() {
 
   // Load data
   useEffect(() => {
-    const savedNotes = localStorage.getItem('nciaflux_notes');
+    const savedNotes = localStorage.getItem(getStorageKey('nciaflux_notes'));
     if (savedNotes) {
       setNotes(JSON.parse(savedNotes));
     }
 
-    const savedFolders = localStorage.getItem('nciaflux_note_folders');
+    const savedFolders = localStorage.getItem(getStorageKey('nciaflux_note_folders'));
     if (savedFolders) {
       setFolders(JSON.parse(savedFolders));
     }
@@ -80,13 +81,13 @@ export default function NotesPage() {
   // Save notes
   function saveNotes(newNotes: Note[]) {
     setNotes(newNotes);
-    localStorage.setItem('nciaflux_notes', JSON.stringify(newNotes));
+    localStorage.setItem(getStorageKey('nciaflux_notes'), JSON.stringify(newNotes));
   }
 
   // Save folders
   function saveFolders(newFolders: Folder[]) {
     setFolders(newFolders);
-    localStorage.setItem('nciaflux_note_folders', JSON.stringify(newFolders));
+    localStorage.setItem(getStorageKey('nciaflux_note_folders'), JSON.stringify(newFolders));
   }
 
   // Quick capture
