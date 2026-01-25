@@ -31,6 +31,11 @@ const MODEL_INFO: Record<AIModelId, { name: string; icon: string; description: s
     icon: '🤖',
     description: 'Rapido e barato',
   },
+  'openai/gpt-5-mini': {
+    name: 'GPT-5 Mini',
+    icon: '✨',
+    description: 'Novo da OpenAI',
+  },
   'meta-llama/llama-3.3-70b-instruct:free': {
     name: 'Llama 3.3',
     icon: '🦙',

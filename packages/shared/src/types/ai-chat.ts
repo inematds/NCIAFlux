@@ -179,6 +179,7 @@ export type AIModelId =
   | 'anthropic/claude-3.5-sonnet'
   | 'anthropic/claude-3-haiku'
   | 'openai/gpt-4o-mini'
+  | 'openai/gpt-5-mini'
   | 'meta-llama/llama-3.3-70b-instruct:free';
 
 export interface AIModelConfig {
@@ -217,9 +218,19 @@ export const AI_MODELS: Record<string, AIModelConfig> = {
   'openai/gpt-4o-mini': {
     id: 'openai/gpt-4o-mini',
     name: 'GPT-4o Mini',
-    description: 'Rapido e muito barato',
+    description: 'Rapido e barato',
     costPer1kInput: 0.00015,
     costPer1kOutput: 0.0006,
+    maxTokens: 4096,
+    supportsTools: true,
+    recommended: false,
+  },
+  'openai/gpt-5-mini': {
+    id: 'openai/gpt-5-mini',
+    name: 'GPT-5 Mini',
+    description: 'Novo modelo OpenAI',
+    costPer1kInput: 0.0003,
+    costPer1kOutput: 0.001,
     maxTokens: 4096,
     supportsTools: true,
     recommended: false,
