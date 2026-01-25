@@ -22,7 +22,8 @@ interface UserSettings {
 }
 
 export default function SettingsPage() {
-  const [activeTab, setActiveTab] = useState<'profile' | 'notifications' | 'preferences' | 'team'>('profile');
+  const [activeTab, setActiveTab] = useState<'profile' | 'notifications' | 'preferences' | 'team' | 'data'>('profile');
+  const [showResetModal, setShowResetModal] = useState(false);
   const [settings, setSettings] = useState<UserSettings>({
     name: 'Usuário Demo',
     email: 'demo@nciaflux.com',
@@ -105,7 +106,27 @@ export default function SettingsPage() {
     { id: 'notifications', label: 'Notificações', icon: '🔔' },
     { id: 'preferences', label: 'Preferências', icon: '⚙️' },
     { id: 'team', label: 'Equipe', icon: '👥' },
+    { id: 'data', label: 'Dados', icon: '🗄️' },
   ];
+
+  function handleResetData() {
+    // Get all keys that start with nciaflux_
+    const keysToRemove: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.includes('nciaflux_')) {
+        keysToRemove.push(key);
+      }
+    }
+
+    // Remove all nciaflux keys
+    keysToRemove.forEach(key => localStorage.removeItem(key));
+
+    setShowResetModal(false);
+
+    // Redirect to login
+    window.location.href = '/login';
+  }
 
   return (
     <div className="p-6 lg:p-8">
@@ -423,6 +444,79 @@ export default function SettingsPage() {
                   <button className="text-accent-error hover:underline text-sm">
                     Excluir equipe
                   </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'data' && (
+            <div className="bg-white rounded-2xl shadow-sm p-6">
+              <h2 className="text-lg font-semibold text-neutral-textPrimary mb-6">
+                Gerenciamento de Dados
+              </h2>
+              <div className="space-y-6">
+                <div className="p-4 bg-neutral-background rounded-xl">
+                  <h3 className="font-medium text-neutral-textPrimary mb-2">Armazenamento Local</h3>
+                  <p className="text-sm text-neutral-textMuted mb-4">
+                    Seus dados estao salvos localmente no navegador. Isso inclui tarefas, notas, eventos, check-ins e configuracoes.
+                  </p>
+                  <div className="text-sm text-neutral-textSecondary">
+                    <p>📋 Tarefas e projetos</p>
+                    <p>📝 Notas e brain dump</p>
+                    <p>📅 Eventos do calendario</p>
+                    <p>💬 Historico do chat</p>
+                    <p>⚙️ Configuracoes e perfil</p>
+                  </div>
+                </div>
+
+                <div className="p-4 border-2 border-accent-error/20 bg-accent-error/5 rounded-xl">
+                  <h3 className="font-medium text-accent-error mb-2">Zona de Perigo</h3>
+                  <p className="text-sm text-neutral-textMuted mb-4">
+                    Esta acao ira excluir permanentemente todos os seus dados locais. Voce sera deslogado e precisara criar uma nova conta.
+                  </p>
+                  <button
+                    onClick={() => setShowResetModal(true)}
+                    className="px-4 py-2 bg-accent-error text-white rounded-lg font-medium hover:bg-accent-error/90 transition-colors"
+                  >
+                    🗑️ Excluir todos os dados
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Reset Data Modal */}
+          {showResetModal && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+              <div className="bg-white rounded-2xl w-full max-w-md">
+                <div className="p-6 border-b border-neutral-border">
+                  <h2 className="text-xl font-semibold text-accent-error">Confirmar Exclusao</h2>
+                </div>
+                <div className="p-6">
+                  <div className="text-center mb-6">
+                    <span className="text-5xl block mb-4">⚠️</span>
+                    <p className="text-neutral-textPrimary font-medium mb-2">
+                      Tem certeza que deseja excluir todos os dados?
+                    </p>
+                    <p className="text-sm text-neutral-textMuted">
+                      Esta acao nao pode ser desfeita. Todos os seus dados serao perdidos permanentemente.
+                    </p>
+                  </div>
+
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => setShowResetModal(false)}
+                      className="flex-1 px-4 py-3 border border-neutral-border rounded-lg text-neutral-textSecondary hover:bg-neutral-background transition-colors font-medium"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      onClick={handleResetData}
+                      className="flex-1 px-4 py-3 bg-accent-error text-white rounded-lg font-medium hover:bg-accent-error/90 transition-colors"
+                    >
+                      Sim, excluir tudo
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
