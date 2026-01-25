@@ -37,9 +37,10 @@ interface MenuItem {
   label: string;
   href: string;
   section?: string;
+  requiresRole?: 'manager' | 'admin';
 }
 
-const menuItems: MenuItem[] = [
+const baseMenuItems: MenuItem[] = [
   // Principal
   { icon: '🏠', label: 'Dashboard', href: '/dashboard', section: 'Principal' },
   { icon: '📝', label: 'Brain Dump', href: '/dashboard/brain-dump' },
@@ -61,6 +62,9 @@ const menuItems: MenuItem[] = [
   { icon: '🧠', label: 'Cronotipo', href: '/dashboard/chronotype', section: 'Perfil' },
   { icon: '📊', label: 'Revisoes', href: '/dashboard/review' },
   { icon: '📈', label: 'Relatorios', href: '/dashboard/reports' },
+
+  // Gestao (apenas para managers/admins)
+  { icon: '👥', label: 'Equipes', href: '/dashboard/teams', section: 'Gestao', requiresRole: 'manager' },
 
   // Sistema
   { icon: '⚙️', label: 'Configuracoes', href: '/dashboard/settings', section: 'Sistema' },
@@ -267,10 +271,22 @@ export default function DashboardLayout({
         {/* Navigation */}
         <nav className="flex-1 p-4 overflow-y-auto">
           <ul className="space-y-1">
-            {menuItems.map((item, index) => {
+            {baseMenuItems
+              .filter((item) => {
+                // Filter items based on role
+                if (!item.requiresRole) return true;
+                if (item.requiresRole === 'manager') {
+                  return user?.role === 'manager' || user?.role === 'admin';
+                }
+                if (item.requiresRole === 'admin') {
+                  return user?.role === 'admin';
+                }
+                return true;
+              })
+              .map((item, index, filteredItems) => {
               const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
               const showSection = item.section && sidebarOpen;
-              const prevItem = menuItems[index - 1];
+              const prevItem = filteredItems[index - 1];
               const isFirstInSection = item.section && (!prevItem || prevItem.section !== item.section);
 
               return (
