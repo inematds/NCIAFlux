@@ -330,7 +330,9 @@ export default function DashboardLayout({
                     {user?.name}
                   </p>
                   <p className="text-xs text-neutral-textMuted truncate">
-                    {viewMode === 'management' ? 'Visao Gestao' : 'Visao Pessoal'}
+                    {canAccessManagement
+                      ? (viewMode === 'management' ? 'Visao Gestao' : 'Visao Pessoal')
+                      : user?.email}
                   </p>
                 </div>
                 <span className="text-neutral-textMuted">

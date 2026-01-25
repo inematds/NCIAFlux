@@ -47,7 +47,7 @@ export default function LoginPage() {
       id: `user_${Date.now()}`,
       email: email,
       name: email.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
-      role: 'manager',
+      role: 'user',
     };
 
     userStorage.set(user);

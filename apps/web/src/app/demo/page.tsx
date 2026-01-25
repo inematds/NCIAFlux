@@ -318,9 +318,18 @@ function loadSampleData() {
   localStorage.setItem('nciaflux_demo_mode', 'true');
 }
 
+type DemoRole = 'user' | 'manager' | 'admin';
+
+const roleOptions: { role: DemoRole; icon: string; title: string; desc: string }[] = [
+  { role: 'user', icon: '👤', title: 'Usuario', desc: 'Experiencia pessoal completa' },
+  { role: 'manager', icon: '👥', title: 'Gestor', desc: 'Gerencia equipes + visao pessoal' },
+  { role: 'admin', icon: '🏢', title: 'Admin', desc: 'Administra organizacao completa' },
+];
+
 export default function DemoPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedRole, setSelectedRole] = useState<DemoRole>('user');
 
   // Redirect if already logged in
   useEffect(() => {
@@ -335,12 +344,18 @@ export default function DemoPage() {
     // Simulate loading
     await new Promise((resolve) => setTimeout(resolve, 800));
 
-    // Create demo user
+    // Create demo user with selected role
+    const roleNames = {
+      user: 'Usuario Demo',
+      manager: 'Gestor Demo',
+      admin: 'Admin Demo',
+    };
+
     const demoUser: StoredUser = {
-      id: 'demo_user',
-      email: 'demo@mentesbrilhantes.app',
-      name: 'Usuario Demo',
-      role: 'manager',
+      id: `demo_${selectedRole}`,
+      email: `demo.${selectedRole}@mentesbrilhantes.app`,
+      name: roleNames[selectedRole],
+      role: selectedRole,
     };
 
     // Store user
@@ -388,6 +403,30 @@ export default function DemoPage() {
           </p>
         </div>
 
+        {/* Role Selection */}
+        <div className="mb-8">
+          <h2 className="text-xl font-semibold text-neutral-textPrimary text-center mb-4">
+            Escolha o tipo de perfil para testar:
+          </h2>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center max-w-2xl mx-auto">
+            {roleOptions.map((option) => (
+              <button
+                key={option.role}
+                onClick={() => setSelectedRole(option.role)}
+                className={`flex-1 p-4 rounded-xl border-2 transition-all text-left ${
+                  selectedRole === option.role
+                    ? 'border-primary-main bg-primary-main/10'
+                    : 'border-neutral-border bg-white hover:border-primary-light'
+                }`}
+              >
+                <span className="text-2xl block mb-2">{option.icon}</span>
+                <h3 className="font-semibold text-neutral-textPrimary">{option.title}</h3>
+                <p className="text-sm text-neutral-textSecondary">{option.desc}</p>
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* Start Demo Button */}
         <div className="text-center mb-16">
           <button
@@ -403,7 +442,7 @@ export default function DemoPage() {
             ) : (
               <>
                 <span>▶️</span>
-                Iniciar Demo Gratuito
+                Iniciar Demo como {roleOptions.find(r => r.role === selectedRole)?.title}
               </>
             )}
           </button>

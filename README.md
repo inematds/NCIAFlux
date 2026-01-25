@@ -96,9 +96,19 @@ Porque acreditamos que cérebros neurodivergentes não são defeituosos - são d
 
 #### v2 - Versão Pro
 
-- **Chat com IA**: Converse com a IA para criar tarefas, fazer brain dump, ou pedir ajuda
-- **Suporte a voz**: Comandos por voz para criar e gerenciar tarefas
-- **Assistente inteligente**: Sugestões personalizadas baseadas no seu perfil cognitivo
+**Chat com IA**
+- Converse com a IA para criar tarefas, fazer brain dump, ou pedir ajuda
+- Comandos por voz para criar e gerenciar tarefas
+- Sugestões personalizadas baseadas no seu perfil cognitivo
+
+**Gestão de Equipes (Plano Empresarial)**
+- **Admin**: Cria organizações e empresas, define permissões para gestores
+- **Gestor**: Convida membros via email/ID, gerencia equipes
+- **Convites**: Aparecem na tela de chat da equipe (não por email externo)
+- **Toggle de Visão**: Gestores alternam entre visão pessoal e gestão de equipe
+- **Dados Isolados**: Cada membro tem seus dados separados e privados
+
+> Nota: Na versão atual, a Demo simula os 3 perfis (usuario/gestor/admin) para demonstração. O login normal cria apenas usuários comuns com tela limpa.
 
 ---
 
