@@ -575,6 +575,13 @@ export default function DashboardLayout({
         <div className="flex-1 overflow-auto">
           {children}
         </div>
+
+        {/* Version Footer */}
+        <div className="bg-neutral-background border-t border-neutral-border px-4 py-2 text-center">
+          <p className="text-xs text-neutral-textMuted">
+            NeuroFluxo Mentes Brilhantes v1.2
+          </p>
+        </div>
       </main>
     </div>
   );
