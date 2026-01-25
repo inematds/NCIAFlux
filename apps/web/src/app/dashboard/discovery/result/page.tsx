@@ -9,6 +9,7 @@ interface CognitiveProfile {
   summary: string;
   insight: string;
   suggestion: string;
+  chronotype: string;
   energy_pattern: {
     morning: string;
     afternoon: string;
@@ -31,7 +32,8 @@ interface DiscoveryAnswer {
 
 function generateProfile(answers: Record<string, DiscoveryAnswer>): CognitiveProfile {
   // Extract answers
-  const morningEnergy = answers['1']?.value as string || 'medium';
+  const chronotype = answers['0']?.value as string || 'normal';
+  const wakeEnergy = answers['1']?.value as string || 'medium';
   const productiveTime = answers['2']?.value as string || 'afternoon';
   const focusDuration = answers['3']?.value as number || 25;
   const distractions = (answers['4']?.value as string[]) || ['notifications'];
@@ -40,31 +42,68 @@ function generateProfile(answers: Record<string, DiscoveryAnswer>): CognitivePro
   const accountability = answers['7']?.value as string || 'sometimes';
   const pressureResponse = answers['8']?.value as string || 'mixed';
 
-  // Map morning energy to energy level
-  const morningEnergyLevel = ['low', 'poor_sleep', 'anxious'].includes(morningEnergy) ? 'low'
-    : morningEnergy === 'high' ? 'high'
+  // Map wake energy to energy level
+  const wakeEnergyLevel = ['low', 'poor_sleep', 'anxious'].includes(wakeEnergy) ? 'low'
+    : wakeEnergy === 'high' ? 'high'
     : 'medium';
 
-  // Generate energy pattern based on answers
-  const energyPattern = {
-    morning: morningEnergyLevel,
-    afternoon: ['afternoon'].includes(productiveTime) ? 'high' : 'medium',
-    evening: ['evening'].includes(productiveTime) ? 'high' : 'medium',
-    night: ['late_night'].includes(productiveTime) ? 'high' : 'low',
+  // Generate energy pattern based on chronotype and productive time
+  let energyPattern = {
+    morning: 'medium',
+    afternoon: 'medium',
+    evening: 'medium',
+    night: 'low',
   };
+
+  // Adjust energy pattern based on chronotype
+  if (chronotype === 'early_bird') {
+    energyPattern = { morning: 'high', afternoon: 'medium', evening: 'low', night: 'low' };
+  } else if (chronotype === 'night_owl') {
+    energyPattern = { morning: 'low', afternoon: 'medium', evening: 'high', night: 'high' };
+  } else if (chronotype === 'nocturnal') {
+    energyPattern = { morning: 'low', afternoon: 'low', evening: 'medium', night: 'high' };
+  } else if (chronotype === 'shift_worker') {
+    energyPattern = { morning: 'medium', afternoon: 'medium', evening: 'medium', night: 'medium' };
+  } else if (chronotype === 'insomniac' || chronotype === 'irregular') {
+    energyPattern = { morning: 'low', afternoon: 'medium', evening: 'medium', night: 'medium' };
+  }
+
+  // Override with productive time preference
+  if (productiveTime === 'early_morning' || productiveTime === 'morning') {
+    energyPattern.morning = 'high';
+  } else if (productiveTime === 'afternoon') {
+    energyPattern.afternoon = 'high';
+  } else if (productiveTime === 'evening') {
+    energyPattern.evening = 'high';
+  } else if (productiveTime === 'late_night' || productiveTime === 'dawn') {
+    energyPattern.night = 'high';
+  }
 
   // Generate personalized summary
   const summaryParts = [];
-  if (morningEnergy === 'low') {
-    summaryParts.push('Voce tem um inicio de dia mais lento, precisando de tempo para engrenar.');
-  } else if (morningEnergy === 'poor_sleep') {
-    summaryParts.push('Seu sono afeta muito sua energia matinal - cuidar do descanso e prioridade.');
-  } else if (morningEnergy === 'anxious') {
-    summaryParts.push('Voce tende a acordar com a mente acelerada - tecnicas de relaxamento podem ajudar.');
-  } else if (morningEnergy === 'high') {
-    summaryParts.push('Voce acorda com boa energia e pode aproveitar as manhas.');
-  } else if (morningEnergy === 'varies') {
-    summaryParts.push('Sua energia matinal varia - identifique os padroes do que afeta seu sono.');
+
+  // Chronotype-based summary
+  if (chronotype === 'early_bird') {
+    summaryParts.push('Voce e uma cotovia - funciona melhor cedo e seu dia rende nas primeiras horas.');
+  } else if (chronotype === 'night_owl') {
+    summaryParts.push('Voce e uma coruja - seu cerebro acorda de verdade a noite.');
+  } else if (chronotype === 'nocturnal') {
+    summaryParts.push('Voce tem um ritmo noturno - trabalha quando o mundo dorme e dorme quando o mundo trabalha.');
+  } else if (chronotype === 'shift_worker') {
+    summaryParts.push('Voce trabalha em turnos - sua rotina muda e voce precisa se adaptar constantemente.');
+  } else if (chronotype === 'insomniac') {
+    summaryParts.push('Voce lida com insonia ou sono irregular - o cansaco e um companheiro frequente.');
+  } else if (chronotype === 'irregular') {
+    summaryParts.push('Seu ritmo e caotico - cada dia e diferente e previsibilidade nao e seu forte.');
+  }
+
+  // Wake energy addition
+  if (wakeEnergy === 'low' || wakeEnergy === 'depends_time') {
+    summaryParts.push('Acordar no seu horario natural faz toda diferenca na sua energia.');
+  } else if (wakeEnergy === 'poor_sleep') {
+    summaryParts.push('Sono de qualidade e uma luta constante - cuidar disso e prioridade.');
+  } else if (wakeEnergy === 'anxious') {
+    summaryParts.push('A mente ja acorda acelerada - tecnicas de calma matinal podem ajudar.');
   }
 
   if (focusDuration <= 20) {
@@ -83,9 +122,19 @@ function generateProfile(answers: Record<string, DiscoveryAnswer>): CognitivePro
     summaryParts.push('Seu estilo de trabalho depende do seu humor e energia do momento.');
   }
 
-  // Generate insight
+  // Generate insight based on chronotype
   let insight = '';
-  if (accountability === 'yes') {
+
+  // Chronotype-specific insights
+  if (chronotype === 'nocturnal') {
+    insight = 'Trabalhar de noite tem suas vantagens: menos distracao, silencio. Mas cuide para ter luz adequada e nao pular refeicoes. ';
+  } else if (chronotype === 'shift_worker') {
+    insight = 'Turnos variaveis exigem flexibilidade. Tente manter rituais de inicio/fim de trabalho independente do horario. ';
+  } else if (chronotype === 'insomniac') {
+    insight = 'Com sono irregular, foque em aproveitar os momentos de clareza mental quando eles vierem. Nao se cobre por horarios "normais". ';
+  } else if (chronotype === 'irregular') {
+    insight = 'Seu ritmo caotico pode ser uma forca: voce se adapta. Mas ter algumas ancoras fixas (como refeicoes) pode ajudar. ';
+  } else if (accountability === 'yes') {
     insight = 'Seu cerebro responde bem a estimulos externos como cobrancas e prazos. ';
   } else {
     insight = 'Voce funciona melhor com autonomia e auto-gestao. ';
@@ -103,9 +152,19 @@ function generateProfile(answers: Record<string, DiscoveryAnswer>): CognitivePro
     insight += 'Comunicar seus horarios de foco pode reduzir interrupcoes.';
   }
 
-  // Generate suggestion
+  // Generate suggestion based on chronotype and focus
   let suggestion = '';
-  if (focusDuration <= 25) {
+
+  // Chronotype-specific suggestions
+  if (chronotype === 'nocturnal') {
+    suggestion = 'Configure o app para seu horario noturno. Suas "manhas" sao as noites dos outros. ';
+  } else if (chronotype === 'shift_worker') {
+    suggestion = 'Use o check-in de energia sempre que mudar de turno para reajustar suas expectativas. ';
+  } else if (chronotype === 'insomniac') {
+    suggestion = 'Nao se force a produzir quando esta exausto. Priorize tarefas para momentos de maior clareza. ';
+  } else if (chronotype === 'irregular') {
+    suggestion = 'Defina 1-2 tarefas prioritarias por dia. Com ritmo imprevisivel, menos metas = mais chances de cumprir. ';
+  } else if (focusDuration <= 25) {
     suggestion = 'Experimente a tecnica Pomodoro (25 min foco + 5 min pausa) nos seus horarios de pico de energia.';
   } else if (focusDuration >= 120) {
     suggestion = 'Com seu hiperfoco, blocos de 90-120 min sao ideais. Mas lembre-se de pausar para agua e alongamento!';
@@ -130,6 +189,7 @@ function generateProfile(answers: Record<string, DiscoveryAnswer>): CognitivePro
     summary: summaryParts.join(' ') || 'Voce tem um perfil unico que combina diferentes padroes de energia e foco ao longo do dia.',
     insight,
     suggestion,
+    chronotype,
     energy_pattern: energyPattern,
     execution_style: executionStyle,
     distraction_triggers: distractions,
@@ -146,9 +206,21 @@ const TIME_LABELS: Record<string, string> = {
   morning: 'Manha',
   afternoon: 'Tarde',
   evening: 'Noite',
-  late_night: 'Madrugada',
-  night: 'Madrugada',
+  late_night: 'Noite alta',
+  dawn: 'Madrugada',
+  night: 'Noite',
   varies: 'Varia',
+  no_pattern: 'Sem padrao',
+};
+
+const CHRONOTYPE_LABELS: Record<string, { label: string; emoji: string }> = {
+  early_bird: { label: 'Cotovia', emoji: '🐦' },
+  normal: { label: 'Normal', emoji: '😴' },
+  night_owl: { label: 'Coruja', emoji: '🦉' },
+  nocturnal: { label: 'Noturno', emoji: '🌙' },
+  shift_worker: { label: 'Turnista', emoji: '🔄' },
+  insomniac: { label: 'Insone', emoji: '👁️' },
+  irregular: { label: 'Caotico', emoji: '🎲' },
 };
 
 const ENERGY_LABELS: Record<string, string> = {
@@ -317,6 +389,15 @@ export default function DiscoveryResultPage() {
           <div className="space-y-4">
             <div className="flex justify-between items-center py-3 border-b border-neutral-border">
               <div className="flex items-center gap-2">
+                <span className="text-xl">{CHRONOTYPE_LABELS[profile.chronotype]?.emoji || '🕐'}</span>
+                <span className="text-neutral-textSecondary">Cronotipo</span>
+              </div>
+              <span className="font-semibold text-neutral-textPrimary">
+                {CHRONOTYPE_LABELS[profile.chronotype]?.label || profile.chronotype}
+              </span>
+            </div>
+            <div className="flex justify-between items-center py-3 border-b border-neutral-border">
+              <div className="flex items-center gap-2">
                 <span className="text-xl">⏱️</span>
                 <span className="text-neutral-textSecondary">Foco ideal</span>
               </div>
@@ -341,7 +422,7 @@ export default function DiscoveryResultPage() {
                 <span className="text-neutral-textSecondary">Melhor horario</span>
               </div>
               <span className="font-semibold text-neutral-textPrimary">
-                {TIME_LABELS[profile.best_focus_time]}
+                {TIME_LABELS[profile.best_focus_time] || profile.best_focus_time}
               </span>
             </div>
           </div>

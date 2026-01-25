@@ -34,18 +34,36 @@ interface DiscoveryAnswer {
 
 const QUESTIONS: DiscoveryQuestion[] = [
   {
+    id: '0',
+    order: 0,
+    category: 'chronotype',
+    question_text: 'Qual seu padrao de sono/trabalho?',
+    question_type: 'single_choice',
+    options: [
+      { value: 'early_bird', label: 'Cotovia - durmo cedo, acordo cedo', emoji: '🐦' },
+      { value: 'normal', label: 'Normal - horarios tradicionais (dia)', emoji: '😴' },
+      { value: 'night_owl', label: 'Coruja - durmo tarde, acordo tarde', emoji: '🦉' },
+      { value: 'nocturnal', label: 'Noturno - trabalho de noite, durmo de dia', emoji: '🌙' },
+      { value: 'shift_worker', label: 'Turnista - manha/tarde/noite/madrugada variam', emoji: '🔄' },
+      { value: 'insomniac', label: 'Insone - durmo pouco, horarios erraticos', emoji: '👁️' },
+      { value: 'irregular', label: 'Caotico - sem padrao definido', emoji: '🎲' },
+    ],
+    required: true,
+  },
+  {
     id: '1',
     order: 1,
     category: 'energy',
-    question_text: 'Como voce geralmente se sente pela manha?',
+    question_text: 'Como voce geralmente se sente ao acordar?',
     question_type: 'single_choice',
     options: [
       { value: 'low', label: 'Dificil acordar, pouca energia', emoji: '😴' },
       { value: 'medium', label: 'Normal, demoro a engrenar', emoji: '😐' },
       { value: 'high', label: 'Acordo bem disposto', emoji: '⚡' },
-      { value: 'poor_sleep', label: 'Dormi pouco/mal', emoji: '😫' },
+      { value: 'poor_sleep', label: 'Dormi pouco/mal (comum)', emoji: '😫' },
       { value: 'anxious', label: 'Acordo ansioso/preocupado', emoji: '😰' },
       { value: 'varies', label: 'Varia muito de um dia pro outro', emoji: '🎲' },
+      { value: 'depends_time', label: 'Depende se acordei no meu horario', emoji: '⏰' },
     ],
     required: true,
   },
@@ -53,15 +71,17 @@ const QUESTIONS: DiscoveryQuestion[] = [
     id: '2',
     order: 2,
     category: 'energy',
-    question_text: 'Em que periodo do dia voce se sente mais produtivo?',
+    question_text: 'Em que periodo voce se sente mais produtivo?',
     question_type: 'single_choice',
     options: [
-      { value: 'early_morning', label: 'Bem cedo (antes das 9h)', emoji: '🌅' },
+      { value: 'early_morning', label: 'Bem cedo (5h-9h)', emoji: '🌅' },
       { value: 'morning', label: 'Manha (9h-12h)', emoji: '☀️' },
       { value: 'afternoon', label: 'Tarde (12h-18h)', emoji: '🌤️' },
       { value: 'evening', label: 'Noite (18h-22h)', emoji: '🌙' },
-      { value: 'late_night', label: 'Madrugada (apos 22h)', emoji: '🌃' },
+      { value: 'late_night', label: 'Noite alta (22h-2h)', emoji: '🌃' },
+      { value: 'dawn', label: 'Madrugada (2h-5h)', emoji: '🌌' },
       { value: 'varies', label: 'Varia muito', emoji: '🔄' },
+      { value: 'no_pattern', label: 'Nao tenho padrao', emoji: '❓' },
     ],
     required: true,
   },
@@ -161,6 +181,7 @@ const QUESTIONS: DiscoveryQuestion[] = [
 ];
 
 const CATEGORY_LABELS: Record<string, string> = {
+  chronotype: 'Cronotipo',
   energy: 'Energia',
   focus: 'Foco',
   distraction: 'Distracoes',
@@ -327,18 +348,23 @@ export default function DiscoveryPage() {
                 <input
                   type="range"
                   min={currentQuestion.min_value || 5}
-                  max={currentQuestion.max_value || 60}
-                  step={5}
+                  max={currentQuestion.max_value || 360}
+                  step={currentQuestion.step || 5}
                   value={sliderValue}
                   onChange={(e) => setSliderValue(Number(e.target.value))}
                   className="w-full h-3 bg-neutral-border rounded-full appearance-none cursor-pointer accent-primary-main"
                 />
                 <p className="text-5xl font-bold text-primary-main text-center mt-6">
-                  {sliderValue} minutos
+                  {sliderValue >= 60
+                    ? `${Math.floor(sliderValue / 60)}h${sliderValue % 60 > 0 ? ` ${sliderValue % 60}min` : ''}`
+                    : `${sliderValue} minutos`}
+                </p>
+                <p className="text-sm text-neutral-textMuted text-center mt-2">
+                  {sliderValue >= 120 ? '🔥 Hiperfoco!' : sliderValue <= 15 ? '⚡ Sprints rapidos' : ''}
                 </p>
                 <div className="flex justify-between mt-4">
                   <span className="text-sm text-neutral-textMuted">5 min</span>
-                  <span className="text-sm text-neutral-textMuted">60 min</span>
+                  <span className="text-sm text-neutral-textMuted">6h</span>
                 </div>
               </div>
             )}
