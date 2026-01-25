@@ -21,6 +21,7 @@ interface DiscoveryQuestion {
   options?: QuestionOption[];
   min_value?: number;
   max_value?: number;
+  step?: number;
   required: boolean;
   allowOther?: boolean;
 }

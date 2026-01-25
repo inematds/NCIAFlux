@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { userStorage, settingsStorage } from '@/lib/storage';
+import { useState, useEffect, useRef } from 'react';
+import { userStorage, settingsStorage, tasksStorage, getStorageKey } from '@/lib/storage';
 
 interface UserSettings {
   name: string;
@@ -24,6 +24,9 @@ interface UserSettings {
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<'profile' | 'notifications' | 'preferences' | 'team' | 'data'>('profile');
   const [showResetModal, setShowResetModal] = useState(false);
+  const [importMessage, setImportMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [importType, setImportType] = useState<'tasks' | 'events' | 'notes' | 'backup' | null>(null);
   const [settings, setSettings] = useState<UserSettings>({
     name: 'Usuário Demo',
     email: 'demo@nciaflux.com',
@@ -126,6 +129,265 @@ export default function SettingsPage() {
 
     // Redirect to login
     window.location.href = '/login';
+  }
+
+  // ===== EXPORT FUNCTIONS =====
+
+  function exportTasks() {
+    const tasks = tasksStorage.getAll();
+    const csv = [
+      'titulo,descricao,prioridade,data,status,categoria',
+      ...tasks.map(t =>
+        `"${t.title}","${t.description || ''}","${t.priority}","${t.dueDate}","${t.status}","${t.category || ''}"`
+      )
+    ].join('\n');
+    downloadFile(csv, 'tarefas.csv', 'text/csv');
+  }
+
+  function exportEvents() {
+    const events = JSON.parse(localStorage.getItem(getStorageKey('nciaflux_calendar_events')) || '[]');
+    const icsLines = [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'PRODID:-//NCIAFlux//MentesBrilhantes//PT',
+      ...events.flatMap((e: { id: string; title: string; date: string; startTime?: string; endTime?: string; description?: string }) => [
+        'BEGIN:VEVENT',
+        `UID:${e.id}@nciaflux`,
+        `SUMMARY:${e.title}`,
+        `DTSTART:${e.date.replace(/-/g, '')}${e.startTime ? 'T' + e.startTime.replace(':', '') + '00' : ''}`,
+        `DTEND:${e.date.replace(/-/g, '')}${e.endTime ? 'T' + e.endTime.replace(':', '') + '00' : ''}`,
+        e.description ? `DESCRIPTION:${e.description}` : '',
+        'END:VEVENT'
+      ].filter(Boolean)),
+      'END:VCALENDAR'
+    ].join('\r\n');
+    downloadFile(icsLines, 'agenda.ics', 'text/calendar');
+  }
+
+  function exportNotes() {
+    const notes = JSON.parse(localStorage.getItem(getStorageKey('nciaflux_notes')) || '[]');
+    const csv = [
+      'titulo,conteudo,pasta,tags',
+      ...notes.map((n: { title: string; content: string; folderId?: string; tags?: string[] }) =>
+        `"${n.title}","${n.content.replace(/"/g, '""')}","${n.folderId || 'inbox'}","${(n.tags || []).join(';')}"`
+      )
+    ].join('\n');
+    downloadFile(csv, 'notas.csv', 'text/csv');
+  }
+
+  function exportBackup() {
+    const backup: Record<string, unknown> = {};
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.includes('nciaflux_')) {
+        try {
+          backup[key] = JSON.parse(localStorage.getItem(key) || '');
+        } catch {
+          backup[key] = localStorage.getItem(key);
+        }
+      }
+    }
+    const json = JSON.stringify(backup, null, 2);
+    downloadFile(json, 'backup-nciaflux.json', 'application/json');
+  }
+
+  function downloadFile(content: string, filename: string, type: string) {
+    const blob = new Blob([content], { type });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  // ===== IMPORT FUNCTIONS =====
+
+  function triggerImport(type: 'tasks' | 'events' | 'notes' | 'backup') {
+    setImportType(type);
+    setImportMessage(null);
+    fileInputRef.current?.click();
+  }
+
+  function handleFileImport(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file || !importType) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const content = event.target?.result as string;
+      try {
+        switch (importType) {
+          case 'tasks':
+            importTasks(content);
+            break;
+          case 'events':
+            importEvents(content);
+            break;
+          case 'notes':
+            importNotes(content);
+            break;
+          case 'backup':
+            importBackup(content);
+            break;
+        }
+      } catch (err) {
+        setImportMessage({ type: 'error', text: `Erro ao importar: ${err instanceof Error ? err.message : 'Formato invalido'}` });
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  }
+
+  function importTasks(csv: string) {
+    const lines = csv.split('\n').filter(l => l.trim());
+    if (lines.length < 2) throw new Error('Arquivo vazio ou sem dados');
+
+    const tasks = tasksStorage.getAll();
+    let imported = 0;
+
+    for (let i = 1; i < lines.length; i++) {
+      const values = parseCSVLine(lines[i]);
+      if (values.length >= 4) {
+        const [titulo, descricao, prioridade, data, status, categoria] = values;
+        tasks.push({
+          id: `task_import_${Date.now()}_${i}`,
+          title: titulo,
+          description: descricao || '',
+          priority: (['high', 'medium', 'low'].includes(prioridade) ? prioridade : 'medium') as 'high' | 'medium' | 'low',
+          dueDate: data || new Date().toISOString().split('T')[0],
+          status: (['pending', 'in_progress', 'completed'].includes(status) ? status : 'pending') as 'pending' | 'in_progress' | 'completed',
+          category: categoria || 'geral',
+          assignee: userStorage.get()?.id || '',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        });
+        imported++;
+      }
+    }
+
+    tasksStorage.setAll(tasks);
+    setImportMessage({ type: 'success', text: `${imported} tarefas importadas com sucesso!` });
+    window.dispatchEvent(new CustomEvent('nciaflux-data-refresh', { detail: { type: 'tasks' } }));
+  }
+
+  function importEvents(ics: string) {
+    const events = JSON.parse(localStorage.getItem(getStorageKey('nciaflux_calendar_events')) || '[]');
+    let imported = 0;
+
+    const eventBlocks = ics.split('BEGIN:VEVENT').slice(1);
+    for (const block of eventBlocks) {
+      const getField = (name: string) => {
+        const match = block.match(new RegExp(`${name}:(.+)`));
+        return match ? match[1].trim() : '';
+      };
+
+      const summary = getField('SUMMARY');
+      const dtstart = getField('DTSTART');
+      const dtend = getField('DTEND');
+      const description = getField('DESCRIPTION');
+
+      if (summary && dtstart) {
+        const date = dtstart.slice(0, 8);
+        const formattedDate = `${date.slice(0, 4)}-${date.slice(4, 6)}-${date.slice(6, 8)}`;
+
+        let startTime = '';
+        let endTime = '';
+        if (dtstart.includes('T')) {
+          const time = dtstart.split('T')[1];
+          startTime = `${time.slice(0, 2)}:${time.slice(2, 4)}`;
+        }
+        if (dtend && dtend.includes('T')) {
+          const time = dtend.split('T')[1];
+          endTime = `${time.slice(0, 2)}:${time.slice(2, 4)}`;
+        }
+
+        events.push({
+          id: `event_import_${Date.now()}_${imported}`,
+          title: summary,
+          date: formattedDate,
+          startTime,
+          endTime,
+          description: description || '',
+          createdAt: new Date().toISOString(),
+        });
+        imported++;
+      }
+    }
+
+    localStorage.setItem(getStorageKey('nciaflux_calendar_events'), JSON.stringify(events));
+    setImportMessage({ type: 'success', text: `${imported} eventos importados com sucesso!` });
+    window.dispatchEvent(new CustomEvent('nciaflux-data-refresh', { detail: { type: 'events' } }));
+  }
+
+  function importNotes(csv: string) {
+    const lines = csv.split('\n').filter(l => l.trim());
+    if (lines.length < 2) throw new Error('Arquivo vazio ou sem dados');
+
+    const notes = JSON.parse(localStorage.getItem(getStorageKey('nciaflux_notes')) || '[]');
+    let imported = 0;
+
+    for (let i = 1; i < lines.length; i++) {
+      const values = parseCSVLine(lines[i]);
+      if (values.length >= 2) {
+        const [titulo, conteudo, pasta, tags] = values;
+        notes.push({
+          id: `note_import_${Date.now()}_${i}`,
+          title: titulo || 'Nota importada',
+          content: conteudo || '',
+          folderId: pasta || 'inbox',
+          tags: tags ? tags.split(';').filter(Boolean) : [],
+          isPinned: false,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        });
+        imported++;
+      }
+    }
+
+    localStorage.setItem(getStorageKey('nciaflux_notes'), JSON.stringify(notes));
+    setImportMessage({ type: 'success', text: `${imported} notas importadas com sucesso!` });
+    window.dispatchEvent(new CustomEvent('nciaflux-data-refresh', { detail: { type: 'all' } }));
+  }
+
+  function importBackup(json: string) {
+    const backup = JSON.parse(json);
+    let imported = 0;
+
+    for (const [key, value] of Object.entries(backup)) {
+      if (key.includes('nciaflux_')) {
+        localStorage.setItem(key, typeof value === 'string' ? value : JSON.stringify(value));
+        imported++;
+      }
+    }
+
+    setImportMessage({ type: 'success', text: `Backup restaurado! ${imported} itens importados. Recarregando...` });
+    setTimeout(() => window.location.reload(), 1500);
+  }
+
+  function parseCSVLine(line: string): string[] {
+    const result: string[] = [];
+    let current = '';
+    let inQuotes = false;
+
+    for (let i = 0; i < line.length; i++) {
+      const char = line[i];
+      if (char === '"') {
+        if (inQuotes && line[i + 1] === '"') {
+          current += '"';
+          i++;
+        } else {
+          inQuotes = !inQuotes;
+        }
+      } else if (char === ',' && !inQuotes) {
+        result.push(current);
+        current = '';
+      } else {
+        current += char;
+      }
+    }
+    result.push(current);
+    return result;
   }
 
   return (
@@ -450,25 +712,140 @@ export default function SettingsPage() {
           )}
 
           {activeTab === 'data' && (
-            <div className="bg-white rounded-2xl shadow-sm p-6">
-              <h2 className="text-lg font-semibold text-neutral-textPrimary mb-6">
-                Gerenciamento de Dados
-              </h2>
-              <div className="space-y-6">
-                <div className="p-4 bg-neutral-background rounded-xl">
-                  <h3 className="font-medium text-neutral-textPrimary mb-2">Armazenamento Local</h3>
-                  <p className="text-sm text-neutral-textMuted mb-4">
-                    Seus dados estao salvos localmente no navegador. Isso inclui tarefas, notas, eventos, check-ins e configuracoes.
-                  </p>
-                  <div className="text-sm text-neutral-textSecondary">
-                    <p>📋 Tarefas e projetos</p>
-                    <p>📝 Notas e brain dump</p>
-                    <p>📅 Eventos do calendario</p>
-                    <p>💬 Historico do chat</p>
-                    <p>⚙️ Configuracoes e perfil</p>
+            <div className="space-y-6">
+              {/* Hidden file input */}
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileImport}
+                accept={importType === 'events' ? '.ics' : importType === 'backup' ? '.json' : '.csv'}
+                className="hidden"
+              />
+
+              {/* Import message */}
+              {importMessage && (
+                <div className={`p-4 rounded-xl ${importMessage.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+                  {importMessage.text}
+                </div>
+              )}
+
+              {/* Import/Export Tarefas */}
+              <div className="bg-white rounded-2xl shadow-sm p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <span className="text-2xl">📋</span>
+                  <div>
+                    <h3 className="font-semibold text-neutral-textPrimary">Tarefas</h3>
+                    <p className="text-sm text-neutral-textMuted">Formato CSV (Excel/Google Sheets)</p>
                   </div>
                 </div>
+                <div className="bg-neutral-background rounded-lg p-3 mb-4">
+                  <p className="text-xs font-mono text-neutral-textSecondary mb-2">Formato do arquivo:</p>
+                  <code className="text-xs text-neutral-textMuted block">
+                    titulo,descricao,prioridade,data,status,categoria<br/>
+                    "Minha tarefa","Descricao aqui","high","2026-01-28","pending","trabalho"
+                  </code>
+                  <p className="text-xs text-neutral-textMuted mt-2">
+                    <strong>prioridade:</strong> high, medium, low | <strong>status:</strong> pending, in_progress, completed
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <button onClick={() => triggerImport('tasks')} className="flex-1 px-4 py-2 border border-primary-main text-primary-main rounded-lg hover:bg-primary-main/5 transition-colors">
+                    📥 Importar CSV
+                  </button>
+                  <button onClick={exportTasks} className="flex-1 px-4 py-2 bg-primary-main text-white rounded-lg hover:bg-primary-dark transition-colors">
+                    📤 Exportar CSV
+                  </button>
+                </div>
+              </div>
 
+              {/* Import/Export Eventos */}
+              <div className="bg-white rounded-2xl shadow-sm p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <span className="text-2xl">📅</span>
+                  <div>
+                    <h3 className="font-semibold text-neutral-textPrimary">Agenda / Eventos</h3>
+                    <p className="text-sm text-neutral-textMuted">Formato ICS (Google Calendar, Outlook, Apple)</p>
+                  </div>
+                </div>
+                <div className="bg-neutral-background rounded-lg p-3 mb-4">
+                  <p className="text-xs text-neutral-textMuted mb-2">
+                    <strong>O que e ICS?</strong> E o formato padrao de calendario. Para exportar do Google Calendar:
+                  </p>
+                  <ol className="text-xs text-neutral-textMuted list-decimal list-inside space-y-1">
+                    <li>Acesse calendar.google.com</li>
+                    <li>Clique na engrenagem → Configuracoes</li>
+                    <li>Selecione seu calendario → Exportar calendario</li>
+                    <li>Baixe o arquivo .ics</li>
+                  </ol>
+                </div>
+                <div className="flex gap-2">
+                  <button onClick={() => triggerImport('events')} className="flex-1 px-4 py-2 border border-primary-main text-primary-main rounded-lg hover:bg-primary-main/5 transition-colors">
+                    📥 Importar ICS
+                  </button>
+                  <button onClick={exportEvents} className="flex-1 px-4 py-2 bg-primary-main text-white rounded-lg hover:bg-primary-dark transition-colors">
+                    📤 Exportar ICS
+                  </button>
+                </div>
+              </div>
+
+              {/* Import/Export Notas */}
+              <div className="bg-white rounded-2xl shadow-sm p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <span className="text-2xl">📝</span>
+                  <div>
+                    <h3 className="font-semibold text-neutral-textPrimary">Notas</h3>
+                    <p className="text-sm text-neutral-textMuted">Formato CSV (Excel/Google Sheets)</p>
+                  </div>
+                </div>
+                <div className="bg-neutral-background rounded-lg p-3 mb-4">
+                  <p className="text-xs font-mono text-neutral-textSecondary mb-2">Formato do arquivo:</p>
+                  <code className="text-xs text-neutral-textMuted block">
+                    titulo,conteudo,pasta,tags<br/>
+                    "Minha nota","Conteudo da nota aqui","inbox","tag1;tag2"
+                  </code>
+                  <p className="text-xs text-neutral-textMuted mt-2">
+                    <strong>pasta:</strong> inbox, ideas, reference, archive | <strong>tags:</strong> separadas por ;
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <button onClick={() => triggerImport('notes')} className="flex-1 px-4 py-2 border border-primary-main text-primary-main rounded-lg hover:bg-primary-main/5 transition-colors">
+                    📥 Importar CSV
+                  </button>
+                  <button onClick={exportNotes} className="flex-1 px-4 py-2 bg-primary-main text-white rounded-lg hover:bg-primary-dark transition-colors">
+                    📤 Exportar CSV
+                  </button>
+                </div>
+              </div>
+
+              {/* Backup Completo */}
+              <div className="bg-white rounded-2xl shadow-sm p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <span className="text-2xl">💾</span>
+                  <div>
+                    <h3 className="font-semibold text-neutral-textPrimary">Backup Completo</h3>
+                    <p className="text-sm text-neutral-textMuted">Formato JSON (todos os dados)</p>
+                  </div>
+                </div>
+                <div className="bg-neutral-background rounded-lg p-3 mb-4">
+                  <p className="text-xs text-neutral-textMuted">
+                    Exporta <strong>todos</strong> os seus dados em um unico arquivo: tarefas, notas, eventos,
+                    check-ins, configuracoes, historico de chat e perfil cognitivo.
+                    <br/><br/>
+                    Use para fazer backup ou transferir para outro navegador/dispositivo.
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <button onClick={() => triggerImport('backup')} className="flex-1 px-4 py-2 border border-primary-main text-primary-main rounded-lg hover:bg-primary-main/5 transition-colors">
+                    📥 Restaurar Backup
+                  </button>
+                  <button onClick={exportBackup} className="flex-1 px-4 py-2 bg-primary-main text-white rounded-lg hover:bg-primary-dark transition-colors">
+                    📤 Fazer Backup
+                  </button>
+                </div>
+              </div>
+
+              {/* Zona de Perigo */}
+              <div className="bg-white rounded-2xl shadow-sm p-6">
                 <div className="p-4 border-2 border-accent-error/20 bg-accent-error/5 rounded-xl">
                   <h3 className="font-medium text-accent-error mb-2">Zona de Perigo</h3>
                   <p className="text-sm text-neutral-textMuted mb-4">
