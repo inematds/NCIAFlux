@@ -89,6 +89,16 @@ export default function PlannerPage() {
   // Load data
   useEffect(() => {
     loadData(selectedDate);
+
+    // Listen for refresh events from chat
+    const handleRefresh = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail.type === 'tasks' || detail.type === 'all') {
+        loadData(selectedDate);
+      }
+    };
+    window.addEventListener('nciaflux-data-refresh', handleRefresh);
+    return () => window.removeEventListener('nciaflux-data-refresh', handleRefresh);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedDate]);
 

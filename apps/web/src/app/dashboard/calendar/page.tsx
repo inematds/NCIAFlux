@@ -106,15 +106,29 @@ export default function CalendarPage() {
 
   // Load data
   useEffect(() => {
-    const savedEvents = localStorage.getItem(getStorageKey('nciaflux_calendar_events'));
-    if (savedEvents) {
-      setEvents(JSON.parse(savedEvents));
+    function loadData() {
+      const savedEvents = localStorage.getItem(getStorageKey('nciaflux_calendar_events'));
+      if (savedEvents) {
+        setEvents(JSON.parse(savedEvents));
+      }
+
+      const savedTasks = localStorage.getItem(getStorageKey('nciaflux_tasks'));
+      if (savedTasks) {
+        setTasks(JSON.parse(savedTasks));
+      }
     }
 
-    const savedTasks = localStorage.getItem(getStorageKey('nciaflux_tasks'));
-    if (savedTasks) {
-      setTasks(JSON.parse(savedTasks));
-    }
+    loadData();
+
+    // Listen for refresh events from chat
+    const handleRefresh = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail.type === 'events' || detail.type === 'tasks' || detail.type === 'all') {
+        loadData();
+      }
+    };
+    window.addEventListener('nciaflux-data-refresh', handleRefresh);
+    return () => window.removeEventListener('nciaflux-data-refresh', handleRefresh);
   }, []);
 
   // Save events

@@ -36,13 +36,27 @@ export default function DashboardPage() {
   const [hasProfile, setHasProfile] = useState(true);
 
   useEffect(() => {
-    const storedUser = userStorage.get();
-    setUser(storedUser);
-    setTasks(tasksStorage.getAll());
+    function loadData() {
+      const storedUser = userStorage.get();
+      setUser(storedUser);
+      setTasks(tasksStorage.getAll());
 
-    // Check if user has completed discovery
-    const profile = localStorage.getItem(getStorageKey('nciaflux_cognitive_profile'));
-    setHasProfile(!!profile);
+      // Check if user has completed discovery
+      const profile = localStorage.getItem(getStorageKey('nciaflux_cognitive_profile'));
+      setHasProfile(!!profile);
+    }
+
+    loadData();
+
+    // Listen for refresh events from chat
+    const handleRefresh = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail.type === 'tasks' || detail.type === 'all') {
+        loadData();
+      }
+    };
+    window.addEventListener('nciaflux-data-refresh', handleRefresh);
+    return () => window.removeEventListener('nciaflux-data-refresh', handleRefresh);
   }, []);
 
   const today = new Date().toLocaleDateString('pt-BR', {

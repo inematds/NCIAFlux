@@ -289,6 +289,13 @@ export function useChatWithAI(): UseChatWithAIReturn {
   );
 
   /**
+   * Dispatch refresh event to update UI components
+   */
+  const dispatchRefreshEvent = (type: 'tasks' | 'events' | 'all') => {
+    window.dispatchEvent(new CustomEvent('nciaflux-data-refresh', { detail: { type } }));
+  };
+
+  /**
    * Handle tool result (execute client-side actions)
    */
   const handleToolResult = async (result: Record<string, unknown>, userId: string) => {
@@ -307,6 +314,7 @@ export function useChatWithAI(): UseChatWithAIReturn {
             category: 'geral',
             assignee: userId,
           });
+          dispatchRefreshEvent('tasks');
         }
         break;
       }
@@ -326,6 +334,7 @@ export function useChatWithAI(): UseChatWithAIReturn {
             tasksStorage.update(task.id, { status: 'completed' });
           }
         }
+        dispatchRefreshEvent('tasks');
         break;
       }
 
@@ -335,6 +344,7 @@ export function useChatWithAI(): UseChatWithAIReturn {
           const key = getStorageKey('nciaflux_brain_dump');
           const existing = JSON.parse(localStorage.getItem(key) || '[]');
           localStorage.setItem(key, JSON.stringify([...existing, ...items]));
+          dispatchRefreshEvent('all');
         }
         break;
       }
@@ -361,10 +371,114 @@ export function useChatWithAI(): UseChatWithAIReturn {
       case 'create_event': {
         const event = result.event as Record<string, unknown>;
         if (event) {
-          const key = getStorageKey('nciaflux_events');
+          const key = getStorageKey('nciaflux_calendar_events');
           const existing = JSON.parse(localStorage.getItem(key) || '[]');
           localStorage.setItem(key, JSON.stringify([...existing, event]));
+          dispatchRefreshEvent('events');
         }
+        break;
+      }
+
+      case 'delete_task': {
+        const taskId = result.taskId as string;
+        const taskTitle = result.taskTitle as string;
+        const tasks = tasksStorage.getAll();
+
+        if (taskId) {
+          tasksStorage.delete(taskId);
+        } else if (taskTitle) {
+          const task = tasks.find(
+            (t) => t.title.toLowerCase().includes(taskTitle.toLowerCase())
+          );
+          if (task) {
+            tasksStorage.delete(task.id);
+          }
+        }
+        dispatchRefreshEvent('tasks');
+        break;
+      }
+
+      case 'delete_event': {
+        const eventId = result.eventId as string;
+        const eventTitle = result.eventTitle as string;
+        const date = result.date as string;
+        const key = getStorageKey('nciaflux_calendar_events');
+        const events = JSON.parse(localStorage.getItem(key) || '[]') as Array<Record<string, unknown>>;
+
+        let filtered = events;
+        if (eventId) {
+          filtered = events.filter((e) => e.id !== eventId);
+        } else if (eventTitle) {
+          filtered = events.filter((e) => {
+            const titleMatch = !(e.title as string).toLowerCase().includes(eventTitle.toLowerCase());
+            if (date) {
+              return titleMatch || e.date !== date;
+            }
+            return titleMatch;
+          });
+        }
+        localStorage.setItem(key, JSON.stringify(filtered));
+        dispatchRefreshEvent('events');
+        break;
+      }
+
+      case 'delete_all_tasks': {
+        const date = result.date as string;
+        const tasks = tasksStorage.getAll();
+        const filtered = tasks.filter((t) => t.dueDate !== date);
+        tasksStorage.setAll(filtered);
+        dispatchRefreshEvent('tasks');
+        break;
+      }
+
+      case 'delete_all_events': {
+        const date = result.date as string;
+        const key = getStorageKey('nciaflux_calendar_events');
+        const events = JSON.parse(localStorage.getItem(key) || '[]') as Array<Record<string, unknown>>;
+        const filtered = events.filter((e) => e.date !== date);
+        localStorage.setItem(key, JSON.stringify(filtered));
+        dispatchRefreshEvent('events');
+        break;
+      }
+
+      case 'move_task': {
+        const taskId = result.taskId as string;
+        const taskTitle = result.taskTitle as string;
+        const newDate = result.newDate as string;
+        const tasks = tasksStorage.getAll();
+
+        if (taskId) {
+          tasksStorage.update(taskId, { dueDate: newDate });
+        } else if (taskTitle) {
+          const task = tasks.find(
+            (t) => t.title.toLowerCase().includes(taskTitle.toLowerCase())
+          );
+          if (task) {
+            tasksStorage.update(task.id, { dueDate: newDate });
+          }
+        }
+        dispatchRefreshEvent('tasks');
+        break;
+      }
+
+      case 'move_event': {
+        const eventId = result.eventId as string;
+        const eventTitle = result.eventTitle as string;
+        const newDate = result.newDate as string;
+        const key = getStorageKey('nciaflux_calendar_events');
+        const events = JSON.parse(localStorage.getItem(key) || '[]') as Array<Record<string, unknown>>;
+
+        const updated = events.map((e) => {
+          if (eventId && e.id === eventId) {
+            return { ...e, date: newDate, updatedAt: new Date().toISOString() };
+          }
+          if (eventTitle && (e.title as string).toLowerCase().includes(eventTitle.toLowerCase())) {
+            return { ...e, date: newDate, updatedAt: new Date().toISOString() };
+          }
+          return e;
+        });
+        localStorage.setItem(key, JSON.stringify(updated));
+        dispatchRefreshEvent('events');
         break;
       }
 
@@ -374,6 +488,7 @@ export function useChatWithAI(): UseChatWithAIReturn {
           const key = getStorageKey('nciaflux_notes');
           const existing = JSON.parse(localStorage.getItem(key) || '[]');
           localStorage.setItem(key, JSON.stringify([...existing, note]));
+          dispatchRefreshEvent('all');
         }
         break;
       }
@@ -384,6 +499,7 @@ export function useChatWithAI(): UseChatWithAIReturn {
           const key = getStorageKey('nciaflux_projects');
           const existing = JSON.parse(localStorage.getItem(key) || '[]');
           localStorage.setItem(key, JSON.stringify([...existing, project]));
+          dispatchRefreshEvent('all');
         }
         break;
       }

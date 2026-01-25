@@ -5,8 +5,8 @@
 
 'use client';
 
-import { useRef, useEffect, useState } from 'react';
-import { MessageCircle, X, Trash2, Sparkles, Zap, ChevronDown } from 'lucide-react';
+import { useRef, useEffect, useState, useCallback } from 'react';
+import { MessageCircle, X, Trash2, Sparkles, Zap, ChevronDown, GripHorizontal } from 'lucide-react';
 import { useChatWithAI } from '@/hooks/useChatWithAI';
 import { useChatStore } from '@/stores/chatStore';
 import { userStorage } from '@/lib/storage';
@@ -15,31 +15,36 @@ import { ChatInput } from './ChatInput';
 import type { AIModelId } from '@shared/types';
 
 // Model display info
-const MODEL_INFO: Record<AIModelId, { name: string; icon: string; description: string }> = {
+const MODEL_INFO: Record<AIModelId, { name: string; icon: string; description: string; supportsTools: boolean }> = {
   'anthropic/claude-3.5-sonnet': {
     name: 'Claude 3.5',
     icon: '🧠',
     description: 'Melhor qualidade',
+    supportsTools: true,
   },
   'anthropic/claude-3-haiku': {
     name: 'Claude Haiku',
     icon: '⚡',
     description: 'Rapido e economico',
+    supportsTools: true,
   },
   'openai/gpt-4o-mini': {
     name: 'GPT-4o Mini',
     icon: '🤖',
     description: 'Rapido e barato',
+    supportsTools: true,
   },
   'openai/gpt-5-mini': {
     name: 'GPT-5 Mini',
     icon: '✨',
     description: 'Novo da OpenAI',
+    supportsTools: true,
   },
   'meta-llama/llama-3.3-70b-instruct:free': {
     name: 'Llama 3.3',
     icon: '🦙',
-    description: 'Gratuito!',
+    description: 'Gratuito (sem acoes)',
+    supportsTools: false,
   },
 };
 
@@ -61,6 +66,12 @@ export function ChatWidget() {
   const [userPlan, setUserPlan] = useState<'free' | 'team' | 'premium' | 'enterprise'>('free');
   const [showModelSelector, setShowModelSelector] = useState(false);
 
+  // Drag state
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const dragStartRef = useRef({ x: 0, y: 0 });
+  const positionStartRef = useRef({ x: 0, y: 0 });
+
   useEffect(() => {
     const user = userStorage.get();
     if (user) {
@@ -76,6 +87,39 @@ export function ChatWidget() {
     setModel(modelId);
     setShowModelSelector(false);
   };
+
+  // Drag handlers
+  const handleDragStart = useCallback((e: React.MouseEvent) => {
+    setIsDragging(true);
+    dragStartRef.current = { x: e.clientX, y: e.clientY };
+    positionStartRef.current = { ...position };
+    e.preventDefault();
+  }, [position]);
+
+  useEffect(() => {
+    if (!isDragging) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const deltaX = e.clientX - dragStartRef.current.x;
+      const deltaY = e.clientY - dragStartRef.current.y;
+      setPosition({
+        x: positionStartRef.current.x + deltaX,
+        y: positionStartRef.current.y + deltaY,
+      });
+    };
+
+    const handleMouseUp = () => {
+      setIsDragging(false);
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDragging]);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
@@ -123,17 +167,24 @@ export function ChatWidget() {
       {/* Chat window */}
       <div
         ref={chatContainerRef}
-        className={`fixed bottom-24 right-6 z-40 w-96 max-w-[calc(100vw-3rem)]
+        className={`fixed z-40 w-96 max-w-[calc(100vw-3rem)]
           bg-white rounded-2xl shadow-2xl border border-gray-200
-          transition-all duration-300 transform origin-bottom-right
+          ${isDragging ? '' : 'transition-all duration-300'} transform origin-bottom-right
           ${isOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0 pointer-events-none'}`}
-        style={{ maxHeight: 'calc(100vh - 8rem)' }}
+        style={{
+          maxHeight: 'calc(100vh - 8rem)',
+          bottom: `${96 - position.y}px`,
+          right: `${24 - position.x}px`,
+        }}
       >
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-100 bg-gradient-to-r from-purple-600 to-purple-700 rounded-t-2xl">
+        {/* Header - Draggable */}
+        <div
+          className={`flex items-center justify-between p-4 border-b border-gray-100 bg-gradient-to-r from-purple-600 to-purple-700 rounded-t-2xl ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+          onMouseDown={handleDragStart}
+        >
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
-              <Sparkles className="w-5 h-5 text-white" />
+              <GripHorizontal className="w-5 h-5 text-white/70" />
             </div>
             <div>
               <h3 className="font-semibold text-white">Assistente IA</h3>

@@ -63,6 +63,16 @@ export default function TasksPage() {
   useEffect(() => {
     loadTasks();
     loadProjects();
+
+    // Listen for refresh events from chat
+    const handleRefresh = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail.type === 'tasks' || detail.type === 'all') {
+        loadTasks();
+      }
+    };
+    window.addEventListener('nciaflux-data-refresh', handleRefresh);
+    return () => window.removeEventListener('nciaflux-data-refresh', handleRefresh);
   }, []);
 
   function loadTasks() {

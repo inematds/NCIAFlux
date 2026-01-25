@@ -37,6 +37,44 @@ export const AI_TOOLS: AITool[] = [
     },
   },
 
+  {
+    name: 'delete_task',
+    description: 'Exclui/deleta uma tarefa permanentemente. Use quando o usuario quiser remover uma tarefa.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        taskId: { type: 'string', description: 'ID da tarefa (opcional se fornecer titulo)' },
+        taskTitle: { type: 'string', description: 'Titulo da tarefa para buscar e deletar' },
+      },
+    },
+  },
+
+  {
+    name: 'delete_all_tasks',
+    description: 'Exclui todas as tarefas de uma data especifica. Use quando o usuario quiser limpar todas as tarefas de um dia.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        date: { type: 'string', description: 'Data das tarefas a serem deletadas (YYYY-MM-DD)' },
+      },
+      required: ['date'],
+    },
+  },
+
+  {
+    name: 'move_task',
+    description: 'Move uma tarefa para outra data. Use quando o usuario quiser adiar ou antecipar uma tarefa.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        taskId: { type: 'string', description: 'ID da tarefa (opcional se fornecer titulo)' },
+        taskTitle: { type: 'string', description: 'Titulo da tarefa para buscar' },
+        newDate: { type: 'string', description: 'Nova data da tarefa (YYYY-MM-DD)' },
+      },
+      required: ['newDate'],
+    },
+  },
+
   // === BRAIN DUMP ===
   {
     name: 'add_to_brain_dump',
@@ -107,6 +145,45 @@ export const AI_TOOLS: AITool[] = [
         reminder: { type: 'number', description: 'Lembrete em minutos antes (ex: 15, 30, 60)' },
       },
       required: ['title', 'date', 'startTime'],
+    },
+  },
+
+  {
+    name: 'delete_event',
+    description: 'Exclui/deleta um evento da agenda. Use quando o usuario quiser remover um compromisso.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        eventId: { type: 'string', description: 'ID do evento (opcional se fornecer titulo)' },
+        eventTitle: { type: 'string', description: 'Titulo do evento para buscar e deletar' },
+        date: { type: 'string', description: 'Data do evento para ajudar a identificar (YYYY-MM-DD)' },
+      },
+    },
+  },
+
+  {
+    name: 'delete_all_events',
+    description: 'Exclui todos os eventos de uma data especifica. Use quando o usuario quiser limpar toda a agenda de um dia.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        date: { type: 'string', description: 'Data dos eventos a serem deletados (YYYY-MM-DD)' },
+      },
+      required: ['date'],
+    },
+  },
+
+  {
+    name: 'move_event',
+    description: 'Move um evento para outra data. Use quando o usuario quiser remarcar um compromisso.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        eventId: { type: 'string', description: 'ID do evento (opcional se fornecer titulo)' },
+        eventTitle: { type: 'string', description: 'Titulo do evento para buscar' },
+        newDate: { type: 'string', description: 'Nova data do evento (YYYY-MM-DD)' },
+      },
+      required: ['newDate'],
     },
   },
 
@@ -229,6 +306,12 @@ export async function executeToolCall(
         return await createTask(args, userId);
       case 'complete_task':
         return await completeTask(args, userId);
+      case 'delete_task':
+        return await deleteTask(args, userId);
+      case 'delete_all_tasks':
+        return await deleteAllTasks(args, userId);
+      case 'move_task':
+        return await moveTask(args, userId);
       case 'add_to_brain_dump':
         return await addToBrainDump(args, userId);
       case 'activate_crisis_mode':
@@ -237,6 +320,12 @@ export async function executeToolCall(
         return await recordCheckin(args, userId);
       case 'create_event':
         return await createEvent(args, userId);
+      case 'delete_event':
+        return await deleteEvent(args, userId);
+      case 'delete_all_events':
+        return await deleteAllEvents(args, userId);
+      case 'move_event':
+        return await moveEvent(args, userId);
       case 'search_tasks':
         return await searchTasks(args, userId);
       case 'list_today_tasks':
@@ -324,6 +413,90 @@ async function completeTask(
       searchBy: taskId ? 'id' : 'title',
     },
     message: `Otimo! Marquei a tarefa "${taskTitle || taskId}" como concluida. Parabens pelo progresso!`,
+  };
+}
+
+async function deleteTask(
+  args: Record<string, unknown>,
+  _userId: string
+): Promise<ToolExecutionResult> {
+  const taskId = args.taskId as string | undefined;
+  const taskTitle = args.taskTitle as string | undefined;
+
+  if (!taskId && !taskTitle) {
+    return {
+      success: false,
+      error: 'Preciso do ID ou titulo da tarefa para deletar.',
+    };
+  }
+
+  return {
+    success: true,
+    result: {
+      action: 'delete_task',
+      taskId,
+      taskTitle,
+      searchBy: taskId ? 'id' : 'title',
+    },
+    message: `Pronto! Excluí a tarefa "${taskTitle || taskId}".`,
+  };
+}
+
+async function deleteAllTasks(
+  args: Record<string, unknown>,
+  _userId: string
+): Promise<ToolExecutionResult> {
+  const date = args.date as string;
+
+  if (!date) {
+    return {
+      success: false,
+      error: 'Preciso da data para deletar as tarefas.',
+    };
+  }
+
+  return {
+    success: true,
+    result: {
+      action: 'delete_all_tasks',
+      date,
+    },
+    message: `Pronto! Excluí todas as tarefas de ${date}.`,
+  };
+}
+
+async function moveTask(
+  args: Record<string, unknown>,
+  _userId: string
+): Promise<ToolExecutionResult> {
+  const taskId = args.taskId as string | undefined;
+  const taskTitle = args.taskTitle as string | undefined;
+  const newDate = args.newDate as string;
+
+  if (!taskId && !taskTitle) {
+    return {
+      success: false,
+      error: 'Preciso do ID ou titulo da tarefa para mover.',
+    };
+  }
+
+  if (!newDate) {
+    return {
+      success: false,
+      error: 'Preciso da nova data para mover a tarefa.',
+    };
+  }
+
+  return {
+    success: true,
+    result: {
+      action: 'move_task',
+      taskId,
+      taskTitle,
+      newDate,
+      searchBy: taskId ? 'id' : 'title',
+    },
+    message: `Pronto! Movi a tarefa "${taskTitle || taskId}" para ${newDate}.`,
   };
 }
 
@@ -456,6 +629,92 @@ async function createEvent(
     success: true,
     result: { event, action: 'create_event' },
     message: `${emoji} Agendei "${title}" para ${date} as ${timeText}.${reminder ? ` Vou te lembrar ${reminder} minutos antes.` : ''}`,
+  };
+}
+
+async function deleteEvent(
+  args: Record<string, unknown>,
+  _userId: string
+): Promise<ToolExecutionResult> {
+  const eventId = args.eventId as string | undefined;
+  const eventTitle = args.eventTitle as string | undefined;
+  const date = args.date as string | undefined;
+
+  if (!eventId && !eventTitle) {
+    return {
+      success: false,
+      error: 'Preciso do ID ou titulo do evento para deletar.',
+    };
+  }
+
+  return {
+    success: true,
+    result: {
+      action: 'delete_event',
+      eventId,
+      eventTitle,
+      date,
+      searchBy: eventId ? 'id' : 'title',
+    },
+    message: `Pronto! Removi o evento "${eventTitle || eventId}" da sua agenda.`,
+  };
+}
+
+async function deleteAllEvents(
+  args: Record<string, unknown>,
+  _userId: string
+): Promise<ToolExecutionResult> {
+  const date = args.date as string;
+
+  if (!date) {
+    return {
+      success: false,
+      error: 'Preciso da data para deletar os eventos.',
+    };
+  }
+
+  return {
+    success: true,
+    result: {
+      action: 'delete_all_events',
+      date,
+    },
+    message: `Pronto! Limpei toda a agenda de ${date}.`,
+  };
+}
+
+async function moveEvent(
+  args: Record<string, unknown>,
+  _userId: string
+): Promise<ToolExecutionResult> {
+  const eventId = args.eventId as string | undefined;
+  const eventTitle = args.eventTitle as string | undefined;
+  const newDate = args.newDate as string;
+
+  if (!eventId && !eventTitle) {
+    return {
+      success: false,
+      error: 'Preciso do ID ou titulo do evento para mover.',
+    };
+  }
+
+  if (!newDate) {
+    return {
+      success: false,
+      error: 'Preciso da nova data para mover o evento.',
+    };
+  }
+
+  return {
+    success: true,
+    result: {
+      action: 'move_event',
+      eventId,
+      eventTitle,
+      newDate,
+      searchBy: eventId ? 'id' : 'title',
+    },
+    message: `Pronto! Remarcei o evento "${eventTitle || eventId}" para ${newDate}.`,
   };
 }
 

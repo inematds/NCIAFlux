@@ -12,6 +12,7 @@ import type {
   AIModelId,
   OpenRouterTool,
 } from '@shared/types';
+import { AI_MODELS } from '@shared/types';
 
 // Request body type
 interface ChatRequest {
@@ -89,6 +90,10 @@ export async function POST(request: NextRequest) {
     // Select model
     const selectedModel = model || selectModelForTask(message, isCrisisMode);
 
+    // Check if model supports tools
+    const modelConfig = AI_MODELS[selectedModel];
+    const modelSupportsTools = modelConfig?.supportsTools !== false;
+
     // Build messages array
     const messages = [
       { role: 'system' as const, content: systemPrompt },
@@ -96,15 +101,18 @@ export async function POST(request: NextRequest) {
       { role: 'user' as const, content: message },
     ];
 
-    // Convert tools to OpenRouter format
-    const openRouterTools: OpenRouterTool[] = AI_TOOLS.map(tool => ({
-      type: 'function',
-      function: {
-        name: tool.name,
-        description: tool.description,
-        parameters: tool.input_schema,
-      },
-    }));
+    // Convert tools to OpenRouter format (only if model supports them)
+    let openRouterTools: OpenRouterTool[] | undefined;
+    if (modelSupportsTools) {
+      openRouterTools = AI_TOOLS.map(tool => ({
+        type: 'function',
+        function: {
+          name: tool.name,
+          description: tool.description,
+          parameters: tool.input_schema,
+        },
+      }));
+    }
 
     // Call OpenRouter
     const response = await client.chat({
@@ -200,6 +208,8 @@ export async function POST(request: NextRequest) {
 
     // Handle specific errors
     if (error instanceof Error) {
+      console.error('Error details:', error.message, error.stack);
+
       if (error.message.includes('401')) {
         return NextResponse.json(
           { error: 'Chave da API invalida. Verifique OPENROUTER_API_KEY.' },
@@ -212,6 +222,18 @@ export async function POST(request: NextRequest) {
           { status: 429 }
         );
       }
+      if (error.message.includes('400')) {
+        return NextResponse.json(
+          { error: 'Requisicao invalida. Verifique os parametros.' },
+          { status: 400 }
+        );
+      }
+
+      // Return more specific error message in development
+      return NextResponse.json(
+        { error: `Erro: ${error.message}` },
+        { status: 500 }
+      );
     }
 
     return NextResponse.json(
