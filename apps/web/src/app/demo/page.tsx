@@ -368,179 +368,85 @@ export default function DemoPage() {
     router.push('/dashboard');
   }
 
-  const features = [
-    { icon: '📝', title: 'Brain Dump', desc: 'Capture pensamentos e organize com triagem' },
-    { icon: '📅', title: 'Planner Diario', desc: 'Planeje seu dia em blocos de tempo' },
-    { icon: '🔄', title: 'Rotinas', desc: 'Crie rotinas matinais e noturnas' },
-    { icon: '📁', title: 'Projetos', desc: 'Organize tarefas por projetos' },
-    { icon: '📆', title: 'Agenda', desc: 'Visualize eventos em calendario' },
-    { icon: '📓', title: 'Notas', desc: 'Capture ideias e referencias' },
-    { icon: '🧠', title: 'Cronotipos', desc: 'Descubra seu perfil de produtividade' },
-    { icon: '📊', title: 'Revisoes', desc: 'Reflita sobre seu progresso' },
-  ];
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-main/10 to-secondary-main/10">
-      {/* Header */}
-      <header className="p-6">
-        <Link href="/" className="inline-flex items-center gap-2">
-          <div className="w-10 h-10 bg-primary-main rounded-xl flex items-center justify-center text-white font-bold text-lg">
-            M
-          </div>
-          <span className="text-xl font-bold text-neutral-textPrimary">MentesBrilhantes</span>
-        </Link>
-      </header>
-
-      <main className="max-w-4xl mx-auto px-6 py-12">
-        {/* Hero */}
-        <div className="text-center mb-12">
-          <span className="text-6xl mb-6 block">🚀</span>
-          <h1 className="text-4xl lg:text-5xl font-bold text-neutral-textPrimary mb-4">
-            Experimente o MentesBrilhantes
-          </h1>
-          <p className="text-xl text-neutral-textSecondary max-w-2xl mx-auto">
-            Explore todas as funcionalidades com dados de exemplo. Sem cadastro, sem compromisso.
+    <div className="min-h-screen bg-neutral-background flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        {/* Logo */}
+        <div className="text-center mb-8">
+          <Link href="/" className="inline-flex items-center gap-3 justify-center">
+            <div className="w-12 h-12 bg-primary-main rounded-xl flex items-center justify-center text-white font-bold text-xl">
+              M
+            </div>
+            <span className="text-3xl font-bold text-primary-main">MentesBrilhantes</span>
+          </Link>
+          <p className="text-neutral-textSecondary mt-2">
+            Modo Demonstracao
           </p>
         </div>
 
-        {/* Role Selection */}
-        <div className="mb-8">
-          <h2 className="text-xl font-semibold text-neutral-textPrimary text-center mb-4">
-            Escolha o tipo de perfil para testar:
+        {/* Demo Card */}
+        <div className="bg-white rounded-2xl shadow-sm p-8">
+          <h2 className="text-lg font-semibold text-neutral-textPrimary text-center mb-6">
+            Escolha o tipo de perfil:
           </h2>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center max-w-2xl mx-auto">
+
+          {/* Role Selection */}
+          <div className="space-y-3 mb-6">
             {roleOptions.map((option) => (
               <button
                 key={option.role}
                 onClick={() => setSelectedRole(option.role)}
-                className={`flex-1 p-4 rounded-xl border-2 transition-all text-left ${
+                className={`w-full flex items-center gap-4 p-4 rounded-xl border-2 transition-all text-left ${
                   selectedRole === option.role
                     ? 'border-primary-main bg-primary-main/10'
                     : 'border-neutral-border bg-white hover:border-primary-light'
                 }`}
               >
-                <span className="text-2xl block mb-2">{option.icon}</span>
-                <h3 className="font-semibold text-neutral-textPrimary">{option.title}</h3>
-                <p className="text-sm text-neutral-textSecondary">{option.desc}</p>
+                <span className="text-3xl">{option.icon}</span>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-neutral-textPrimary">{option.title}</h3>
+                  <p className="text-sm text-neutral-textSecondary">{option.desc}</p>
+                </div>
+                {selectedRole === option.role && (
+                  <span className="text-primary-main text-xl">✓</span>
+                )}
               </button>
             ))}
           </div>
-        </div>
 
-        {/* Start Demo Button */}
-        <div className="text-center mb-16">
+          {/* Start Button */}
           <button
             onClick={startDemo}
             disabled={isLoading}
-            className="inline-flex items-center gap-3 px-8 py-4 rounded-2xl bg-primary-main text-white text-xl font-bold hover:bg-primary-dark transition-all shadow-lg hover:shadow-xl disabled:opacity-50"
+            className="w-full bg-primary-main text-white py-3 rounded-lg font-semibold hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isLoading ? (
-              <>
-                <div className="w-6 h-6 border-3 border-white border-t-transparent rounded-full animate-spin" />
-                Preparando demo...
-              </>
-            ) : (
-              <>
-                <span>▶️</span>
-                Iniciar Demo como {roleOptions.find(r => r.role === selectedRole)?.title}
-              </>
-            )}
+            {isLoading ? 'Entrando...' : 'Entrar no Demo'}
           </button>
-          <p className="text-sm text-neutral-textMuted mt-4">
-            Seus dados ficam salvos localmente no navegador
+        </div>
+
+        {/* Links */}
+        <div className="mt-6 text-center">
+          <p className="text-neutral-textSecondary">
+            Quer criar sua propria conta?{' '}
+            <Link href="/register" className="text-primary-main font-medium hover:underline">
+              Criar conta
+            </Link>
+          </p>
+          <p className="text-neutral-textSecondary mt-2">
+            Ja tem uma conta?{' '}
+            <Link href="/login" className="text-primary-main font-medium hover:underline">
+              Fazer login
+            </Link>
           </p>
         </div>
 
-        {/* Features Grid */}
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-16">
-          {features.map((feature, i) => (
-            <div
-              key={i}
-              className="bg-white rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow"
-            >
-              <span className="text-3xl block mb-3">{feature.icon}</span>
-              <h3 className="font-semibold text-neutral-textPrimary mb-1">{feature.title}</h3>
-              <p className="text-sm text-neutral-textSecondary">{feature.desc}</p>
-            </div>
-          ))}
-        </div>
-
-        {/* What's Included */}
-        <div className="bg-white rounded-2xl p-8 shadow-sm mb-12">
-          <h2 className="text-2xl font-bold text-neutral-textPrimary mb-6 text-center">
-            O que esta incluido no demo?
-          </h2>
-          <div className="grid md:grid-cols-2 gap-6">
-            <div className="flex items-start gap-3">
-              <span className="text-accent-success text-xl">✓</span>
-              <div>
-                <p className="font-medium text-neutral-textPrimary">Tarefas e Projetos de exemplo</p>
-                <p className="text-sm text-neutral-textSecondary">Veja como organizar seu trabalho</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <span className="text-accent-success text-xl">✓</span>
-              <div>
-                <p className="font-medium text-neutral-textPrimary">Rotinas pre-configuradas</p>
-                <p className="text-sm text-neutral-textSecondary">Rotinas matinal e noturna prontas</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <span className="text-accent-success text-xl">✓</span>
-              <div>
-                <p className="font-medium text-neutral-textPrimary">Cronotipo definido</p>
-                <p className="text-sm text-neutral-textSecondary">Veja dicas personalizadas</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <span className="text-accent-success text-xl">✓</span>
-              <div>
-                <p className="font-medium text-neutral-textPrimary">Notas e Brain Dump</p>
-                <p className="text-sm text-neutral-textSecondary">Exemplos de captura de ideias</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <span className="text-accent-success text-xl">✓</span>
-              <div>
-                <p className="font-medium text-neutral-textPrimary">Eventos no calendario</p>
-                <p className="text-sm text-neutral-textSecondary">Visualize sua agenda</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <span className="text-accent-success text-xl">✓</span>
-              <div>
-                <p className="font-medium text-neutral-textPrimary">Revisao semanal completa</p>
-                <p className="text-sm text-neutral-textSecondary">Veja como refletir sobre progresso</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* CTA */}
-        <div className="text-center">
-          <p className="text-neutral-textSecondary mb-4">
-            Ja tem uma conta?
+        {/* Info */}
+        <div className="mt-6 bg-secondary-main/20 rounded-xl p-4 text-center">
+          <p className="text-sm text-neutral-textSecondary">
+            O demo usa dados de exemplo salvos localmente no navegador.
           </p>
-          <Link
-            href="/login"
-            className="text-primary-main font-semibold hover:underline"
-          >
-            Fazer login
-          </Link>
-          <span className="mx-3 text-neutral-border">|</span>
-          <Link
-            href="/register"
-            className="text-primary-main font-semibold hover:underline"
-          >
-            Criar conta gratuita
-          </Link>
         </div>
-      </main>
-
-      {/* Footer */}
-      <footer className="text-center py-8 text-sm text-neutral-textMuted">
-        <p>MentesBrilhantes - Produtividade que entende voce</p>
-      </footer>
+      </div>
     </div>
   );
 }
