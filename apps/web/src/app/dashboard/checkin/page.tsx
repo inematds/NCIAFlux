@@ -1,17 +1,29 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { userStorage } from '@/lib/storage';
 
 type CheckInStep = 'mood' | 'energy' | 'notes' | 'complete';
 
+interface Task {
+  id: string;
+  title: string;
+  priority?: 'high' | 'medium' | 'low';
+  isTop1?: boolean;
+  status?: string;
+  completed?: boolean;
+  estimatedMinutes?: number;
+  projectId?: string;
+}
+
 const CHECK_IN_MOODS = [
-  { value: 'great', emoji: '😊', label: 'Otimo' },
-  { value: 'good', emoji: '🙂', label: 'Bem' },
-  { value: 'okay', emoji: '😐', label: 'Ok' },
-  { value: 'low', emoji: '😔', label: 'Baixo' },
-  { value: 'struggling', emoji: '😢', label: 'Dificil' },
+  { value: 'great', emoji: '😊', label: 'Otimo', level: 5 },
+  { value: 'good', emoji: '🙂', label: 'Bem', level: 4 },
+  { value: 'okay', emoji: '😐', label: 'Ok', level: 3 },
+  { value: 'low', emoji: '😔', label: 'Baixo', level: 2 },
+  { value: 'struggling', emoji: '😢', label: 'Dificil', level: 1 },
 ];
 
 const ENERGY_LEVELS = [
@@ -22,24 +34,6 @@ const ENERGY_LEVELS = [
   { value: 5, emoji: '🔥', label: 'Alta' },
 ];
 
-const CHECK_IN_RESPONSES = {
-  high_energy: [
-    'Que bom saber que sua energia esta alta! Aproveite para tarefas mais desafiadoras.',
-    'Excelente! Esse e um otimo momento para focar em algo importante.',
-    'Energia alta detectada! Use esse momento a seu favor.',
-  ],
-  low_energy: [
-    'Tudo bem ter dias assim. Que tal comecar com algo leve?',
-    'Esta tudo bem descansar quando precisa. Cuide de voce.',
-    'Dias de baixa energia fazem parte. Seja gentil consigo.',
-  ],
-  struggling: [
-    'Obrigado por compartilhar. Estou aqui com voce.',
-    'Reconhecer como se sente e um passo importante. Voce nao esta sozinho.',
-    'Dias dificeis acontecem. Quer que eu sugira algo para ajudar?',
-  ],
-};
-
 export default function CheckInPage() {
   const router = useRouter();
   const user = userStorage.get();
@@ -48,8 +42,21 @@ export default function CheckInPage() {
   const [mood, setMood] = useState<string | null>(null);
   const [energy, setEnergy] = useState<number | null>(null);
   const [notes, setNotes] = useState('');
-  const [responseMessage, setResponseMessage] = useState('');
   const [isAnimating, setIsAnimating] = useState(false);
+  const [tasks, setTasks] = useState<Task[]>([]);
+
+  // Load tasks on mount
+  useEffect(() => {
+    const tasksData = localStorage.getItem('nciaflux_tasks');
+    if (tasksData) {
+      const allTasks: Task[] = JSON.parse(tasksData);
+      // Filter to pending/in_progress tasks only
+      const pendingTasks = allTasks.filter(
+        (t) => !t.completed && t.status !== 'completed'
+      );
+      setTasks(pendingTasks);
+    }
+  }, []);
 
   function getTimeBasedGreeting(): string {
     const hour = new Date().getHours();
@@ -77,29 +84,22 @@ export default function CheckInPage() {
   }
 
   function handleSubmit() {
-    let responses: readonly string[];
-    if (energy && energy >= 4) {
-      responses = CHECK_IN_RESPONSES.high_energy;
-    } else if (mood === 'struggling' || mood === 'low') {
-      responses = CHECK_IN_RESPONSES.struggling;
-    } else {
-      responses = CHECK_IN_RESPONSES.low_energy;
-    }
-    const randomResponse = responses[Math.floor(Math.random() * responses.length)];
-    setResponseMessage(randomResponse);
+    // Save check-in to localStorage with today's date as key
+    const today = new Date().toISOString().split('T')[0];
+    const checkinsData = localStorage.getItem('nciaflux_checkins');
+    const checkins = checkinsData ? JSON.parse(checkinsData) : {};
 
-    // Save check-in to localStorage
-    const checkIns = JSON.parse(localStorage.getItem('nciaflux_checkins') || '[]');
-    checkIns.push({
+    checkins[today] = {
       id: `checkin_${Date.now()}`,
+      date: today,
       userId: user?.id,
       mood,
       energy,
       notes,
       createdAt: new Date().toISOString(),
-    });
-    localStorage.setItem('nciaflux_checkins', JSON.stringify(checkIns));
+    };
 
+    localStorage.setItem('nciaflux_checkins', JSON.stringify(checkins));
     animateTransition(() => setStep('complete'));
   }
 
@@ -113,8 +113,80 @@ export default function CheckInPage() {
     }
   }
 
+  // Get recommendations based on mood and energy
+  function getRecommendations() {
+    const moodLevel = CHECK_IN_MOODS.find((m) => m.value === mood)?.level || 3;
+    const energyLevel = energy || 3;
+    const combinedScore = (moodLevel + energyLevel) / 2;
+
+    // Categorize tasks
+    const highPriorityTasks = tasks.filter((t) => t.priority === 'high' || t.isTop1);
+    const quickTasks = tasks.filter((t) => (t.estimatedMinutes || 30) <= 15);
+    const mediumTasks = tasks.filter((t) => t.priority === 'medium' || (!t.priority && !t.isTop1));
+
+    if (mood === 'struggling' || moodLevel <= 1) {
+      // Struggling - Crisis mode and self-care
+      return {
+        type: 'crisis' as const,
+        title: 'Cuide de voce primeiro',
+        message: 'Tudo bem nao estar bem. Que tal fazer uma pausa e usar algumas tecnicas para se acalmar?',
+        primaryAction: { label: 'Modo Crise', href: '/dashboard/crisis', icon: '🆘' },
+        secondaryActions: [
+          { label: 'Apenas respirar', href: '/dashboard/focus', icon: '🧘' },
+        ],
+        tasks: [],
+      };
+    }
+
+    if (combinedScore <= 2) {
+      // Very low - suggest easy wins
+      return {
+        type: 'low' as const,
+        title: 'Dia de vitorias pequenas',
+        message: 'Energia baixa? Vamos com calma. Escolha uma tarefa rapida para comecar.',
+        primaryAction: { label: 'Ver tarefas rapidas', href: '/dashboard/tasks?priority=low', icon: '✨' },
+        secondaryActions: [
+          { label: 'Descansar', href: '/dashboard', icon: '😴' },
+        ],
+        tasks: quickTasks.slice(0, 3),
+        taskLabel: 'Tarefas rapidas (menos de 15 min):',
+      };
+    }
+
+    if (combinedScore <= 3.5) {
+      // Medium - balanced approach
+      return {
+        type: 'medium' as const,
+        title: 'Um passo de cada vez',
+        message: 'Dia ok! Vamos manter um ritmo tranquilo. Escolha uma tarefa para comecar.',
+        primaryAction: { label: 'Timer de Foco', href: '/dashboard/focus', icon: '🎯' },
+        secondaryActions: [
+          { label: 'Ver todas tarefas', href: '/dashboard/tasks', icon: '📋' },
+          { label: 'Planejar o dia', href: '/dashboard/planner', icon: '📅' },
+        ],
+        tasks: mediumTasks.slice(0, 3),
+        taskLabel: 'Sugestoes para hoje:',
+      };
+    }
+
+    // High energy - go for it!
+    return {
+      type: 'high' as const,
+      title: 'Bora com tudo! 🚀',
+      message: 'Energia alta e humor bom? Hora de atacar as tarefas importantes!',
+      primaryAction: { label: 'Comecar Foco', href: '/dashboard/focus', icon: '🔥' },
+      secondaryActions: [
+        { label: 'Ver prioridades', href: '/dashboard/tasks?priority=high', icon: '⚡' },
+        { label: 'Brain Dump', href: '/dashboard/brain-dump', icon: '📝' },
+      ],
+      tasks: highPriorityTasks.slice(0, 3),
+      taskLabel: 'Tarefas prioritarias:',
+    };
+  }
+
   const selectedMood = CHECK_IN_MOODS.find((m) => m.value === mood);
   const selectedEnergy = ENERGY_LEVELS.find((e) => e.value === energy);
+  const recommendations = step === 'complete' ? getRecommendations() : null;
 
   return (
     <div className="p-6 lg:p-8 max-w-2xl mx-auto">
@@ -247,47 +319,113 @@ export default function CheckInPage() {
           </div>
         )}
 
-        {/* Complete Step */}
-        {step === 'complete' && (
-          <div className="text-center">
-            <div className="w-20 h-20 bg-accent-success/20 rounded-full flex items-center justify-center mx-auto mb-6">
-              <span className="text-4xl">✨</span>
-            </div>
-
-            <h2 className="text-2xl font-bold text-neutral-textPrimary mb-4">
-              Check-in registrado!
-            </h2>
-            <p className="text-neutral-textSecondary mb-8 max-w-md mx-auto">
-              {responseMessage}
-            </p>
-
-            <div className="bg-white rounded-xl p-6 shadow-sm mb-8 text-left">
-              <p className="text-sm font-semibold text-neutral-textMuted mb-4">Seu check-in:</p>
-              <div className="flex justify-between items-center mb-3">
-                <span className="text-neutral-textSecondary">Humor:</span>
-                <span className="font-semibold">
-                  {selectedMood?.emoji} {selectedMood?.label}
-                </span>
-              </div>
-              <div className="flex justify-between items-center mb-3">
-                <span className="text-neutral-textSecondary">Energia:</span>
-                <span className="font-semibold">
-                  {selectedEnergy?.emoji} {selectedEnergy?.label}
-                </span>
-              </div>
-              {notes.trim() && (
-                <div className="pt-3 border-t border-neutral-border">
-                  <span className="text-sm text-neutral-textSecondary">Notas:</span>
-                  <p className="text-neutral-textPrimary mt-1">{notes}</p>
+        {/* Complete Step - Now with Recommendations! */}
+        {step === 'complete' && recommendations && (
+          <div>
+            {/* Summary Card */}
+            <div className="bg-white rounded-xl p-4 shadow-sm mb-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <span className="text-2xl">{selectedMood?.emoji}</span>
+                    <span className="text-sm text-neutral-textMuted">{selectedMood?.label}</span>
+                  </div>
+                  <div className="w-px h-6 bg-neutral-border"></div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-2xl">{selectedEnergy?.emoji}</span>
+                    <span className="text-sm text-neutral-textMuted">{selectedEnergy?.label}</span>
+                  </div>
                 </div>
-              )}
+                <span className="text-xs text-accent-success font-medium">✓ Registrado</span>
+              </div>
             </div>
 
+            {/* Recommendation */}
+            <div className={`rounded-2xl p-6 mb-6 ${
+              recommendations.type === 'crisis'
+                ? 'bg-gradient-to-br from-orange-100 to-red-100 border-2 border-orange-200'
+                : recommendations.type === 'high'
+                ? 'bg-gradient-to-br from-green-100 to-emerald-100 border-2 border-green-200'
+                : recommendations.type === 'low'
+                ? 'bg-gradient-to-br from-blue-100 to-indigo-100 border-2 border-blue-200'
+                : 'bg-gradient-to-br from-purple-100 to-pink-100 border-2 border-purple-200'
+            }`}>
+              <h2 className="text-2xl font-bold text-neutral-textPrimary mb-2">
+                {recommendations.title}
+              </h2>
+              <p className="text-neutral-textSecondary mb-6">
+                {recommendations.message}
+              </p>
+
+              {/* Primary Action */}
+              <Link
+                href={recommendations.primaryAction.href}
+                className={`w-full py-4 rounded-xl font-semibold text-lg flex items-center justify-center gap-3 transition-all hover:scale-[1.02] mb-4 ${
+                  recommendations.type === 'crisis'
+                    ? 'bg-orange-500 text-white hover:bg-orange-600'
+                    : recommendations.type === 'high'
+                    ? 'bg-green-600 text-white hover:bg-green-700'
+                    : 'bg-primary-main text-white hover:bg-primary-dark'
+                }`}
+              >
+                <span className="text-2xl">{recommendations.primaryAction.icon}</span>
+                {recommendations.primaryAction.label}
+              </Link>
+
+              {/* Secondary Actions */}
+              <div className="flex gap-3">
+                {recommendations.secondaryActions.map((action, idx) => (
+                  <Link
+                    key={idx}
+                    href={action.href}
+                    className="flex-1 py-3 rounded-xl border-2 border-white/50 bg-white/30 text-neutral-textPrimary font-medium flex items-center justify-center gap-2 hover:bg-white/50 transition-colors"
+                  >
+                    <span>{action.icon}</span>
+                    {action.label}
+                  </Link>
+                ))}
+              </div>
+            </div>
+
+            {/* Suggested Tasks */}
+            {recommendations.tasks && recommendations.tasks.length > 0 && (
+              <div className="bg-white rounded-xl p-4 shadow-sm mb-6">
+                <p className="text-sm font-semibold text-neutral-textMuted mb-3">
+                  {recommendations.taskLabel}
+                </p>
+                <div className="space-y-2">
+                  {recommendations.tasks.map((task) => (
+                    <Link
+                      key={task.id}
+                      href="/dashboard/focus"
+                      className="flex items-center gap-3 p-3 rounded-lg hover:bg-neutral-background transition-colors group"
+                    >
+                      <span className="text-lg">
+                        {task.isTop1 ? '⭐' : task.priority === 'high' ? '🔴' : task.priority === 'medium' ? '🟡' : '🟢'}
+                      </span>
+                      <span className="flex-1 text-neutral-textPrimary group-hover:text-primary-main transition-colors">
+                        {task.title}
+                      </span>
+                      {task.estimatedMinutes && (
+                        <span className="text-xs text-neutral-textMuted">
+                          ~{task.estimatedMinutes}min
+                        </span>
+                      )}
+                      <span className="text-neutral-textMuted group-hover:text-primary-main transition-colors">
+                        ▶
+                      </span>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Skip to Dashboard */}
             <button
               onClick={() => router.push('/dashboard')}
-              className="w-full py-3 rounded-xl bg-primary-main text-white font-semibold hover:bg-primary-dark transition-colors"
+              className="w-full py-3 text-neutral-textMuted hover:text-neutral-textSecondary transition-colors text-sm"
             >
-              Continuar
+              Ir para o Dashboard →
             </button>
           </div>
         )}
