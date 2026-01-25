@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 
 type FocusMode = 'pomodoro' | 'deep_work' | 'timeboxing' | 'free_flow';
-type FocusState = 'idle' | 'selecting' | 'focusing' | 'break' | 'paused' | 'completed';
+type FocusState = 'idle' | 'selecting_task' | 'focusing' | 'break' | 'paused' | 'completed';
 
 interface Task {
   id: string;
@@ -68,7 +68,7 @@ export default function FocusPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
-  const [selectedMode, setSelectedMode] = useState<FocusMode>('pomodoro');
+  const [selectedMode, setSelectedMode] = useState<FocusMode | null>(null);
   const [focusState, setFocusState] = useState<FocusState>('idle');
   const [timeLeft, setTimeLeft] = useState(0);
   const [totalFocusTime, setTotalFocusTime] = useState(0);
@@ -76,7 +76,7 @@ export default function FocusPage() {
   const [freeFlowTime, setFreeFlowTime] = useState(0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const currentMode = FOCUS_MODES.find((m) => m.id === selectedMode)!;
+  const currentMode = selectedMode ? FOCUS_MODES.find((m) => m.id === selectedMode)! : FOCUS_MODES[0];
   const today = new Date().toISOString().split('T')[0];
 
   // Load tasks and stats
@@ -85,18 +85,14 @@ export default function FocusPage() {
     const savedTasks = localStorage.getItem('nciaflux_tasks');
     if (savedTasks) {
       const allTasks: Task[] = JSON.parse(savedTasks);
-      // Filter: pending/in_progress tasks, sorted by priority and due date
       const priorityOrder = { high: 0, medium: 1, low: 2 };
       const filteredTasks = allTasks
         .filter(t => t.status === 'pending' || t.status === 'in_progress')
         .sort((a, b) => {
-          // Top1 first
           if (a.isTop1 && !b.isTop1) return -1;
           if (!a.isTop1 && b.isTop1) return 1;
-          // Then by priority
           const priorityDiff = priorityOrder[a.priority] - priorityOrder[b.priority];
           if (priorityDiff !== 0) return priorityDiff;
-          // Then by due date
           if (a.dueDate && b.dueDate) return a.dueDate.localeCompare(b.dueDate);
           if (a.dueDate) return -1;
           if (b.dueDate) return 1;
@@ -180,12 +176,22 @@ export default function FocusPage() {
     return task.title || task.content || 'Sem titulo';
   }
 
-  function selectTask(task: Task) {
-    setSelectedTask(task);
-    setFocusState('selecting');
+  function selectMode(mode: FocusMode) {
+    setSelectedMode(mode);
+    setFocusState('selecting_task');
   }
 
-  function startFocus() {
+  function selectTask(task: Task) {
+    setSelectedTask(task);
+    startFocus(task);
+  }
+
+  function startWithoutTask() {
+    setSelectedTask(null);
+    startFocus(null);
+  }
+
+  function startFocus(task: Task | null) {
     if (selectedMode === 'free_flow') {
       setFreeFlowTime(0);
       setFocusState('focusing');
@@ -195,8 +201,8 @@ export default function FocusPage() {
     }
 
     // Mark task as in_progress
-    if (selectedTask) {
-      updateTaskStatus(selectedTask.id, 'in_progress');
+    if (task) {
+      updateTaskStatus(task.id, 'in_progress');
     }
   }
 
@@ -220,27 +226,25 @@ export default function FocusPage() {
         saveStats(minutesFocused, false);
       }
     }
-    setFocusState('idle');
-    setSelectedTask(null);
-    setTimeLeft(0);
-    setFreeFlowTime(0);
+    resetToIdle();
   }
 
   function completeTask() {
     if (selectedTask) {
       updateTaskStatus(selectedTask.id, 'completed');
-      // Remove from local list
       setTasks(prev => prev.filter(t => t.id !== selectedTask.id));
     }
-    setFocusState('idle');
-    setSelectedTask(null);
-    setTimeLeft(0);
-    setFreeFlowTime(0);
+    resetToIdle();
   }
 
   function continueWorking() {
+    resetToIdle();
+  }
+
+  function resetToIdle() {
     setFocusState('idle');
     setSelectedTask(null);
+    setSelectedMode(null);
     setTimeLeft(0);
     setFreeFlowTime(0);
   }
@@ -279,11 +283,8 @@ export default function FocusPage() {
     return dueDate === today;
   }
 
-  // Idle state - show tasks
+  // ========== IDLE STATE - Choose technique ==========
   if (focusState === 'idle') {
-    const highPriorityTasks = tasks.filter(t => t.priority === 'high' || t.isTop1);
-    const otherTasks = tasks.filter(t => t.priority !== 'high' && !t.isTop1);
-
     return (
       <div className="p-6 lg:p-8">
         {/* Header */}
@@ -292,7 +293,7 @@ export default function FocusPage() {
             Timer de Foco
           </h1>
           <p className="text-neutral-textSecondary mt-1">
-            Escolha uma tarefa para focar
+            Escolha uma tecnica para comecar
           </p>
         </div>
 
@@ -308,29 +309,98 @@ export default function FocusPage() {
           </div>
         </div>
 
-        {tasks.length === 0 ? (
-          <div className="bg-white rounded-2xl p-8 shadow-sm text-center">
-            <span className="text-6xl block mb-4">🎯</span>
-            <h2 className="text-xl font-semibold text-neutral-textPrimary mb-2">
-              Nenhuma tarefa pendente
-            </h2>
-            <p className="text-neutral-textSecondary mb-6">
-              Adicione tarefas no Planner ou na pagina de Tarefas
-            </p>
-            <div className="flex gap-4 justify-center">
-              <Link
-                href="/dashboard/planner"
-                className="px-6 py-3 rounded-xl bg-primary-main text-white font-semibold hover:bg-primary-dark transition-colors"
-              >
-                Ir para Planner
-              </Link>
-              <Link
-                href="/dashboard/tasks"
-                className="px-6 py-3 rounded-xl border border-primary-main text-primary-main font-semibold hover:bg-primary-main/5 transition-colors"
-              >
-                Ver Tarefas
-              </Link>
+        {/* Technique Selection */}
+        <h2 className="text-lg font-semibold text-neutral-textPrimary mb-4">
+          Escolha a Tecnica
+        </h2>
+        <div className="grid sm:grid-cols-2 gap-4 mb-8">
+          {FOCUS_MODES.map((mode) => (
+            <button
+              key={mode.id}
+              onClick={() => selectMode(mode.id)}
+              className="p-6 rounded-2xl bg-white shadow-sm hover:shadow-lg transition-all text-left border-2 border-transparent hover:border-primary-main group"
+            >
+              <div className="flex items-center gap-4 mb-3">
+                <span className="text-4xl">{mode.emoji}</span>
+                <div>
+                  <span className="text-xl font-semibold text-neutral-textPrimary group-hover:text-primary-main transition-colors">
+                    {mode.name}
+                  </span>
+                  <p className="text-sm text-neutral-textSecondary">{mode.description}</p>
+                </div>
+              </div>
+            </button>
+          ))}
+        </div>
+
+        {/* Quick tip */}
+        <div className="bg-secondary-main/10 rounded-xl p-4">
+          <p className="text-sm text-neutral-textSecondary">
+            <strong>💡 Dica:</strong> Pomodoro é otimo para tarefas que exigem atencao constante.
+            Deep Work para trabalhos criativos. Timeboxing para tarefas rapidas.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // ========== SELECTING TASK STATE - Choose task or start without ==========
+  if (focusState === 'selecting_task' && selectedMode) {
+    const highPriorityTasks = tasks.filter(t => t.priority === 'high' || t.isTop1);
+    const otherTasks = tasks.filter(t => t.priority !== 'high' && !t.isTop1);
+
+    return (
+      <div className="p-6 lg:p-8">
+        {/* Header */}
+        <div className="mb-6">
+          <button
+            onClick={resetToIdle}
+            className="text-neutral-textSecondary hover:text-neutral-textPrimary mb-2 flex items-center gap-1"
+          >
+            ← Voltar
+          </button>
+          <h1 className="text-2xl lg:text-3xl font-bold text-neutral-textPrimary">
+            Escolha uma Tarefa
+          </h1>
+        </div>
+
+        {/* Selected Mode */}
+        <div className="bg-primary-main/10 rounded-xl p-4 mb-6 border border-primary-main/20 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <span className="text-3xl">{currentMode.emoji}</span>
+            <div>
+              <p className="font-semibold text-neutral-textPrimary">{currentMode.name}</p>
+              <p className="text-sm text-neutral-textSecondary">{currentMode.description}</p>
             </div>
+          </div>
+          <button
+            onClick={resetToIdle}
+            className="text-sm text-primary-main hover:underline"
+          >
+            Trocar
+          </button>
+        </div>
+
+        {/* Start without task */}
+        <button
+          onClick={startWithoutTask}
+          className="w-full p-4 mb-6 rounded-xl bg-gradient-to-r from-secondary-main to-purple-500 text-white font-semibold hover:opacity-90 transition-opacity flex items-center justify-center gap-3"
+        >
+          <span className="text-2xl">🧘</span>
+          Iniciar Foco Livre (sem tarefa)
+        </button>
+
+        {tasks.length === 0 ? (
+          <div className="bg-white rounded-xl p-6 shadow-sm text-center">
+            <p className="text-neutral-textSecondary mb-4">
+              Nenhuma tarefa pendente. Voce pode focar livremente ou adicionar tarefas.
+            </p>
+            <Link
+              href="/dashboard/tasks"
+              className="text-primary-main font-medium hover:underline"
+            >
+              Ir para Tarefas →
+            </Link>
           </div>
         ) : (
           <>
@@ -428,80 +498,8 @@ export default function FocusPage() {
     );
   }
 
-  // Selecting technique
-  if (focusState === 'selecting' && selectedTask) {
-    return (
-      <div className="p-6 lg:p-8">
-        {/* Header */}
-        <div className="mb-8">
-          <button
-            onClick={() => { setFocusState('idle'); setSelectedTask(null); }}
-            className="text-neutral-textSecondary hover:text-neutral-textPrimary mb-2 flex items-center gap-1"
-          >
-            ← Voltar
-          </button>
-          <h1 className="text-2xl lg:text-3xl font-bold text-neutral-textPrimary">
-            Escolha a Tecnica
-          </h1>
-        </div>
-
-        {/* Selected Task */}
-        <div className="bg-primary-main/10 rounded-xl p-5 mb-8 border border-primary-main/20">
-          <p className="text-sm text-primary-main font-medium mb-1">Tarefa selecionada:</p>
-          <p className="text-lg font-semibold text-neutral-textPrimary flex items-center gap-2">
-            {selectedTask.isTop1 && <span>⭐</span>}
-            {getTaskTitle(selectedTask)}
-          </p>
-          {selectedTask.projectId && (
-            <p className="text-sm text-neutral-textMuted mt-1">
-              {getProjectName(selectedTask.projectId)}
-            </p>
-          )}
-        </div>
-
-        {/* Mode Selection */}
-        <div className="mb-8">
-          <h2 className="text-lg font-semibold text-neutral-textPrimary mb-4">
-            Quanto tempo quer focar?
-          </h2>
-          <div className="grid sm:grid-cols-2 gap-4">
-            {FOCUS_MODES.map((mode) => (
-              <button
-                key={mode.id}
-                onClick={() => setSelectedMode(mode.id)}
-                className={`p-5 rounded-xl border-2 text-left transition-all ${
-                  selectedMode === mode.id
-                    ? 'border-primary-main bg-primary-main/5'
-                    : 'border-transparent bg-white shadow-sm hover:shadow-md'
-                }`}
-              >
-                <div className="flex items-center gap-3 mb-2">
-                  <span className="text-3xl">{mode.emoji}</span>
-                  <span className={`text-lg font-semibold ${
-                    selectedMode === mode.id ? 'text-primary-main' : 'text-neutral-textPrimary'
-                  }`}>
-                    {mode.name}
-                  </span>
-                </div>
-                <p className="text-sm text-neutral-textSecondary">{mode.description}</p>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Start Button */}
-        <button
-          onClick={startFocus}
-          className="w-full py-4 rounded-xl bg-primary-main text-white font-semibold text-lg hover:bg-primary-dark transition-colors flex items-center justify-center gap-2"
-        >
-          <span>▶️</span> Iniciar Foco
-        </button>
-      </div>
-    );
-  }
-
-  // Completed state
-  if (focusState === 'completed' && selectedTask) {
+  // ========== COMPLETED STATE ==========
+  if (focusState === 'completed') {
     return (
       <div className="p-6 lg:p-8">
         <div className="bg-white rounded-2xl p-8 shadow-sm text-center">
@@ -509,9 +507,15 @@ export default function FocusPage() {
           <h2 className="text-2xl font-bold text-neutral-textPrimary mb-2">
             Sessao Completa!
           </h2>
-          <p className="text-neutral-textSecondary mb-6">
-            Voce focou em: <strong>{getTaskTitle(selectedTask)}</strong>
-          </p>
+          {selectedTask ? (
+            <p className="text-neutral-textSecondary mb-6">
+              Voce focou em: <strong>{getTaskTitle(selectedTask)}</strong>
+            </p>
+          ) : (
+            <p className="text-neutral-textSecondary mb-6">
+              Excelente sessao de foco!
+            </p>
+          )}
 
           <div className="bg-accent-success/10 rounded-xl p-4 mb-8">
             <p className="text-accent-success font-medium">
@@ -519,39 +523,64 @@ export default function FocusPage() {
             </p>
           </div>
 
-          <p className="text-lg font-medium text-neutral-textPrimary mb-4">
-            Voce terminou essa tarefa?
-          </p>
-
-          <div className="flex gap-4 justify-center">
-            <button
-              onClick={completeTask}
-              className="px-8 py-3 rounded-xl bg-accent-success text-white font-semibold hover:bg-accent-success/90 transition-colors flex items-center gap-2"
-            >
-              <span>✅</span> Sim, concluir!
-            </button>
-            <button
-              onClick={continueWorking}
-              className="px-8 py-3 rounded-xl bg-secondary-main/20 text-secondary-dark font-semibold hover:bg-secondary-main/30 transition-colors"
-            >
-              Ainda nao
-            </button>
-          </div>
+          {selectedTask ? (
+            <>
+              <p className="text-lg font-medium text-neutral-textPrimary mb-4">
+                Voce terminou essa tarefa?
+              </p>
+              <div className="flex gap-4 justify-center">
+                <button
+                  onClick={completeTask}
+                  className="px-8 py-3 rounded-xl bg-accent-success text-white font-semibold hover:bg-accent-success/90 transition-colors flex items-center gap-2"
+                >
+                  <span>✅</span> Sim, concluir!
+                </button>
+                <button
+                  onClick={continueWorking}
+                  className="px-8 py-3 rounded-xl bg-secondary-main/20 text-secondary-dark font-semibold hover:bg-secondary-main/30 transition-colors"
+                >
+                  Ainda nao
+                </button>
+              </div>
+            </>
+          ) : (
+            <div className="flex gap-4 justify-center">
+              <button
+                onClick={continueWorking}
+                className="px-8 py-3 rounded-xl bg-primary-main text-white font-semibold hover:bg-primary-dark transition-colors"
+              >
+                Nova Sessao
+              </button>
+              <Link
+                href="/dashboard"
+                className="px-8 py-3 rounded-xl bg-secondary-main/20 text-secondary-dark font-semibold hover:bg-secondary-main/30 transition-colors"
+              >
+                Voltar ao Dashboard
+              </Link>
+            </div>
+          )}
         </div>
       </div>
     );
   }
 
-  // Timer Display (focusing, break, paused)
+  // ========== TIMER DISPLAY (focusing, break, paused) ==========
   return (
     <div className="p-6 lg:p-8">
-      {/* Selected Task Banner */}
-      {selectedTask && (
+      {/* Task/Mode Banner */}
+      {selectedTask ? (
         <div className="bg-primary-main/10 rounded-xl p-4 mb-6 border border-primary-main/20">
           <p className="text-sm text-primary-main font-medium mb-1">Focando em:</p>
           <p className="text-lg font-semibold text-neutral-textPrimary flex items-center gap-2">
             {selectedTask.isTop1 && <span>⭐</span>}
             {getTaskTitle(selectedTask)}
+          </p>
+        </div>
+      ) : (
+        <div className="bg-secondary-main/10 rounded-xl p-4 mb-6 border border-secondary-main/20">
+          <p className="text-sm text-secondary-dark font-medium mb-1">Modo:</p>
+          <p className="text-lg font-semibold text-neutral-textPrimary">
+            🧘 Foco livre - {currentMode.name}
           </p>
         </div>
       )}

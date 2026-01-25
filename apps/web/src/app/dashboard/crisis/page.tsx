@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 
-type CrisisStep = 'initial' | 'breathing' | 'grounding' | 'action' | 'complete';
+type CrisisStep = 'initial' | 'breathing' | 'grounding' | 'action' | 'game_bubbles' | 'game_colors' | 'game_clicks' | 'game_breathing' | 'complete';
 
 const BREATHING_STEPS = [
   { phase: 'Inspire', duration: 4, emoji: '🫁' },
@@ -29,6 +29,23 @@ const QUICK_ACTIONS = [
   { id: 'outside', label: 'Ir la fora', emoji: '🌳' },
 ];
 
+const MINI_GAMES = [
+  { id: 'game_breathing', label: 'Respiracao Interativa', emoji: '🫧', description: 'Siga a bolha respirando' },
+  { id: 'game_bubbles', label: 'Estourar Bolhas', emoji: '🎈', description: 'Clique nas bolhas coloridas' },
+  { id: 'game_colors', label: 'Sequencia de Cores', emoji: '🎨', description: 'Toque nas cores em ordem' },
+  { id: 'game_clicks', label: 'Descarga de Energia', emoji: '⚡', description: 'Clique rapido para descarregar' },
+];
+
+interface Bubble {
+  id: number;
+  x: number;
+  y: number;
+  color: string;
+  size: number;
+}
+
+const BUBBLE_COLORS = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#98D8C8'];
+
 export default function CrisisPage() {
   const router = useRouter();
   const [step, setStep] = useState<CrisisStep>('initial');
@@ -38,6 +55,138 @@ export default function CrisisPage() {
   const [isBreathing, setIsBreathing] = useState(false);
   const [groundingIndex, setGroundingIndex] = useState(0);
   const [selectedAction, setSelectedAction] = useState<string | null>(null);
+
+  // Game states
+  const [bubbles, setBubbles] = useState<Bubble[]>([]);
+  const [bubblesPopped, setBubblesPopped] = useState(0);
+  const [colorSequence, setColorSequence] = useState<string[]>([]);
+  const [userSequence, setUserSequence] = useState<string[]>([]);
+  const [colorLevel, setColorLevel] = useState(1);
+  const [showingSequence, setShowingSequence] = useState(false);
+  const [activeColor, setActiveColor] = useState<string | null>(null);
+  const [clickCount, setClickCount] = useState(0);
+  const [clickTarget] = useState(50);
+  const [breathingBubbleSize, setBreathingBubbleSize] = useState(100);
+  const [breathingPhase, setBreathingPhase] = useState<'inspire' | 'hold' | 'expire'>('inspire');
+
+  // Bubble game
+  const spawnBubble = useCallback(() => {
+    const newBubble: Bubble = {
+      id: Date.now() + Math.random(),
+      x: Math.random() * 80 + 10,
+      y: Math.random() * 60 + 20,
+      color: BUBBLE_COLORS[Math.floor(Math.random() * BUBBLE_COLORS.length)],
+      size: Math.random() * 30 + 40,
+    };
+    setBubbles(prev => [...prev.slice(-10), newBubble]);
+  }, []);
+
+  useEffect(() => {
+    if (step === 'game_bubbles') {
+      const interval = setInterval(spawnBubble, 800);
+      return () => clearInterval(interval);
+    }
+  }, [step, spawnBubble]);
+
+  function popBubble(id: number) {
+    setBubbles(prev => prev.filter(b => b.id !== id));
+    setBubblesPopped(prev => prev + 1);
+  }
+
+  // Color sequence game
+  const GAME_COLORS = ['#FF6B6B', '#4ECDC4', '#FFEAA7', '#45B7D1'];
+
+  function startColorGame() {
+    const newSequence = Array.from({ length: colorLevel + 2 }, () =>
+      GAME_COLORS[Math.floor(Math.random() * GAME_COLORS.length)]
+    );
+    setColorSequence(newSequence);
+    setUserSequence([]);
+    setShowingSequence(true);
+
+    // Show sequence
+    newSequence.forEach((color, index) => {
+      setTimeout(() => {
+        setActiveColor(color);
+        setTimeout(() => setActiveColor(null), 400);
+      }, index * 700);
+    });
+
+    setTimeout(() => {
+      setShowingSequence(false);
+    }, newSequence.length * 700 + 500);
+  }
+
+  useEffect(() => {
+    if (step === 'game_colors') {
+      startColorGame();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step]);
+
+  function handleColorClick(color: string) {
+    if (showingSequence) return;
+
+    const newUserSequence = [...userSequence, color];
+    setUserSequence(newUserSequence);
+    setActiveColor(color);
+    setTimeout(() => setActiveColor(null), 200);
+
+    // Check if correct
+    const currentIndex = newUserSequence.length - 1;
+    if (colorSequence[currentIndex] !== color) {
+      // Wrong - restart level
+      setTimeout(() => startColorGame(), 500);
+      return;
+    }
+
+    // Check if complete
+    if (newUserSequence.length === colorSequence.length) {
+      setColorLevel(prev => prev + 1);
+      setTimeout(() => startColorGame(), 1000);
+    }
+  }
+
+  // Click game
+  function handleRapidClick() {
+    setClickCount(prev => {
+      if (prev + 1 >= clickTarget) {
+        setTimeout(() => setStep('complete'), 500);
+      }
+      return prev + 1;
+    });
+  }
+
+  // Interactive breathing game
+  useEffect(() => {
+    if (step === 'game_breathing') {
+      let phase: 'inspire' | 'hold' | 'expire' = 'inspire';
+      let size = 100;
+
+      const interval = setInterval(() => {
+        if (phase === 'inspire') {
+          size += 2;
+          if (size >= 200) {
+            phase = 'hold';
+            setTimeout(() => {
+              phase = 'expire';
+              setBreathingPhase('expire');
+            }, 2000);
+          }
+        } else if (phase === 'expire') {
+          size -= 2;
+          if (size <= 100) {
+            phase = 'inspire';
+            setBreathingPhase('inspire');
+          }
+        }
+        setBreathingBubbleSize(size);
+        setBreathingPhase(phase);
+      }, 50);
+
+      return () => clearInterval(interval);
+    }
+  }, [step]);
 
   function startBreathing() {
     setStep('breathing');
@@ -88,7 +237,6 @@ export default function CrisisPage() {
   }
 
   function handleComplete() {
-    // Save crisis event
     const events = JSON.parse(localStorage.getItem('nciaflux_crisis_events') || '[]');
     events.push({
       id: `crisis_${Date.now()}`,
@@ -99,12 +247,22 @@ export default function CrisisPage() {
     router.push('/dashboard');
   }
 
+  function goToGame(gameId: string) {
+    setStep(gameId as CrisisStep);
+    // Reset game states
+    setBubbles([]);
+    setBubblesPopped(0);
+    setColorLevel(1);
+    setUserSequence([]);
+    setClickCount(0);
+  }
+
   return (
     <div className="min-h-[calc(100vh-80px)] bg-gradient-to-b from-primary-main/5 to-secondary-main/5 p-6 lg:p-8">
       <div className="max-w-lg mx-auto">
         {/* Initial State */}
         {step === 'initial' && (
-          <div className="text-center py-12">
+          <div className="text-center py-8">
             <div className="w-24 h-24 bg-primary-main/20 rounded-full flex items-center justify-center mx-auto mb-6">
               <span className="text-5xl">🫂</span>
             </div>
@@ -112,32 +270,63 @@ export default function CrisisPage() {
               Estou aqui com voce
             </h1>
             <p className="text-lg text-neutral-textSecondary mb-8 max-w-md mx-auto">
-              Parece que voce esta passando por um momento dificil.
-              Vamos fazer isso juntos, um passo de cada vez.
+              Vamos fazer isso juntos. Escolha o que te ajuda agora.
             </p>
 
-            <div className="space-y-4">
-              <button
-                onClick={startBreathing}
-                className="w-full py-4 rounded-xl bg-primary-main text-white font-semibold text-lg hover:bg-primary-dark transition-colors"
-              >
-                Comecar exercicio de respiracao
-              </button>
-              <button
-                onClick={() => setStep('grounding')}
-                className="w-full py-4 rounded-xl bg-white border border-neutral-border text-neutral-textPrimary font-semibold hover:bg-neutral-background transition-colors"
-              >
-                Ir para ancoragem (grounding)
-              </button>
-              <button
-                onClick={() => setStep('action')}
-                className="w-full py-4 rounded-xl text-neutral-textSecondary font-medium hover:text-neutral-textPrimary transition-colors"
-              >
-                Escolher uma acao rapida
-              </button>
+            {/* Exercicios */}
+            <div className="mb-6">
+              <h2 className="text-sm font-semibold text-neutral-textMuted uppercase tracking-wider mb-3">
+                Exercicios
+              </h2>
+              <div className="space-y-3">
+                <button
+                  onClick={startBreathing}
+                  className="w-full py-4 rounded-xl bg-primary-main text-white font-semibold text-lg hover:bg-primary-dark transition-colors flex items-center justify-center gap-3"
+                >
+                  <span>🫁</span> Respiracao guiada
+                </button>
+                <button
+                  onClick={() => setStep('grounding')}
+                  className="w-full py-4 rounded-xl bg-white border border-neutral-border text-neutral-textPrimary font-semibold hover:bg-neutral-background transition-colors flex items-center justify-center gap-3"
+                >
+                  <span>👁️</span> Ancoragem (5-4-3-2-1)
+                </button>
+              </div>
             </div>
 
-            <p className="text-sm text-neutral-textMuted mt-8">
+            {/* Mini Games */}
+            <div className="mb-6">
+              <h2 className="text-sm font-semibold text-neutral-textMuted uppercase tracking-wider mb-3">
+                Joguinhos para Acalmar
+              </h2>
+              <div className="grid grid-cols-2 gap-3">
+                {MINI_GAMES.map((game) => (
+                  <button
+                    key={game.id}
+                    onClick={() => goToGame(game.id)}
+                    className="p-4 rounded-xl bg-white border border-neutral-border hover:border-primary-main hover:shadow-md transition-all text-center"
+                  >
+                    <span className="text-3xl block mb-2">{game.emoji}</span>
+                    <span className="font-medium text-neutral-textPrimary text-sm block">
+                      {game.label}
+                    </span>
+                    <span className="text-xs text-neutral-textMuted">
+                      {game.description}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Quick Actions */}
+            <button
+              onClick={() => setStep('action')}
+              className="w-full py-3 rounded-xl text-neutral-textSecondary font-medium hover:text-neutral-textPrimary transition-colors"
+            >
+              Escolher uma acao rapida →
+            </button>
+
+            <p className="text-sm text-neutral-textMuted mt-6">
               Lembre-se: isso vai passar. Voce ja superou momentos dificeis antes.
             </p>
           </div>
@@ -227,6 +416,13 @@ export default function CrisisPage() {
         {/* Quick Actions */}
         {step === 'action' && (
           <div className="py-8">
+            <button
+              onClick={() => setStep('initial')}
+              className="text-neutral-textSecondary hover:text-neutral-textPrimary mb-4 flex items-center gap-1"
+            >
+              ← Voltar
+            </button>
+
             <div className="text-center mb-8">
               <span className="text-5xl block mb-4">💪</span>
               <h2 className="text-2xl font-bold text-neutral-textPrimary mb-2">
@@ -256,6 +452,201 @@ export default function CrisisPage() {
           </div>
         )}
 
+        {/* GAME: Interactive Breathing */}
+        {step === 'game_breathing' && (
+          <div className="py-8">
+            <button
+              onClick={() => setStep('initial')}
+              className="text-neutral-textSecondary hover:text-neutral-textPrimary mb-4 flex items-center gap-1"
+            >
+              ← Voltar
+            </button>
+
+            <div className="text-center">
+              <h2 className="text-2xl font-bold text-neutral-textPrimary mb-2">
+                Siga a Bolha
+              </h2>
+              <p className="text-neutral-textSecondary mb-8">
+                {breathingPhase === 'inspire' ? 'Inspire enquanto cresce...' :
+                 breathingPhase === 'hold' ? 'Segure...' : 'Expire enquanto diminui...'}
+              </p>
+
+              <div className="flex items-center justify-center h-64">
+                <div
+                  className="rounded-full bg-gradient-to-br from-primary-main/60 to-secondary-main/60 transition-all duration-100 flex items-center justify-center"
+                  style={{ width: breathingBubbleSize, height: breathingBubbleSize }}
+                >
+                  <span className="text-4xl">
+                    {breathingPhase === 'inspire' ? '🫁' : breathingPhase === 'hold' ? '⏸️' : '💨'}
+                  </span>
+                </div>
+              </div>
+
+              <p className="text-lg font-semibold text-primary-main mt-4">
+                {breathingPhase === 'inspire' ? 'INSPIRE' :
+                 breathingPhase === 'hold' ? 'SEGURE' : 'EXPIRE'}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* GAME: Pop Bubbles */}
+        {step === 'game_bubbles' && (
+          <div className="py-8">
+            <button
+              onClick={() => setStep('initial')}
+              className="text-neutral-textSecondary hover:text-neutral-textPrimary mb-4 flex items-center gap-1"
+            >
+              ← Voltar
+            </button>
+
+            <div className="text-center mb-4">
+              <h2 className="text-2xl font-bold text-neutral-textPrimary mb-2">
+                Estoure as Bolhas!
+              </h2>
+              <p className="text-3xl font-bold text-primary-main">
+                {bubblesPopped} 🎈
+              </p>
+            </div>
+
+            <div className="relative bg-gradient-to-b from-blue-100 to-purple-100 rounded-2xl h-80 overflow-hidden">
+              {bubbles.map((bubble) => (
+                <button
+                  key={bubble.id}
+                  onClick={() => popBubble(bubble.id)}
+                  className="absolute rounded-full transition-transform hover:scale-110 active:scale-90 cursor-pointer animate-bounce"
+                  style={{
+                    left: `${bubble.x}%`,
+                    top: `${bubble.y}%`,
+                    width: bubble.size,
+                    height: bubble.size,
+                    backgroundColor: bubble.color,
+                    opacity: 0.8,
+                  }}
+                />
+              ))}
+              {bubbles.length === 0 && (
+                <div className="absolute inset-0 flex items-center justify-center text-neutral-textMuted">
+                  As bolhas estao aparecendo...
+                </div>
+              )}
+            </div>
+
+            {bubblesPopped >= 20 && (
+              <button
+                onClick={() => setStep('complete')}
+                className="w-full mt-6 py-4 rounded-xl bg-primary-main text-white font-semibold hover:bg-primary-dark transition-colors"
+              >
+                Continuar ({bubblesPopped} bolhas!)
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* GAME: Color Sequence */}
+        {step === 'game_colors' && (
+          <div className="py-8">
+            <button
+              onClick={() => setStep('initial')}
+              className="text-neutral-textSecondary hover:text-neutral-textPrimary mb-4 flex items-center gap-1"
+            >
+              ← Voltar
+            </button>
+
+            <div className="text-center mb-6">
+              <h2 className="text-2xl font-bold text-neutral-textPrimary mb-2">
+                Repita a Sequencia
+              </h2>
+              <p className="text-neutral-textSecondary">
+                {showingSequence ? 'Observe...' : 'Sua vez! Toque nas cores'}
+              </p>
+              <p className="text-lg font-bold text-primary-main mt-2">
+                Nivel {colorLevel}
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 max-w-xs mx-auto">
+              {GAME_COLORS.map((color) => (
+                <button
+                  key={color}
+                  onClick={() => handleColorClick(color)}
+                  disabled={showingSequence}
+                  className={`h-24 rounded-2xl transition-all ${
+                    activeColor === color ? 'scale-110 ring-4 ring-white' : 'scale-100'
+                  } ${showingSequence ? 'cursor-not-allowed' : 'hover:scale-105 active:scale-95'}`}
+                  style={{ backgroundColor: color, opacity: activeColor === color ? 1 : 0.7 }}
+                />
+              ))}
+            </div>
+
+            <div className="flex justify-center gap-2 mt-6">
+              {colorSequence.map((_, i) => (
+                <div
+                  key={i}
+                  className={`w-3 h-3 rounded-full ${
+                    i < userSequence.length ? 'bg-primary-main' : 'bg-neutral-border'
+                  }`}
+                />
+              ))}
+            </div>
+
+            {colorLevel > 3 && (
+              <button
+                onClick={() => setStep('complete')}
+                className="w-full mt-6 py-4 rounded-xl bg-primary-main text-white font-semibold hover:bg-primary-dark transition-colors"
+              >
+                Parabens! Continuar
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* GAME: Rapid Clicks */}
+        {step === 'game_clicks' && (
+          <div className="py-8">
+            <button
+              onClick={() => setStep('initial')}
+              className="text-neutral-textSecondary hover:text-neutral-textPrimary mb-4 flex items-center gap-1"
+            >
+              ← Voltar
+            </button>
+
+            <div className="text-center">
+              <h2 className="text-2xl font-bold text-neutral-textPrimary mb-2">
+                Descarga de Energia
+              </h2>
+              <p className="text-neutral-textSecondary mb-4">
+                Clique rapido para liberar a tensao!
+              </p>
+
+              <div className="mb-6">
+                <div className="h-4 bg-neutral-border rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-primary-main to-accent-success rounded-full transition-all"
+                    style={{ width: `${(clickCount / clickTarget) * 100}%` }}
+                  />
+                </div>
+                <p className="text-lg font-bold text-primary-main mt-2">
+                  {clickCount} / {clickTarget}
+                </p>
+              </div>
+
+              <button
+                onClick={handleRapidClick}
+                className="w-48 h-48 rounded-full bg-gradient-to-br from-primary-main to-secondary-main text-white text-6xl font-bold hover:scale-105 active:scale-95 transition-transform shadow-lg mx-auto flex items-center justify-center"
+              >
+                ⚡
+              </button>
+
+              <p className="text-sm text-neutral-textMuted mt-6">
+                {clickCount < 20 ? 'Continue clicando!' :
+                 clickCount < 40 ? 'Isso! Mais um pouco!' :
+                 'Quase la!'}
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Complete */}
         {step === 'complete' && (
           <div className="text-center py-12">
@@ -275,6 +666,13 @@ export default function CrisisPage() {
               className="w-full py-4 rounded-xl bg-primary-main text-white font-semibold text-lg hover:bg-primary-dark transition-colors"
             >
               Voltar ao Dashboard
+            </button>
+
+            <button
+              onClick={() => setStep('initial')}
+              className="w-full py-3 mt-3 text-neutral-textSecondary hover:text-neutral-textPrimary transition-colors"
+            >
+              Fazer mais exercicios
             </button>
 
             <div className="mt-8 bg-secondary-main/10 rounded-xl p-6 text-left">
