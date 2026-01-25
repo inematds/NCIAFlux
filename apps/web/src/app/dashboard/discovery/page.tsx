@@ -71,7 +71,8 @@ const QUESTIONS: DiscoveryQuestion[] = [
     question_text: 'Por quanto tempo voce consegue manter o foco em uma tarefa?',
     question_type: 'slider',
     min_value: 5,
-    max_value: 60,
+    max_value: 360,
+    step: 5,
     required: true,
   },
   {

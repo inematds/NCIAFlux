@@ -69,6 +69,8 @@ function generateProfile(answers: Record<string, DiscoveryAnswer>): CognitivePro
 
   if (focusDuration <= 20) {
     summaryParts.push('Sessoes curtas de foco funcionam melhor para voce.');
+  } else if (focusDuration >= 120) {
+    summaryParts.push('Voce tem capacidade de hiperfoco - consegue manter concentracao por horas.');
   } else if (focusDuration >= 40) {
     summaryParts.push('Voce consegue manter blocos de foco mais longos.');
   }
@@ -105,6 +107,8 @@ function generateProfile(answers: Record<string, DiscoveryAnswer>): CognitivePro
   let suggestion = '';
   if (focusDuration <= 25) {
     suggestion = 'Experimente a tecnica Pomodoro (25 min foco + 5 min pausa) nos seus horarios de pico de energia.';
+  } else if (focusDuration >= 120) {
+    suggestion = 'Com seu hiperfoco, blocos de 90-120 min sao ideais. Mas lembre-se de pausar para agua e alongamento!';
   } else {
     suggestion = 'Experimente blocos de Deep Work de 50 minutos seguidos de pausas de 10 minutos.';
   }
@@ -317,7 +321,9 @@ export default function DiscoveryResultPage() {
                 <span className="text-neutral-textSecondary">Foco ideal</span>
               </div>
               <span className="font-semibold text-neutral-textPrimary">
-                {profile.focus_duration_minutes} minutos
+                {profile.focus_duration_minutes >= 60
+                  ? `${Math.floor(profile.focus_duration_minutes / 60)}h${profile.focus_duration_minutes % 60 > 0 ? ` ${profile.focus_duration_minutes % 60}min` : ''}`
+                  : `${profile.focus_duration_minutes} minutos`}
               </span>
             </div>
             <div className="flex justify-between items-center py-3 border-b border-neutral-border">
