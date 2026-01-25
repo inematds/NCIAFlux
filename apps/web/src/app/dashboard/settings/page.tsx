@@ -506,6 +506,27 @@ export default function SettingsPage() {
                     Alterar senha
                   </button>
                 </div>
+
+                <div className="pt-4 border-t border-neutral-border">
+                  <h3 className="font-medium text-neutral-textPrimary mb-2">Perfil Cognitivo</h3>
+                  <p className="text-sm text-neutral-textMuted mb-4">
+                    Refaca o questionario para atualizar seu perfil cognitivo e receber recomendacoes mais precisas.
+                  </p>
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => window.location.href = '/dashboard/discovery'}
+                      className="px-4 py-2 bg-primary-main text-white rounded-lg hover:bg-primary-dark transition-colors"
+                    >
+                      🧠 Refazer Questionario
+                    </button>
+                    <button
+                      onClick={() => window.location.href = '/dashboard/discovery/result'}
+                      className="px-4 py-2 border border-neutral-border rounded-lg text-neutral-textSecondary hover:bg-neutral-background transition-colors"
+                    >
+                      📊 Ver Meu Perfil
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           )}
