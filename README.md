@@ -40,7 +40,7 @@ Porque acreditamos que cérebros neurodivergentes não são defeituosos - são d
 
 ## Funcionalidades
 
-### Implementadas (v1.0)
+### v1.0 - Base
 
 | Módulo | Descrição |
 |--------|-----------|
@@ -61,6 +61,27 @@ Porque acreditamos que cérebros neurodivergentes não são defeituosos - são d
 | **Relatórios** | Estatísticas de produtividade e padrões |
 | **Equipes** | Gestão de equipe (visão admin) |
 | **Configurações** | Preferências, foto, senha |
+
+### v1.1 - Storage Local Aprimorado
+
+| Feature | Descrição |
+|---------|-----------|
+| **Barra de Status** | Humor, energia, foco e tarefas no topo do dashboard |
+| **Timer de Foco Integrado** | Escolha tecnica primeiro, depois tarefa para focar |
+| **Check-in Acionavel** | Recomendacoes personalizadas apos registrar humor/energia |
+| **Modo Crise com Jogos** | Mini-games para acalmar: bolhas, cores, respiracao |
+| **Dados Demo** | Dados de exemplo completos para demonstracao |
+
+### v1.2 - Multi-Perfil (Atual)
+
+| Feature | Descrição |
+|---------|-----------|
+| **Multi-Usuario Local** | Suporte a multiplos perfis no mesmo dispositivo |
+| **Storage Prefixado** | Dados isolados por usuario (nciaflux_${userId}_...) |
+| **Switcher de Perfis** | Troca rapida entre contas no sidebar |
+| **Visao Pessoal/Gestao** | Toggle para managers alternarem entre modos |
+| **Botao Chat IA** | Teaser da versao Pro com chat por texto/voz |
+| **Migracao Automatica** | Dados antigos migrados para novo formato |
 
 ### Roadmap
 
