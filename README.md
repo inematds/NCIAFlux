@@ -1,11 +1,12 @@
-# NCIAFlux - NeuroFluxo
+# NeuroFluxo Mentes Brilhantes
 
 <div align="center">
 
-**Mentes Brilhantes** | Produtividade que entende você
+**v1.2** | Produtividade que entende você
 
 Sistema de organização pessoal baseado em neurociência para pessoas com TDAH.
 
+[![Version](https://img.shields.io/badge/Version-1.2-purple)](https://github.com/inematds/NCIAFlux)
 [![Next.js](https://img.shields.io/badge/Next.js-14-black?logo=next.js)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?logo=typescript)](https://www.typescriptlang.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.4-38B2AC?logo=tailwind-css)](https://tailwindcss.com/)

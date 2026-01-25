@@ -1,8 +1,8 @@
 {
   "name": "nciaflux",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "private": true,
-  "description": "NCIAFlux - NeuroFluxo: App de suporte para TDAH",
+  "description": "NeuroFluxo Mentes Brilhantes - App de produtividade para TDAH",
   "repository": {
     "type": "git",
     "url": "https://github.com/inematds/NCIAFlux.git"
