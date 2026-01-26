@@ -18,28 +18,38 @@ const DEMO_USERS: Record<DemoRole, { email: string; name: string }> = {
 export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [email, setEmail] = useState('');
+
+  // Check demo param immediately (before any state)
+  const demoParam = searchParams.get('demo') as DemoRole | null;
+  const isValidDemo = demoParam && DEMO_USERS[demoParam];
+
+  const [email, setEmail] = useState(isValidDemo ? DEMO_USERS[demoParam!].email : '');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  const [demoRole, setDemoRole] = useState<DemoRole | null>(null);
+  const [demoRole, setDemoRole] = useState<DemoRole | null>(isValidDemo ? demoParam : null);
 
-  // Check for demo parameter and pre-fill email
+  // Update email when demo param changes
   useEffect(() => {
-    const demo = searchParams.get('demo') as DemoRole | null;
-    if (demo && DEMO_USERS[demo]) {
-      setDemoRole(demo);
-      setEmail(DEMO_USERS[demo].email);
-      // Se veio do demo, nao redireciona mesmo se logado
+    if (demoParam && DEMO_USERS[demoParam]) {
+      setDemoRole(demoParam);
+      setEmail(DEMO_USERS[demoParam].email);
+    }
+  }, [demoParam]);
+
+  // Redirect if already logged in (only if NOT in demo mode)
+  useEffect(() => {
+    // Se tem parametro demo, NAO redireciona - permite fazer login com demo
+    if (demoParam) {
       return;
     }
 
-    // Redirect if already logged in (only if not coming from demo)
+    // So redireciona para dashboard se estiver logado E nao for demo
     if (userStorage.isAuthenticated()) {
       router.push('/dashboard');
     }
-  }, [router, searchParams]);
+  }, [router, demoParam]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
