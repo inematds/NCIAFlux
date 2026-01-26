@@ -2,7 +2,17 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { teamsStorage, globalTeamsStorage, userStorage, StoredTeam, StoredTeamMember } from '@/lib/storage';
+import {
+  teamsStorage,
+  globalTeamsStorage,
+  userStorage,
+  invitationsStorage,
+  invitationLogsStorage,
+  StoredTeam,
+  StoredTeamMember,
+  StoredInvitation,
+  InvitationLogEntry,
+} from '@/lib/storage';
 import { userStatsService } from '@/lib/hybrid-storage';
 import HelpButton from '@/components/HelpButton';
 import { getHelpContent } from '@/lib/help-content';
@@ -32,7 +42,7 @@ const CATEGORY_INFO: Record<string, { name: string; emoji: string }> = {
 };
 
 type TabType = 'teams' | 'my-features';
-type DetailTab = 'members' | 'features';
+type DetailTab = 'members' | 'invitations' | 'features';
 
 export default function TeamsPage() {
   const router = useRouter();
@@ -40,6 +50,9 @@ export default function TeamsPage() {
   const [selectedTeam, setSelectedTeam] = useState<StoredTeam | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showAddMemberModal, setShowAddMemberModal] = useState(false);
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [teamInvitations, setTeamInvitations] = useState<StoredInvitation[]>([]);
+  const [teamLogs, setTeamLogs] = useState<InvitationLogEntry[]>([]);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<TabType>('teams');
@@ -74,8 +87,16 @@ export default function TeamsPage() {
   useEffect(() => {
     if (selectedTeam) {
       loadTeamFeatures(selectedTeam.id, selectedTeam.name);
+      loadTeamInvitations(selectedTeam.id);
     }
   }, [selectedTeam]);
+
+  function loadTeamInvitations(teamId: string) {
+    const invitations = invitationsStorage.getByTeam(teamId);
+    const logs = invitationLogsStorage.getByTeam(teamId);
+    setTeamInvitations(invitations);
+    setTeamLogs(logs);
+  }
 
   function loadUserFeatures() {
     const settings = getUserFeatureSettings();
@@ -131,10 +152,70 @@ export default function TeamsPage() {
   }
 
   function handleRemoveMember(teamId: string, memberId: string) {
-    teamsStorage.removeMember(teamId, memberId);
-    setTeams(teamsStorage.getAll());
-    const updated = teamsStorage.getAll().find(t => t.id === teamId);
-    if (updated) setSelectedTeam(updated);
+    // Find the member to log the removal
+    const team = selectedTeam || teams.find(t => t.id === teamId);
+    const member = team?.members.find(m => m.id === memberId);
+
+    // Check if it's a global team or personal team
+    const globalTeams = globalTeamsStorage.getAll();
+    const globalTeam = globalTeams.find(t => t.id === teamId);
+
+    if (globalTeam) {
+      // Update global team
+      const updatedMembers = globalTeam.members.filter(m => m.id !== memberId);
+      globalTeamsStorage.update(teamId, { members: updatedMembers });
+
+      // Log member removal
+      if (member) {
+        invitationLogsStorage.logMemberLeft(teamId, globalTeam.name, member.email, member.name);
+      }
+
+      // Reload teams
+      const allGlobalTeams = globalTeamsStorage.getAll();
+      const personalTeams = teamsStorage.getAll();
+      const allTeams = [...allGlobalTeams, ...personalTeams];
+      const userTeams = allTeams.filter(t =>
+        t.ownerId === user?.id ||
+        t.members.some(m => m.email?.toLowerCase() === user?.email?.toLowerCase() && m.role === 'manager')
+      );
+      setTeams(userTeams);
+      const updated = allGlobalTeams.find(t => t.id === teamId);
+      if (updated) setSelectedTeam(updated);
+    } else {
+      // Personal team
+      teamsStorage.removeMember(teamId, memberId);
+      setTeams(teamsStorage.getAll());
+      const updated = teamsStorage.getAll().find(t => t.id === teamId);
+      if (updated) setSelectedTeam(updated);
+    }
+
+    // Reload invitations
+    loadTeamInvitations(teamId);
+  }
+
+  function handleSendInvitation(email: string, role: 'member' | 'manager') {
+    if (!selectedTeam || !user) return;
+
+    invitationsStorage.create({
+      teamId: selectedTeam.id,
+      teamName: selectedTeam.name,
+      email: email.toLowerCase(),
+      invitedBy: user.name,
+      invitedByEmail: user.email,
+      status: 'pending',
+      role,
+    });
+
+    loadTeamInvitations(selectedTeam.id);
+    setShowInviteModal(false);
+  }
+
+  function handleCancelInvitation(invitationId: string) {
+    if (!user) return;
+    invitationsStorage.cancel(invitationId, user.name, user.email);
+    if (selectedTeam) {
+      loadTeamInvitations(selectedTeam.id);
+    }
   }
 
   // Feature toggle handlers
@@ -601,6 +682,20 @@ export default function TeamsPage() {
                 👥 Membros ({selectedTeam.members.length})
               </button>
               <button
+                onClick={() => setDetailTab('invitations')}
+                className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
+                  detailTab === 'invitations'
+                    ? 'text-primary-main border-b-2 border-primary-main bg-white'
+                    : 'text-neutral-textSecondary hover:text-neutral-textPrimary'
+                }`}
+              >
+                📧 Convites {teamInvitations.filter(i => i.status === 'pending').length > 0 && (
+                  <span className="ml-1 px-1.5 py-0.5 text-xs bg-accent-warning text-white rounded-full">
+                    {teamInvitations.filter(i => i.status === 'pending').length}
+                  </span>
+                )}
+              </button>
+              <button
                 onClick={() => setDetailTab('features')}
                 className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
                   detailTab === 'features'
@@ -608,7 +703,7 @@ export default function TeamsPage() {
                     : 'text-neutral-textSecondary hover:text-neutral-textPrimary'
                 }`}
               >
-                ⚙️ Recursos do Time
+                ⚙️ Recursos
               </button>
             </div>
 
@@ -649,11 +744,120 @@ export default function TeamsPage() {
                     ))}
                   </div>
                   <button
-                    onClick={() => setShowAddMemberModal(true)}
+                    onClick={() => setShowInviteModal(true)}
                     className="w-full mt-4 py-2 text-primary-main font-medium border-2 border-dashed border-neutral-border rounded-xl hover:bg-neutral-background transition-colors"
                   >
-                    + Adicionar Membro
+                    + Convidar por Email
                   </button>
+                </>
+              ) : detailTab === 'invitations' ? (
+                /* Invitations Tab */
+                <>
+                  <div className="flex items-center justify-between mb-4">
+                    <p className="text-sm text-neutral-textMuted">
+                      Gerencie convites e veja o historico
+                    </p>
+                    <button
+                      onClick={() => setShowInviteModal(true)}
+                      className="px-3 py-1.5 text-sm bg-primary-main text-white rounded-lg hover:bg-primary-dark transition-colors"
+                    >
+                      + Novo Convite
+                    </button>
+                  </div>
+
+                  {/* Pending Invitations */}
+                  {teamInvitations.filter(i => i.status === 'pending').length > 0 && (
+                    <div className="mb-6">
+                      <h4 className="text-sm font-medium text-neutral-textPrimary mb-3">Convites Pendentes</h4>
+                      <div className="space-y-2">
+                        {teamInvitations
+                          .filter(i => i.status === 'pending')
+                          .map((invitation) => (
+                            <div key={invitation.id} className="flex items-center justify-between p-3 bg-accent-warning/10 rounded-lg border border-accent-warning/20">
+                              <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 bg-accent-warning/20 rounded-full flex items-center justify-center">
+                                  <span className="text-lg">📧</span>
+                                </div>
+                                <div>
+                                  <p className="font-medium text-neutral-textPrimary">{invitation.email}</p>
+                                  <p className="text-xs text-neutral-textMuted">
+                                    Convidado em {new Date(invitation.createdAt).toLocaleDateString('pt-BR')} | Expira em {new Date(invitation.expiresAt).toLocaleDateString('pt-BR')}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <span className={`px-2 py-0.5 text-xs rounded ${
+                                  invitation.role === 'manager' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'
+                                }`}>
+                                  {invitation.role === 'manager' ? 'Gestor' : 'Membro'}
+                                </span>
+                                <button
+                                  onClick={() => handleCancelInvitation(invitation.id)}
+                                  className="p-1 text-neutral-textMuted hover:text-accent-error"
+                                  title="Cancelar convite"
+                                >
+                                  ✕
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Invitation Log */}
+                  <div>
+                    <h4 className="text-sm font-medium text-neutral-textPrimary mb-3">Historico de Convites</h4>
+                    {teamLogs.length === 0 ? (
+                      <p className="text-sm text-neutral-textMuted text-center py-4">Nenhum registro ainda</p>
+                    ) : (
+                      <div className="space-y-2 max-h-64 overflow-y-auto">
+                        {teamLogs.map((log) => {
+                          const actionConfig: Record<string, { icon: string; color: string; text: string }> = {
+                            sent: { icon: '📤', color: 'text-blue-600', text: 'Convite enviado' },
+                            accepted: { icon: '✅', color: 'text-accent-success', text: 'Convite aceito' },
+                            declined: { icon: '❌', color: 'text-accent-error', text: 'Convite recusado' },
+                            expired: { icon: '⏰', color: 'text-neutral-textMuted', text: 'Convite expirado' },
+                            canceled: { icon: '🚫', color: 'text-accent-warning', text: 'Convite cancelado' },
+                            member_left: { icon: '👋', color: 'text-neutral-textMuted', text: 'Membro saiu' },
+                          };
+                          const config = actionConfig[log.action] || { icon: '📋', color: 'text-neutral-textSecondary', text: log.action };
+
+                          return (
+                            <div key={log.id} className="flex items-start gap-3 p-3 bg-neutral-background/50 rounded-lg text-sm">
+                              <span className="text-lg">{config.icon}</span>
+                              <div className="flex-1">
+                                <p className={`font-medium ${config.color}`}>
+                                  {config.text}
+                                </p>
+                                <p className="text-neutral-textMuted">
+                                  {log.email}
+                                  {log.notes && <span className="ml-1">- {log.notes}</span>}
+                                </p>
+                                <p className="text-xs text-neutral-textMuted mt-1">
+                                  {new Date(log.timestamp).toLocaleString('pt-BR')}
+                                  {log.performedBy && ` por ${log.performedBy}`}
+                                </p>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+
+                  {teamInvitations.filter(i => i.status === 'pending').length === 0 && teamLogs.length === 0 && (
+                    <div className="text-center py-8">
+                      <span className="text-4xl block mb-2">📧</span>
+                      <p className="text-neutral-textSecondary">Nenhum convite enviado ainda</p>
+                      <button
+                        onClick={() => setShowInviteModal(true)}
+                        className="mt-3 px-4 py-2 bg-primary-main text-white rounded-lg text-sm font-medium hover:bg-primary-dark transition-colors"
+                      >
+                        Enviar Primeiro Convite
+                      </button>
+                    </div>
+                  )}
                 </>
               ) : (
                 /* Team Features Tab */
@@ -765,6 +969,15 @@ export default function TeamsPage() {
         <AddMemberModal
           onClose={() => setShowAddMemberModal(false)}
           onAdd={(member) => handleAddMember(selectedTeam.id, member)}
+        />
+      )}
+
+      {/* Invite Member Modal */}
+      {showInviteModal && selectedTeam && (
+        <InviteMemberModal
+          teamName={selectedTeam.name}
+          onClose={() => setShowInviteModal(false)}
+          onInvite={handleSendInvitation}
         />
       )}
 
@@ -933,6 +1146,100 @@ function AddMemberModal({ onClose, onAdd }: { onClose: () => void; onAdd: (membe
               className="flex-1 px-4 py-2 bg-primary-main text-white rounded-lg font-medium hover:bg-primary-dark transition-colors"
             >
               Adicionar
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function InviteMemberModal({
+  teamName,
+  onClose,
+  onInvite,
+}: {
+  teamName: string;
+  onClose: () => void;
+  onInvite: (email: string, role: 'member' | 'manager') => void;
+}) {
+  const [email, setEmail] = useState('');
+  const [role, setRole] = useState<'member' | 'manager'>('member');
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (email.trim()) {
+      onInvite(email.trim(), role);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-2xl w-full max-w-lg">
+        <div className="p-6 border-b border-neutral-border flex items-center justify-between">
+          <div>
+            <h2 className="text-xl font-semibold text-neutral-textPrimary">Convidar Membro</h2>
+            <p className="text-sm text-neutral-textMuted">Equipe: {teamName}</p>
+          </div>
+          <button onClick={onClose} className="text-2xl text-neutral-textMuted hover:text-neutral-textPrimary">×</button>
+        </div>
+        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-neutral-textSecondary mb-2">Email</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full px-4 py-2 rounded-lg border border-neutral-border focus:outline-none focus:ring-2 focus:ring-primary-main"
+              placeholder="email@empresa.com"
+              required
+            />
+            <p className="text-xs text-neutral-textMuted mt-1">
+              Um convite sera enviado para este email. O usuario tem 7 dias para aceitar.
+            </p>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-neutral-textSecondary mb-2">Funcao na Equipe</label>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setRole('member')}
+                className={`py-3 px-4 rounded-lg border-2 transition-colors ${
+                  role === 'member'
+                    ? 'border-primary-main bg-primary-main/5'
+                    : 'border-neutral-border hover:border-neutral-textMuted'
+                }`}
+              >
+                <p className="font-medium text-neutral-textPrimary">Membro</p>
+                <p className="text-xs text-neutral-textMuted">Acesso padrao</p>
+              </button>
+              <button
+                type="button"
+                onClick={() => setRole('manager')}
+                className={`py-3 px-4 rounded-lg border-2 transition-colors ${
+                  role === 'manager'
+                    ? 'border-primary-main bg-primary-main/5'
+                    : 'border-neutral-border hover:border-neutral-textMuted'
+                }`}
+              >
+                <p className="font-medium text-neutral-textPrimary">Gestor</p>
+                <p className="text-xs text-neutral-textMuted">Pode gerenciar equipe</p>
+              </button>
+            </div>
+          </div>
+          <div className="flex gap-3 pt-4">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 px-4 py-2 border border-neutral-border rounded-lg text-neutral-textSecondary hover:bg-neutral-background transition-colors"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              className="flex-1 px-4 py-2 bg-primary-main text-white rounded-lg font-medium hover:bg-primary-dark transition-colors"
+            >
+              Enviar Convite
             </button>
           </div>
         </form>

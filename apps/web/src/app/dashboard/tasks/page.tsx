@@ -6,6 +6,8 @@ import { userStorage, getStorageKey } from '@/lib/storage';
 import { userStatsService } from '@/lib/hybrid-storage';
 import HelpButton from '@/components/HelpButton';
 import { getHelpContent } from '@/lib/help-content';
+import { useTeam } from '@/contexts/TeamContext';
+import TeamMemberSelector from '@/components/TeamMemberSelector';
 
 type TaskStatus = 'pending' | 'in_progress' | 'completed' | 'skipped';
 type TaskPriority = 'high' | 'medium' | 'low';
@@ -61,6 +63,9 @@ export default function TasksPage() {
   const [editingTask, setEditingTask] = useState<UnifiedTask | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
+  // Team mode context
+  const { isTeamMode, selectedTeam, selectedMembers, isViewingAllMembers } = useTeam();
+
   // Load tasks and projects from storage on mount
   useEffect(() => {
     loadTasks();
@@ -76,6 +81,53 @@ export default function TasksPage() {
     window.addEventListener('nciaflux-data-refresh', handleRefresh);
     return () => window.removeEventListener('nciaflux-data-refresh', handleRefresh);
   }, []);
+
+  // Generate demo team tasks when in team mode
+  function getTeamTasks(): UnifiedTask[] {
+    if (!isTeamMode || !selectedTeam) return [];
+
+    const demoTasks: UnifiedTask[] = [];
+    const today = new Date().toISOString().split('T')[0];
+
+    selectedMembers.forEach((member) => {
+      // Generate 2-4 tasks per member
+      const taskCount = 2 + Math.floor(Math.random() * 3);
+      const statuses: TaskStatus[] = ['pending', 'in_progress', 'completed'];
+      const priorities: TaskPriority[] = ['high', 'medium', 'low'];
+
+      for (let i = 0; i < taskCount; i++) {
+        const statusIndex = i % 3;
+        demoTasks.push({
+          id: `team_${member.id}_task_${i}`,
+          title: getRandomTaskTitle(i),
+          description: `Tarefa atribuida a ${member.name}`,
+          assignee: member.name,
+          priority: priorities[i % 3],
+          status: statuses[statusIndex],
+          dueDate: today,
+          createdAt: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString(),
+        });
+      }
+    });
+
+    return demoTasks;
+  }
+
+  function getRandomTaskTitle(index: number): string {
+    const titles = [
+      'Revisar relatorio semanal',
+      'Preparar apresentacao',
+      'Atualizar documentacao',
+      'Reuniao de alinhamento',
+      'Analise de dados',
+      'Desenvolver nova feature',
+      'Corrigir bug reportado',
+      'Testar integracao',
+      'Revisar codigo',
+      'Planejar sprint',
+    ];
+    return titles[index % titles.length];
+  }
 
   function loadTasks() {
     const saved = localStorage.getItem(getStorageKey('nciaflux_tasks'));
@@ -105,7 +157,10 @@ export default function TasksPage() {
     setTasks(newTasks);
   }
 
-  const filteredTasks = tasks.filter((task) => {
+  // Use team tasks when in team mode, otherwise personal tasks
+  const activeTasks = isTeamMode ? getTeamTasks() : tasks;
+
+  const filteredTasks = activeTasks.filter((task) => {
     if (filterStatus !== 'all' && task.status !== filterStatus) return false;
     if (filterPriority !== 'all' && task.priority !== filterPriority) return false;
     if (filterProject !== 'all' && task.projectId !== filterProject) return false;
@@ -115,10 +170,10 @@ export default function TasksPage() {
   });
 
   const stats = {
-    total: tasks.length,
-    completed: tasks.filter((t) => t.status === 'completed').length,
-    inProgress: tasks.filter((t) => t.status === 'in_progress').length,
-    pending: tasks.filter((t) => t.status === 'pending').length,
+    total: activeTasks.length,
+    completed: activeTasks.filter((t) => t.status === 'completed').length,
+    inProgress: activeTasks.filter((t) => t.status === 'in_progress').length,
+    pending: activeTasks.filter((t) => t.status === 'pending').length,
   };
 
   function handleAddTask(taskData: Omit<UnifiedTask, 'id' | 'createdAt' | 'updatedAt'>) {
@@ -170,30 +225,56 @@ export default function TasksPage() {
 
   return (
     <div className="p-6 lg:p-8">
+      {/* Team Mode Banner */}
+      {isTeamMode && selectedTeam && (
+        <div className="bg-gradient-to-r from-secondary-main/10 to-primary-main/10 rounded-xl p-4 mb-6 border border-secondary-main/20">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-xl">👥</span>
+            <h2 className="font-semibold text-neutral-textPrimary">
+              Tarefas da Equipe: {selectedTeam.name}
+            </h2>
+          </div>
+          <p className="text-sm text-neutral-textMuted">
+            {isViewingAllMembers
+              ? `Visualizando tarefas de todos os ${selectedTeam.members.length} membros`
+              : `Visualizando tarefas de ${selectedMembers.length} membro(s) selecionado(s)`}
+          </p>
+        </div>
+      )}
+
+      {/* Team Member Selector */}
+      {isTeamMode && <TeamMemberSelector showStats={false} />}
+
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-8">
         <div>
           <h1 className="text-2xl lg:text-3xl font-bold text-neutral-textPrimary">
-            Gestão de Tarefas
+            {isTeamMode ? 'Tarefas da Equipe' : 'Gestao de Tarefas'}
           </h1>
           <p className="text-neutral-textSecondary mt-1">
-            Acompanhe e gerencie todas as suas tarefas
+            {isTeamMode
+              ? 'Acompanhe as tarefas dos membros da sua equipe'
+              : 'Acompanhe e gerencie todas as suas tarefas'}
           </p>
         </div>
         <div className="flex gap-3">
-          <Link
-            href="/dashboard/planner"
-            className="px-4 py-3 rounded-xl border border-neutral-border text-neutral-textSecondary hover:bg-neutral-background transition-colors flex items-center gap-2"
-          >
-            📅 Planner
-          </Link>
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="bg-primary-main text-white px-6 py-3 rounded-xl font-semibold hover:bg-primary-dark transition-colors flex items-center gap-2"
-          >
-            <span className="text-xl">+</span>
-            Nova Tarefa
-          </button>
+          {!isTeamMode && (
+            <Link
+              href="/dashboard/planner"
+              className="px-4 py-3 rounded-xl border border-neutral-border text-neutral-textSecondary hover:bg-neutral-background transition-colors flex items-center gap-2"
+            >
+              📅 Planner
+            </Link>
+          )}
+          {!isTeamMode && (
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="bg-primary-main text-white px-6 py-3 rounded-xl font-semibold hover:bg-primary-dark transition-colors flex items-center gap-2"
+            >
+              <span className="text-xl">+</span>
+              Nova Tarefa
+            </button>
+          )}
         </div>
       </div>
 
@@ -272,13 +353,19 @@ export default function TasksPage() {
       <div className="space-y-3">
         {filteredTasks.length === 0 ? (
           <div className="bg-white rounded-2xl p-12 text-center shadow-sm">
-            <p className="text-neutral-textMuted mb-4">Nenhuma tarefa encontrada.</p>
-            <button
-              onClick={() => setShowAddModal(true)}
-              className="text-primary-main font-medium hover:underline"
-            >
-              Criar primeira tarefa
-            </button>
+            <p className="text-neutral-textMuted mb-4">
+              {isTeamMode
+                ? 'Nenhuma tarefa encontrada para os membros selecionados.'
+                : 'Nenhuma tarefa encontrada.'}
+            </p>
+            {!isTeamMode && (
+              <button
+                onClick={() => setShowAddModal(true)}
+                className="text-primary-main font-medium hover:underline"
+              >
+                Criar primeira tarefa
+              </button>
+            )}
           </div>
         ) : (
           filteredTasks.map((task) => {
@@ -289,14 +376,15 @@ export default function TasksPage() {
                 className="bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow"
               >
                 <div className="flex items-start gap-4">
-                  {/* Checkbox */}
+                  {/* Checkbox - only clickable in personal mode */}
                   <button
-                    onClick={() => handleStatusChange(task.id, task.status === 'completed' ? 'pending' : 'completed')}
+                    onClick={() => !isTeamMode && handleStatusChange(task.id, task.status === 'completed' ? 'pending' : 'completed')}
+                    disabled={isTeamMode}
                     className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors flex-shrink-0 mt-1 ${
                       task.status === 'completed'
                         ? 'bg-accent-success border-accent-success text-white'
                         : 'border-neutral-border hover:border-primary-main'
-                    }`}
+                    } ${isTeamMode ? 'cursor-default' : ''}`}
                   >
                     {task.status === 'completed' && '✓'}
                   </button>
@@ -305,8 +393,8 @@ export default function TasksPage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-4">
                       <div
-                        onClick={() => setEditingTask(task)}
-                        className="cursor-pointer flex-1"
+                        onClick={() => !isTeamMode && setEditingTask(task)}
+                        className={`flex-1 ${!isTeamMode ? 'cursor-pointer' : ''}`}
                       >
                         <p className={`font-medium ${
                           task.status === 'completed' ? 'line-through text-neutral-textMuted' : 'text-neutral-textPrimary'
@@ -319,23 +407,25 @@ export default function TasksPage() {
                         )}
                       </div>
 
-                      {/* Actions */}
-                      <div className="flex items-center gap-2 flex-shrink-0">
-                        <button
-                          onClick={() => setEditingTask(task)}
-                          className="p-2 hover:bg-neutral-background rounded-lg transition-colors"
-                          title="Editar"
-                        >
-                          ✏️
-                        </button>
-                        <button
-                          onClick={() => setDeleteConfirm(task.id)}
-                          className="p-2 hover:bg-neutral-background rounded-lg transition-colors"
-                          title="Excluir"
-                        >
-                          🗑️
-                        </button>
-                      </div>
+                      {/* Actions - only for personal mode */}
+                      {!isTeamMode && (
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <button
+                            onClick={() => setEditingTask(task)}
+                            className="p-2 hover:bg-neutral-background rounded-lg transition-colors"
+                            title="Editar"
+                          >
+                            ✏️
+                          </button>
+                          <button
+                            onClick={() => setDeleteConfirm(task.id)}
+                            className="p-2 hover:bg-neutral-background rounded-lg transition-colors"
+                            title="Excluir"
+                          >
+                            🗑️
+                          </button>
+                        </div>
+                      )}
                     </div>
 
                     {/* Tags */}
@@ -350,15 +440,21 @@ export default function TasksPage() {
                       </span>
 
                       {/* Status */}
-                      <select
-                        value={task.status}
-                        onChange={(e) => handleStatusChange(task.id, e.target.value as TaskStatus)}
-                        className={`text-xs px-2 py-1 rounded-full border-none cursor-pointer ${STATUS_CONFIG[task.status].bg} ${STATUS_CONFIG[task.status].color}`}
-                      >
-                        {Object.entries(STATUS_CONFIG).map(([value, config]) => (
-                          <option key={value} value={value}>{config.emoji} {config.label}</option>
-                        ))}
-                      </select>
+                      {isTeamMode ? (
+                        <span className={`text-xs px-2 py-1 rounded-full ${STATUS_CONFIG[task.status].bg} ${STATUS_CONFIG[task.status].color}`}>
+                          {STATUS_CONFIG[task.status].emoji} {STATUS_CONFIG[task.status].label}
+                        </span>
+                      ) : (
+                        <select
+                          value={task.status}
+                          onChange={(e) => handleStatusChange(task.id, e.target.value as TaskStatus)}
+                          className={`text-xs px-2 py-1 rounded-full border-none cursor-pointer ${STATUS_CONFIG[task.status].bg} ${STATUS_CONFIG[task.status].color}`}
+                        >
+                          {Object.entries(STATUS_CONFIG).map(([value, config]) => (
+                            <option key={value} value={value}>{config.emoji} {config.label}</option>
+                          ))}
+                        </select>
+                      )}
 
                       {/* Project */}
                       {project && (

@@ -2,40 +2,22 @@
 
 import { useEffect, useState } from 'react';
 import { userStorage, tasksStorage, StoredUser, StoredTask, getStorageKey } from '@/lib/storage';
+import { useTeam } from '@/contexts/TeamContext';
+import TeamMemberSelector from '@/components/TeamMemberSelector';
 import HelpButton from '@/components/HelpButton';
 import { getHelpContent } from '@/lib/help-content';
-
-// Mock data for managers
-const MOCK_TEAM_MEMBERS = [
-  { id: '1', name: 'Ana Silva', role: 'Desenvolvedor', tasksCompleted: 12, productivity: 85, mood: 'good' },
-  { id: '2', name: 'Carlos Santos', role: 'Designer', tasksCompleted: 8, productivity: 72, mood: 'neutral' },
-  { id: '3', name: 'Maria Oliveira', role: 'Analista', tasksCompleted: 15, productivity: 92, mood: 'good' },
-  { id: '4', name: 'João Pereira', role: 'Desenvolvedor', tasksCompleted: 10, productivity: 68, mood: 'low' },
-  { id: '5', name: 'Fernanda Costa', role: 'PM', tasksCompleted: 6, productivity: 80, mood: 'good' },
-];
-
-const MOCK_RECENT_ACTIVITIES = [
-  { id: '1', user: 'Ana Silva', action: 'completou tarefa', target: 'Revisar código do módulo X', time: '5 min' },
-  { id: '2', user: 'Carlos Santos', action: 'iniciou bloco de foco', target: '45 min', time: '12 min' },
-  { id: '3', user: 'Maria Oliveira', action: 'fez check-in', target: 'Energia: 4/5', time: '20 min' },
-  { id: '4', user: 'João Pereira', action: 'solicitou ajuda', target: 'Bloqueio em tarefa', time: '35 min' },
-  { id: '5', user: 'Fernanda Costa', action: 'completou tarefa', target: 'Reunião de planejamento', time: '1h' },
-];
-
-const MOCK_WEEKLY_DATA = [
-  { day: 'Seg', completed: 45, total: 52 },
-  { day: 'Ter', completed: 38, total: 48 },
-  { day: 'Qua', completed: 52, total: 55 },
-  { day: 'Qui', completed: 41, total: 50 },
-  { day: 'Sex', completed: 38, total: 45 },
-  { day: 'Sáb', completed: 12, total: 15 },
-  { day: 'Dom', completed: 8, total: 10 },
-];
 
 export default function DashboardPage() {
   const [user, setUser] = useState<StoredUser | null>(null);
   const [tasks, setTasks] = useState<StoredTask[]>([]);
   const [hasProfile, setHasProfile] = useState(true);
+
+  const {
+    isTeamMode,
+    selectedTeam,
+    selectedMembers,
+    isViewingAllMembers,
+  } = useTeam();
 
   useEffect(() => {
     function loadData() {
@@ -80,17 +62,221 @@ export default function DashboardPage() {
     completedTasks: tasks.filter((t) => t.status === 'completed').length,
   };
 
+  // Calculate team stats from selected members
+  const teamStats = {
+    totalMembers: selectedMembers.length,
+    activeMembers: selectedMembers.filter(m => m.status === 'active').length,
+    avgProductivity: selectedMembers.length > 0
+      ? Math.round(selectedMembers.reduce((sum, m) => sum + m.productivity, 0) / selectedMembers.length)
+      : 0,
+    // Mock data - in real app would come from member's actual tasks
+    totalTasks: selectedMembers.length * 8,
+    completedTasks: selectedMembers.length * 5,
+  };
+
   // Calculate productivity
   const productivity = personalStats.totalTasks > 0
     ? Math.round((personalStats.completedTasks / personalStats.totalTasks) * 100)
     : 0;
 
+  // TEAM MODE VIEW
+  if (isTeamMode && selectedTeam) {
+    return (
+      <div className="p-6 lg:p-8">
+        {/* Header */}
+        <div className="mb-6">
+          <h1 className="text-2xl lg:text-3xl font-bold text-neutral-textPrimary">
+            Dashboard da Equipe
+          </h1>
+          <p className="text-neutral-textSecondary mt-1 capitalize">{today}</p>
+        </div>
+
+        {/* Team Member Selector */}
+        <TeamMemberSelector showStats={true} />
+
+        {/* Team Stats Grid */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-8">
+          <StatCard
+            icon="👥"
+            label="Membros Selecionados"
+            value={`${teamStats.totalMembers}/${selectedTeam.members.length}`}
+            trend={isViewingAllMembers ? 'Todos' : ''}
+            trendUp
+          />
+          <StatCard
+            icon="🟢"
+            label="Ativos Agora"
+            value={teamStats.activeMembers}
+            trend={`${Math.round((teamStats.activeMembers / teamStats.totalMembers) * 100)}%`}
+            trendUp
+          />
+          <StatCard
+            icon="📈"
+            label="Produtividade Media"
+            value={`${teamStats.avgProductivity}%`}
+            trend=""
+            trendUp
+          />
+          <StatCard
+            icon="✅"
+            label="Taxa de Conclusao"
+            value={`${Math.round((teamStats.completedTasks / teamStats.totalTasks) * 100)}%`}
+            trend=""
+            trendUp
+          />
+        </div>
+
+        {/* Main Grid */}
+        <div className="grid lg:grid-cols-3 gap-6 mb-8">
+          {/* Team Progress */}
+          <div className="lg:col-span-2 bg-white rounded-2xl p-6 shadow-sm">
+            <h2 className="text-lg font-semibold text-neutral-textPrimary mb-4">
+              Progresso da Equipe
+            </h2>
+            <div className="space-y-4">
+              {selectedMembers.map((member) => (
+                <div key={member.id} className="flex items-center gap-4">
+                  <div className="flex items-center gap-3 w-40">
+                    <div className="w-8 h-8 bg-primary-light/20 rounded-full flex items-center justify-center text-sm font-medium text-primary-main">
+                      {member.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                    </div>
+                    <span className="text-sm font-medium text-neutral-textPrimary truncate">
+                      {member.name.split(' ')[0]}
+                    </span>
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 h-4 bg-neutral-background rounded-full overflow-hidden">
+                        <div
+                          className={`h-full rounded-full transition-all duration-500 ${
+                            member.productivity >= 80 ? 'bg-accent-success' :
+                            member.productivity >= 60 ? 'bg-secondary-main' : 'bg-accent-error'
+                          }`}
+                          style={{ width: `${member.productivity}%` }}
+                        />
+                      </div>
+                      <span className="text-sm font-medium text-neutral-textPrimary w-12 text-right">
+                        {member.productivity}%
+                      </span>
+                    </div>
+                  </div>
+                  <div className={`w-2 h-2 rounded-full ${
+                    member.status === 'active' ? 'bg-accent-success' :
+                    member.status === 'away' ? 'bg-secondary-main' : 'bg-neutral-textMuted'
+                  }`} />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Team Activity */}
+          <div className="bg-white rounded-2xl p-6 shadow-sm">
+            <h2 className="text-lg font-semibold text-neutral-textPrimary mb-4">
+              Atividade Recente
+            </h2>
+            <div className="space-y-4">
+              {selectedMembers.slice(0, 5).map((member, index) => (
+                <div key={member.id} className="flex items-start gap-3">
+                  <div className="w-8 h-8 bg-primary-light/20 rounded-full flex items-center justify-center text-sm">
+                    {member.name.charAt(0)}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-neutral-textPrimary">
+                      <span className="font-medium">{member.name.split(' ')[0]}</span>{' '}
+                      <span className="text-neutral-textSecondary">
+                        {['completou tarefa', 'fez check-in', 'iniciou foco', 'adicionou nota'][index % 4]}
+                      </span>
+                    </p>
+                    <p className="text-xs text-neutral-textMuted">
+                      {member.lastCheckIn}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Members Detail Table */}
+        <div className="bg-white rounded-2xl p-6 shadow-sm">
+          <h2 className="text-lg font-semibold text-neutral-textPrimary mb-6">
+            Detalhes dos Membros
+          </h2>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-neutral-border">
+                  <th className="text-left py-3 px-4 text-sm font-medium text-neutral-textSecondary">Membro</th>
+                  <th className="text-left py-3 px-4 text-sm font-medium text-neutral-textSecondary">Funcao</th>
+                  <th className="text-center py-3 px-4 text-sm font-medium text-neutral-textSecondary">Status</th>
+                  <th className="text-center py-3 px-4 text-sm font-medium text-neutral-textSecondary">Produtividade</th>
+                  <th className="text-center py-3 px-4 text-sm font-medium text-neutral-textSecondary">Ultimo Check-in</th>
+                </tr>
+              </thead>
+              <tbody>
+                {selectedMembers.map((member) => (
+                  <tr key={member.id} className="border-b border-neutral-border last:border-0 hover:bg-neutral-background/50">
+                    <td className="py-4 px-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-primary-light/20 rounded-full flex items-center justify-center font-medium text-primary-main">
+                          {member.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                        </div>
+                        <div>
+                          <p className="font-medium text-neutral-textPrimary">{member.name}</p>
+                          <p className="text-sm text-neutral-textMuted">{member.email}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="py-4 px-4 text-neutral-textSecondary">{member.role}</td>
+                    <td className="py-4 px-4 text-center">
+                      <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium ${
+                        member.status === 'active' ? 'bg-accent-success/10 text-accent-success' :
+                        member.status === 'away' ? 'bg-secondary-main/10 text-secondary-dark' :
+                        'bg-neutral-background text-neutral-textMuted'
+                      }`}>
+                        <span className={`w-2 h-2 rounded-full ${
+                          member.status === 'active' ? 'bg-accent-success' :
+                          member.status === 'away' ? 'bg-secondary-main' : 'bg-neutral-textMuted'
+                        }`} />
+                        {member.status === 'active' ? 'Ativo' : member.status === 'away' ? 'Ausente' : 'Offline'}
+                      </span>
+                    </td>
+                    <td className="py-4 px-4">
+                      <div className="flex items-center justify-center gap-2">
+                        <div className="w-20 h-2 bg-neutral-background rounded-full overflow-hidden">
+                          <div
+                            className={`h-full rounded-full ${
+                              member.productivity >= 80 ? 'bg-accent-success' :
+                              member.productivity >= 60 ? 'bg-secondary-main' : 'bg-accent-error'
+                            }`}
+                            style={{ width: `${member.productivity}%` }}
+                          />
+                        </div>
+                        <span className="text-sm font-medium">{member.productivity}%</span>
+                      </div>
+                    </td>
+                    <td className="py-4 px-4 text-center text-sm text-neutral-textSecondary">
+                      {member.lastCheckIn}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <HelpButton content={getHelpContent('dashboard')} />
+      </div>
+    );
+  }
+
+  // PERSONAL/ADMIN MODE VIEW
   return (
     <div className="p-6 lg:p-8">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-2xl lg:text-3xl font-bold text-neutral-textPrimary">
-          {isAdmin ? 'Painel de Administracao' : isManager ? 'Dashboard' : `Olá, ${user?.name?.split(' ')[0] || 'Usuário'}!`}
+          {isAdmin ? 'Painel de Administracao' : isManager ? 'Dashboard' : `Ola, ${user?.name?.split(' ')[0] || 'Usuario'}!`}
         </h1>
         <p className="text-neutral-textSecondary mt-1 capitalize">{today}</p>
       </div>
@@ -123,66 +309,18 @@ export default function DashboardPage() {
       {isAdmin ? (
         // Admin Stats - Visao organizacional
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-8">
-          <StatCard
-            icon="🏢"
-            label="Organizacoes"
-            value={1}
-            trend=""
-            trendUp
-          />
-          <StatCard
-            icon="👥"
-            label="Total de Usuarios"
-            value={24}
-            trend="+2 esta semana"
-            trendUp
-          />
-          <StatCard
-            icon="👔"
-            label="Gestores"
-            value={5}
-            trend=""
-            trendUp
-          />
-          <StatCard
-            icon="📊"
-            label="Engajamento"
-            value="72%"
-            trend="+3% esta semana"
-            trendUp
-          />
+          <StatCard icon="🏢" label="Organizacoes" value={1} trend="" trendUp />
+          <StatCard icon="👥" label="Total de Usuarios" value={24} trend="+2 esta semana" trendUp />
+          <StatCard icon="👔" label="Gestores" value={5} trend="" trendUp />
+          <StatCard icon="📊" label="Engajamento" value="72%" trend="+3% esta semana" trendUp />
         </div>
       ) : isManager ? (
         // Manager Stats - Visao de gestao de equipes
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-8">
-          <StatCard
-            icon="👥"
-            label="Total de Usuarios"
-            value={24}
-            trend="+2 esta semana"
-            trendUp
-          />
-          <StatCard
-            icon="📋"
-            label="Tarefas Ativas"
-            value={156}
-            trend="-12 vs ontem"
-            trendUp={false}
-          />
-          <StatCard
-            icon="✅"
-            label="Concluídas Hoje"
-            value={38}
-            trend="+8 vs ontem"
-            trendUp
-          />
-          <StatCard
-            icon="📈"
-            label="Produtividade Média"
-            value="78%"
-            trend="+5% esta semana"
-            trendUp
-          />
+          <StatCard icon="👥" label="Total de Usuarios" value={24} trend="+2 esta semana" trendUp />
+          <StatCard icon="📋" label="Tarefas Ativas" value={156} trend="-12 vs ontem" trendUp={false} />
+          <StatCard icon="✅" label="Concluidas Hoje" value={38} trend="+8 vs ontem" trendUp />
+          <StatCard icon="📈" label="Produtividade Media" value="78%" trend="+5% esta semana" trendUp />
         </div>
       ) : (
         // User Stats - Personal
@@ -194,25 +332,13 @@ export default function DashboardPage() {
             trend={personalStats.totalTasks === 0 ? 'Crie sua primeira tarefa!' : ''}
             trendUp
           />
-          <StatCard
-            icon="⏳"
-            label="Pendentes"
-            value={personalStats.pendingTasks}
-            trend=""
-            trendUp
-          />
-          <StatCard
-            icon="🔄"
-            label="Em Progresso"
-            value={personalStats.inProgressTasks}
-            trend=""
-            trendUp
-          />
+          <StatCard icon="⏳" label="Pendentes" value={personalStats.pendingTasks} trend="" trendUp />
+          <StatCard icon="🔄" label="Em Progresso" value={personalStats.inProgressTasks} trend="" trendUp />
           <StatCard
             icon="✅"
-            label="Concluídas"
+            label="Concluidas"
             value={personalStats.completedTasks}
-            trend={productivity > 0 ? `${productivity}% de conclusão` : ''}
+            trend={productivity > 0 ? `${productivity}% de conclusao` : ''}
             trendUp
           />
         </div>
@@ -223,7 +349,7 @@ export default function DashboardPage() {
         {/* Weekly Chart */}
         <div className="lg:col-span-2 bg-white rounded-2xl p-6 shadow-sm">
           <h2 className="text-lg font-semibold text-neutral-textPrimary mb-4">
-            {isAdmin ? 'Visao Geral da Organizacao' : isManager ? 'Progresso Semanal da Equipe' : 'Seu Progresso'}
+            {isAdmin ? 'Visao Geral da Organizacao' : isManager ? 'Progresso Semanal' : 'Seu Progresso'}
           </h2>
           {isAdmin ? (
             // Admin - Organization overview
@@ -242,45 +368,25 @@ export default function DashboardPage() {
                 </a>
               </div>
             </div>
-          ) : isManager ? (
-            <div className="h-64 flex items-end justify-between gap-2">
-              {MOCK_WEEKLY_DATA.map((day) => {
-                const percentage = (day.completed / day.total) * 100;
-                return (
-                  <div key={day.day} className="flex-1 flex flex-col items-center gap-2">
-                    <div className="w-full bg-neutral-background rounded-lg overflow-hidden h-48 flex flex-col-reverse">
-                      <div
-                        className="bg-primary-main rounded-lg transition-all duration-500"
-                        style={{ height: `${percentage}%` }}
-                      />
-                    </div>
-                    <span className="text-sm text-neutral-textSecondary">{day.day}</span>
-                    <span className="text-xs text-neutral-textMuted">
-                      {day.completed}/{day.total}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
           ) : (
-            // User personal progress - show task breakdown
+            // User/Manager personal progress - show task breakdown
             <div className="h-64 flex items-center justify-center">
               {personalStats.totalTasks === 0 ? (
                 <div className="text-center">
                   <span className="text-6xl mb-4 block">📝</span>
-                  <p className="text-neutral-textSecondary">Você ainda não tem tarefas.</p>
+                  <p className="text-neutral-textSecondary">Voce ainda nao tem tarefas.</p>
                   <a
                     href="/dashboard/tasks"
                     className="inline-block mt-4 text-primary-main font-medium hover:underline"
                   >
-                    Criar primeira tarefa →
+                    Criar primeira tarefa
                   </a>
                 </div>
               ) : (
                 <div className="w-full">
                   <div className="space-y-4">
                     <ProgressBar
-                      label="Concluídas"
+                      label="Concluidas"
                       value={personalStats.completedTasks}
                       total={personalStats.totalTasks}
                       color="bg-accent-success"
@@ -307,36 +413,13 @@ export default function DashboardPage() {
         {/* Recent Activity / Quick Actions */}
         <div className="bg-white rounded-2xl p-6 shadow-sm">
           <h2 className="text-lg font-semibold text-neutral-textPrimary mb-4">
-            {isAdmin ? 'Acoes de Admin' : isManager ? 'Atividade Recente' : 'Ações Rápidas'}
+            {isAdmin ? 'Acoes de Admin' : 'Acoes Rapidas'}
           </h2>
           {isAdmin ? (
             // Admin quick actions
             <div className="space-y-3">
               <QuickActionButton href="/dashboard/admin" icon="👥" label="Gerenciar Usuarios" />
-              <QuickActionButton href="/dashboard/admin/reports" icon="📊" label="Relatorios Org" />
               <QuickActionButton href="/dashboard/settings" icon="⚙️" label="Configuracoes" />
-            </div>
-          ) : isManager ? (
-            <div className="space-y-4">
-              {MOCK_RECENT_ACTIVITIES.map((activity) => (
-                <div key={activity.id} className="flex items-start gap-3">
-                  <div className="w-8 h-8 bg-primary-light/20 rounded-full flex items-center justify-center text-sm">
-                    {activity.user.charAt(0)}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm text-neutral-textPrimary">
-                      <span className="font-medium">{activity.user}</span>{' '}
-                      <span className="text-neutral-textSecondary">{activity.action}</span>
-                    </p>
-                    <p className="text-sm text-neutral-textMuted truncate">
-                      {activity.target}
-                    </p>
-                  </div>
-                  <span className="text-xs text-neutral-textMuted whitespace-nowrap">
-                    {activity.time}
-                  </span>
-                </div>
-              ))}
             </div>
           ) : (
             // User quick actions
@@ -350,89 +433,8 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Team Overview - Only for managers (not admin, they have separate admin page) */}
-      {isManager && !isAdmin && (
-        <div className="bg-white rounded-2xl p-6 shadow-sm">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-semibold text-neutral-textPrimary">
-              Visão da Equipe
-            </h2>
-            <a href="/dashboard/teams" className="text-primary-main text-sm font-medium hover:underline">
-              Ver todos
-            </a>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-neutral-border">
-                  <th className="text-left py-3 px-4 text-sm font-medium text-neutral-textSecondary">
-                    Membro
-                  </th>
-                  <th className="text-left py-3 px-4 text-sm font-medium text-neutral-textSecondary">
-                    Função
-                  </th>
-                  <th className="text-center py-3 px-4 text-sm font-medium text-neutral-textSecondary">
-                    Tarefas Hoje
-                  </th>
-                  <th className="text-center py-3 px-4 text-sm font-medium text-neutral-textSecondary">
-                    Produtividade
-                  </th>
-                  <th className="text-center py-3 px-4 text-sm font-medium text-neutral-textSecondary">
-                    Humor
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {MOCK_TEAM_MEMBERS.map((member) => (
-                  <tr key={member.id} className="border-b border-neutral-border last:border-0 hover:bg-neutral-background/50">
-                    <td className="py-4 px-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-primary-light/20 rounded-full flex items-center justify-center font-medium text-primary-main">
-                          {member.name.split(' ').map(n => n[0]).join('')}
-                        </div>
-                        <span className="font-medium text-neutral-textPrimary">{member.name}</span>
-                      </div>
-                    </td>
-                    <td className="py-4 px-4 text-neutral-textSecondary">
-                      {member.role}
-                    </td>
-                    <td className="py-4 px-4 text-center font-medium text-neutral-textPrimary">
-                      {member.tasksCompleted}
-                    </td>
-                    <td className="py-4 px-4">
-                      <div className="flex items-center justify-center gap-2">
-                        <div className="w-24 h-2 bg-neutral-background rounded-full overflow-hidden">
-                          <div
-                            className={`h-full rounded-full ${
-                              member.productivity >= 80
-                                ? 'bg-accent-success'
-                                : member.productivity >= 60
-                                ? 'bg-secondary-main'
-                                : 'bg-accent-error'
-                            }`}
-                            style={{ width: `${member.productivity}%` }}
-                          />
-                        </div>
-                        <span className="text-sm text-neutral-textSecondary">
-                          {member.productivity}%
-                        </span>
-                      </div>
-                    </td>
-                    <td className="py-4 px-4 text-center">
-                      <span className="text-2xl">
-                        {member.mood === 'good' ? '😊' : member.mood === 'neutral' ? '😐' : '😔'}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {/* My Tasks - Only for regular users (not admin or manager) */}
-      {!isManagerOrAdmin && tasks.length > 0 && (
+      {/* My Tasks - Only for regular users (not admin) */}
+      {!isAdmin && tasks.length > 0 && (
         <div className="bg-white rounded-2xl p-6 shadow-sm">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-lg font-semibold text-neutral-textPrimary">
@@ -450,11 +452,8 @@ export default function DashboardPage() {
               >
                 <div className="flex items-center gap-3">
                   <span className={`w-3 h-3 rounded-full ${
-                    task.status === 'completed'
-                      ? 'bg-accent-success'
-                      : task.status === 'in_progress'
-                      ? 'bg-secondary-main'
-                      : 'bg-neutral-border'
+                    task.status === 'completed' ? 'bg-accent-success' :
+                    task.status === 'in_progress' ? 'bg-secondary-main' : 'bg-neutral-border'
                   }`} />
                   <div>
                     <p className="font-medium text-neutral-textPrimary">{task.title}</p>
@@ -464,13 +463,11 @@ export default function DashboardPage() {
                   </div>
                 </div>
                 <span className={`text-xs px-2 py-1 rounded-full ${
-                  task.priority === 'high'
-                    ? 'bg-accent-error/10 text-accent-error'
-                    : task.priority === 'medium'
-                    ? 'bg-secondary-main/20 text-secondary-main'
-                    : 'bg-neutral-background text-neutral-textSecondary'
+                  task.priority === 'high' ? 'bg-accent-error/10 text-accent-error' :
+                  task.priority === 'medium' ? 'bg-secondary-main/20 text-secondary-main' :
+                  'bg-neutral-background text-neutral-textSecondary'
                 }`}>
-                  {task.priority === 'high' ? 'Alta' : task.priority === 'medium' ? 'Média' : 'Baixa'}
+                  {task.priority === 'high' ? 'Alta' : task.priority === 'medium' ? 'Media' : 'Baixa'}
                 </span>
               </div>
             ))}
@@ -504,18 +501,14 @@ function StatCard({
         {trend && (
           <span
             className={`text-xs font-medium px-2 py-1 rounded-full ${
-              trendUp
-                ? 'bg-accent-success/10 text-accent-success'
-                : 'bg-accent-error/10 text-accent-error'
+              trendUp ? 'bg-accent-success/10 text-accent-success' : 'bg-accent-error/10 text-accent-error'
             }`}
           >
             {trend}
           </span>
         )}
       </div>
-      <p className="text-2xl lg:text-3xl font-bold text-neutral-textPrimary mt-3">
-        {value}
-      </p>
+      <p className="text-2xl lg:text-3xl font-bold text-neutral-textPrimary mt-3">{value}</p>
       <p className="text-sm text-neutral-textSecondary mt-1">{label}</p>
     </div>
   );

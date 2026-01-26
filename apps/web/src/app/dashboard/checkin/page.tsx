@@ -6,6 +6,8 @@ import Link from 'next/link';
 import { userStorage, getStorageKey } from '@/lib/storage';
 import HelpButton from '@/components/HelpButton';
 import { getHelpContent } from '@/lib/help-content';
+import { useTeam } from '@/contexts/TeamContext';
+import TeamMemberSelector from '@/components/TeamMemberSelector';
 
 type CheckInStep = 'mood' | 'energy' | 'notes' | 'complete';
 
@@ -36,6 +38,15 @@ const ENERGY_LEVELS = [
   { value: 5, emoji: '🔥', label: 'Alta' },
 ];
 
+// Team check-in data structure
+interface TeamCheckin {
+  memberId: string;
+  memberName: string;
+  mood: string;
+  energy: number;
+  checkedInAt: string;
+}
+
 export default function CheckInPage() {
   const router = useRouter();
   const user = userStorage.get();
@@ -46,6 +57,9 @@ export default function CheckInPage() {
   const [notes, setNotes] = useState('');
   const [isAnimating, setIsAnimating] = useState(false);
   const [tasks, setTasks] = useState<Task[]>([]);
+
+  // Team mode context
+  const { isTeamMode, selectedTeam, selectedMembers, isViewingAllMembers } = useTeam();
 
   // Load tasks on mount
   useEffect(() => {
@@ -59,6 +73,139 @@ export default function CheckInPage() {
       setTasks(pendingTasks);
     }
   }, []);
+
+  // Generate demo team check-ins
+  function getTeamCheckins(): TeamCheckin[] {
+    if (!isTeamMode || !selectedTeam) return [];
+
+    const moods = ['great', 'good', 'okay', 'low', 'struggling'];
+    const now = new Date();
+
+    return selectedMembers.map((member, idx) => ({
+      memberId: member.id,
+      memberName: member.name,
+      mood: moods[idx % moods.length],
+      energy: 1 + (idx % 5),
+      checkedInAt: new Date(now.getTime() - Math.random() * 8 * 60 * 60 * 1000).toISOString(),
+    }));
+  }
+
+  // Team mode view
+  if (isTeamMode && selectedTeam) {
+    const teamCheckins = getTeamCheckins();
+    const today = new Date().toISOString().split('T')[0];
+
+    // Calculate team mood/energy stats
+    const avgEnergy = teamCheckins.length > 0
+      ? Math.round(teamCheckins.reduce((sum, c) => sum + c.energy, 0) / teamCheckins.length * 10) / 10
+      : 0;
+
+    const moodCounts: Record<string, number> = {};
+    teamCheckins.forEach((c) => {
+      moodCounts[c.mood] = (moodCounts[c.mood] || 0) + 1;
+    });
+
+    const dominantMood = Object.entries(moodCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || 'okay';
+    const dominantMoodData = CHECK_IN_MOODS.find((m) => m.value === dominantMood);
+
+    const checkedInCount = teamCheckins.filter((c) => {
+      const checkinDate = c.checkedInAt.split('T')[0];
+      return checkinDate === today;
+    }).length;
+
+    return (
+      <div className="p-6 lg:p-8">
+        {/* Team Header */}
+        <div className="mb-6">
+          <h1 className="text-2xl lg:text-3xl font-bold text-neutral-textPrimary mb-2">
+            Check-ins da Equipe
+          </h1>
+          <p className="text-neutral-textSecondary">
+            Acompanhe o bem-estar dos membros da sua equipe
+          </p>
+        </div>
+
+        {/* Team Member Selector */}
+        <TeamMemberSelector showStats={false} />
+
+        {/* Team Stats Overview */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+          <div className="bg-white rounded-xl p-6 shadow-sm">
+            <div className="flex items-center gap-4">
+              <span className="text-4xl">{dominantMoodData?.emoji || '😐'}</span>
+              <div>
+                <p className="text-sm text-neutral-textMuted">Humor Predominante</p>
+                <p className="text-xl font-bold text-neutral-textPrimary">{dominantMoodData?.label || 'Ok'}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl p-6 shadow-sm">
+            <div className="flex items-center gap-4">
+              <span className="text-4xl">{avgEnergy >= 4 ? '⚡' : avgEnergy >= 3 ? '😐' : '😴'}</span>
+              <div>
+                <p className="text-sm text-neutral-textMuted">Energia Media</p>
+                <p className="text-xl font-bold text-neutral-textPrimary">{avgEnergy}/5</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl p-6 shadow-sm">
+            <div className="flex items-center gap-4">
+              <span className="text-4xl">✅</span>
+              <div>
+                <p className="text-sm text-neutral-textMuted">Check-ins Hoje</p>
+                <p className="text-xl font-bold text-neutral-textPrimary">{checkedInCount}/{selectedMembers.length}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Individual Check-ins */}
+        <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+          <div className="p-4 border-b border-neutral-border">
+            <h2 className="font-semibold text-neutral-textPrimary">
+              Check-ins de Hoje ({isViewingAllMembers ? 'Todos' : `${selectedMembers.length} selecionados`})
+            </h2>
+          </div>
+          <div className="divide-y divide-neutral-border">
+            {teamCheckins.map((checkin) => {
+              const moodData = CHECK_IN_MOODS.find((m) => m.value === checkin.mood);
+              const energyData = ENERGY_LEVELS.find((e) => e.value === checkin.energy);
+              const checkinTime = new Date(checkin.checkedInAt);
+
+              return (
+                <div key={checkin.memberId} className="p-4 flex items-center gap-4">
+                  <div className="w-10 h-10 bg-primary-light rounded-full flex items-center justify-center text-white font-semibold">
+                    {checkin.memberName.charAt(0)}
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-medium text-neutral-textPrimary">{checkin.memberName}</p>
+                    <p className="text-sm text-neutral-textMuted">
+                      Check-in as {checkinTime.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2 px-3 py-1 bg-neutral-background rounded-lg">
+                      <span className="text-lg">{moodData?.emoji}</span>
+                      <span className="text-sm text-neutral-textSecondary">{moodData?.label}</span>
+                    </div>
+                    <div className="flex items-center gap-2 px-3 py-1 bg-neutral-background rounded-lg">
+                      <span className="text-lg">{energyData?.emoji}</span>
+                      <span className="text-sm text-neutral-textSecondary">{energyData?.label}</span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Help Button */}
+        <HelpButton content={getHelpContent('checkin')} />
+      </div>
+    );
+  }
 
   function getTimeBasedGreeting(): string {
     const hour = new Date().getHours();

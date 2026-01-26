@@ -2,11 +2,12 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
-import { userStorage, clearAllStorage, StoredUser, getStorageKey, profileManager, teamsStorage, globalTeamsStorage } from '@/lib/storage';
+import { usePathname } from 'next/navigation';
+import { userStorage, clearAllStorage, StoredUser, getStorageKey, invitationsStorage } from '@/lib/storage';
 import { storageModeService } from '@/lib/hybrid-storage';
 import { ChatWidget } from '@/components/chat';
 import { useChatStore } from '@/stores/chatStore';
+import { TeamProvider, useTeam } from '@/contexts/TeamContext';
 
 // Status bar types
 interface DayStatus {
@@ -89,11 +90,47 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const pathname = usePathname();
-  const router = useRouter();
   const [user, setUser] = useState<StoredUser | null>(null);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const storedUser = userStorage.get();
+    if (!storedUser) {
+      window.location.href = '/login';
+      return;
+    }
+    setUser(storedUser);
+    setIsLoading(false);
+  }, []);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-neutral-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-primary-main border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-neutral-textSecondary">Carregando...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <TeamProvider>
+      <DashboardLayoutContent user={user}>{children}</DashboardLayoutContent>
+    </TeamProvider>
+  );
+}
+
+// Inner component that can use TeamContext
+function DashboardLayoutContent({
+  children,
+  user,
+}: {
+  children: React.ReactNode;
+  user: StoredUser | null;
+}) {
+  const pathname = usePathname();
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isDemoMode, setIsDemoMode] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [dayStatus, setDayStatus] = useState<DayStatus>({
@@ -105,9 +142,11 @@ export default function DashboardLayout({
     completedTasks: 0,
   });
   const [showProfileMenu, setShowProfileMenu] = useState(false);
-  const [managedTeams, setManagedTeams] = useState<Array<{ id: string; name: string }>>([]);
-  const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
+  const [pendingInvitationsCount, setPendingInvitationsCount] = useState(0);
   const openChat = useChatStore((state) => state.openChat);
+
+  // Use TeamContext for team state
+  const { managedTeams, selectedTeamId, selectTeam } = useTeam();
 
   // Load day status from localStorage (uses user-prefixed keys)
   const loadDayStatus = useCallback(() => {
@@ -171,38 +210,24 @@ export default function DashboardLayout({
   }, []);
 
   useEffect(() => {
-    // Check authentication
-    const storedUser = userStorage.get();
-    if (!storedUser) {
-      // Not authenticated - redirect to login (full page to clear state)
-      window.location.href = '/login';
-      return;
-    }
-    setUser(storedUser);
-    setIsLoading(false);
-
-    // Load managed teams from BOTH global (admin-created) and personal storage
-    const globalTeams = globalTeamsStorage.getAll();
-    const personalTeams = teamsStorage.getAll();
-    const allTeams = [...globalTeams, ...personalTeams];
-
-    // Filter teams where user is owner or has manager role in members
-    const userTeams = allTeams.filter(t => {
-      const isOwner = t.ownerId === storedUser.id;
-      const isManager = t.members.some(m =>
-        m.email?.toLowerCase() === storedUser.email?.toLowerCase() && m.role === 'manager'
-      );
-      return isOwner || isManager;
-    });
-
-    setManagedTeams(userTeams.map(t => ({ id: t.id, name: t.name })));
-
     // Check if in demo mode
     const demoMode = localStorage.getItem(getStorageKey('nciaflux_demo_mode'));
     setIsDemoMode(demoMode === 'true');
 
     // Load day status
     loadDayStatus();
+
+    // Load pending invitations count
+    function loadPendingInvitations() {
+      if (user?.email) {
+        const invitations = invitationsStorage.getByEmail(user.email);
+        setPendingInvitationsCount(invitations.length);
+      }
+    }
+    loadPendingInvitations();
+
+    // Refresh invitations every 30 seconds
+    const invitationsInterval = setInterval(loadPendingInvitations, 30000);
 
     // Update time every second
     const timeInterval = setInterval(() => {
@@ -215,8 +240,9 @@ export default function DashboardLayout({
     return () => {
       clearInterval(timeInterval);
       clearInterval(statusInterval);
+      clearInterval(invitationsInterval);
     };
-  }, [router, loadDayStatus]);
+  }, [loadDayStatus]);
 
   function handleLogout() {
     clearAllStorage();
@@ -225,31 +251,12 @@ export default function DashboardLayout({
   }
 
   function handleSelectTeam(teamId: string | null) {
-    setSelectedTeamId(teamId);
-    profileManager.setViewMode(teamId ? 'management' : 'personal');
+    selectTeam(teamId);
     setShowProfileMenu(false);
-    // Navigate to appropriate page based on context
-    if (teamId) {
-      router.push('/dashboard/teams');
-    } else {
-      router.push('/dashboard');
-    }
   }
 
   const isAdmin = user?.role === 'admin';
   const canAccessManagement = user?.role === 'manager' || isAdmin || managedTeams.length > 0;
-
-  // Show loading while checking auth
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-neutral-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-primary-main border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-neutral-textSecondary">Carregando...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-neutral-background flex">
@@ -575,6 +582,24 @@ export default function DashboardLayout({
               </div>
             </>
           )}
+
+          {/* Invitations Notification */}
+          <Link
+            href="/dashboard/invitations"
+            className={`flex items-center gap-2 px-3 py-1 rounded-lg transition-colors relative ${
+              pendingInvitationsCount > 0
+                ? 'bg-accent-warning/10 hover:bg-accent-warning/20 border border-accent-warning/30'
+                : 'bg-neutral-background hover:bg-neutral-border'
+            }`}
+            title="Meus convites"
+          >
+            <span className="text-xl">📬</span>
+            {pendingInvitationsCount > 0 && (
+              <span className="absolute -top-1 -right-1 w-5 h-5 bg-accent-warning text-white text-xs font-bold rounded-full flex items-center justify-center">
+                {pendingInvitationsCount}
+              </span>
+            )}
+          </Link>
 
           {/* Chat Button - disponivel para todos */}
           <button

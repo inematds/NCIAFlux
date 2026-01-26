@@ -91,6 +91,34 @@ export interface StoredSettings {
   };
 }
 
+// Invitation types
+export interface StoredInvitation {
+  id: string;
+  teamId: string;
+  teamName: string;
+  email: string;
+  invitedBy: string;
+  invitedByEmail: string;
+  status: 'pending' | 'accepted' | 'declined' | 'expired';
+  role: 'member' | 'manager';
+  createdAt: string;
+  respondedAt?: string;
+  expiresAt: string;
+}
+
+export interface InvitationLogEntry {
+  id: string;
+  invitationId: string;
+  teamId: string;
+  teamName: string;
+  email: string;
+  action: 'sent' | 'accepted' | 'declined' | 'expired' | 'canceled' | 'member_left';
+  performedBy: string;
+  performedByEmail: string;
+  timestamp: string;
+  notes?: string;
+}
+
 // Default data
 const DEFAULT_SETTINGS: StoredSettings = {
   notifications: {
@@ -338,6 +366,171 @@ export const teamsStorage = {
     teams[index].members = teams[index].members.filter((m) => m.id !== memberId);
     this.setAll(teams);
     return true;
+  },
+};
+
+// Invitations Storage - Global (not user-prefixed, shared across all users)
+export const invitationsStorage = {
+  getAll(): StoredInvitation[] {
+    if (!isBrowser) return [];
+    const data = localStorage.getItem('nciaflux_invitations');
+    return data ? JSON.parse(data) : [];
+  },
+
+  setAll(invitations: StoredInvitation[]): void {
+    if (!isBrowser) return;
+    localStorage.setItem('nciaflux_invitations', JSON.stringify(invitations));
+  },
+
+  create(invitation: Omit<StoredInvitation, 'id' | 'createdAt' | 'expiresAt'>): StoredInvitation {
+    const invitations = this.getAll();
+    const now = new Date();
+    const expiresAt = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000); // 7 days
+
+    const newInvitation: StoredInvitation = {
+      ...invitation,
+      id: `inv_${Date.now()}`,
+      createdAt: now.toISOString(),
+      expiresAt: expiresAt.toISOString(),
+    };
+    invitations.push(newInvitation);
+    this.setAll(invitations);
+
+    // Log the sent invitation
+    invitationLogsStorage.add({
+      invitationId: newInvitation.id,
+      teamId: newInvitation.teamId,
+      teamName: newInvitation.teamName,
+      email: newInvitation.email,
+      action: 'sent',
+      performedBy: newInvitation.invitedBy,
+      performedByEmail: newInvitation.invitedByEmail,
+    });
+
+    return newInvitation;
+  },
+
+  getByEmail(email: string): StoredInvitation[] {
+    const invitations = this.getAll();
+    return invitations.filter(i =>
+      i.email.toLowerCase() === email.toLowerCase() && i.status === 'pending'
+    );
+  },
+
+  getByTeam(teamId: string): StoredInvitation[] {
+    const invitations = this.getAll();
+    return invitations.filter(i => i.teamId === teamId);
+  },
+
+  respond(invitationId: string, accept: boolean, userEmail: string): StoredInvitation | null {
+    const invitations = this.getAll();
+    const index = invitations.findIndex(i => i.id === invitationId);
+    if (index === -1) return null;
+
+    const invitation = invitations[index];
+    invitation.status = accept ? 'accepted' : 'declined';
+    invitation.respondedAt = new Date().toISOString();
+    this.setAll(invitations);
+
+    // Log the response
+    invitationLogsStorage.add({
+      invitationId: invitation.id,
+      teamId: invitation.teamId,
+      teamName: invitation.teamName,
+      email: invitation.email,
+      action: accept ? 'accepted' : 'declined',
+      performedBy: invitation.email,
+      performedByEmail: invitation.email,
+    });
+
+    // If accepted, add member to team
+    if (accept) {
+      const teams = globalTeamsStorage.getAll();
+      const teamIndex = teams.findIndex(t => t.id === invitation.teamId);
+      if (teamIndex !== -1) {
+        const newMember: StoredTeamMember = {
+          id: `member_${Date.now()}`,
+          name: invitation.email.split('@')[0],
+          email: invitation.email,
+          role: invitation.role,
+          status: 'active',
+          productivity: 0,
+          lastCheckIn: new Date().toISOString(),
+        };
+        teams[teamIndex].members.push(newMember);
+        globalTeamsStorage.setAll(teams);
+      }
+    }
+
+    return invitation;
+  },
+
+  cancel(invitationId: string, canceledBy: string, canceledByEmail: string): boolean {
+    const invitations = this.getAll();
+    const index = invitations.findIndex(i => i.id === invitationId);
+    if (index === -1) return false;
+
+    const invitation = invitations[index];
+    invitation.status = 'expired';
+    invitation.respondedAt = new Date().toISOString();
+    this.setAll(invitations);
+
+    // Log the cancellation
+    invitationLogsStorage.add({
+      invitationId: invitation.id,
+      teamId: invitation.teamId,
+      teamName: invitation.teamName,
+      email: invitation.email,
+      action: 'canceled',
+      performedBy: canceledBy,
+      performedByEmail: canceledByEmail,
+    });
+
+    return true;
+  },
+};
+
+// Invitation Logs Storage - Global (for manager visibility)
+export const invitationLogsStorage = {
+  getAll(): InvitationLogEntry[] {
+    if (!isBrowser) return [];
+    const data = localStorage.getItem('nciaflux_invitation_logs');
+    return data ? JSON.parse(data) : [];
+  },
+
+  setAll(logs: InvitationLogEntry[]): void {
+    if (!isBrowser) return;
+    localStorage.setItem('nciaflux_invitation_logs', JSON.stringify(logs));
+  },
+
+  add(entry: Omit<InvitationLogEntry, 'id' | 'timestamp'>): InvitationLogEntry {
+    const logs = this.getAll();
+    const newEntry: InvitationLogEntry = {
+      ...entry,
+      id: `log_${Date.now()}`,
+      timestamp: new Date().toISOString(),
+    };
+    logs.unshift(newEntry); // Add to beginning for most recent first
+    this.setAll(logs);
+    return newEntry;
+  },
+
+  getByTeam(teamId: string): InvitationLogEntry[] {
+    const logs = this.getAll();
+    return logs.filter(l => l.teamId === teamId);
+  },
+
+  logMemberLeft(teamId: string, teamName: string, memberEmail: string, memberName: string): void {
+    this.add({
+      invitationId: '',
+      teamId,
+      teamName,
+      email: memberEmail,
+      action: 'member_left',
+      performedBy: memberName,
+      performedByEmail: memberEmail,
+      notes: `${memberName} left the team`,
+    });
   },
 };
 

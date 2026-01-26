@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { getStorageKey } from '@/lib/storage';
 import HelpButton from '@/components/HelpButton';
 import { getHelpContent } from '@/lib/help-content';
+import { useTeam } from '@/contexts/TeamContext';
+import TeamMemberSelector from '@/components/TeamMemberSelector';
 
 type FocusMode = 'pomodoro' | 'deep_work' | 'timeboxing' | 'free_flow';
 type FocusState = 'idle' | 'selecting_task' | 'focusing' | 'break' | 'paused' | 'completed';
@@ -67,6 +69,15 @@ const PRIORITY_CONFIG = {
   low: { label: 'Baixa', color: 'text-accent-success', bg: 'bg-accent-success/10', emoji: '🟢' },
 };
 
+// Team focus stats structure
+interface TeamFocusStats {
+  memberId: string;
+  memberName: string;
+  focusMinutes: number;
+  sessions: number;
+  lastFocusAt: string;
+}
+
 export default function FocusPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
@@ -79,8 +90,138 @@ export default function FocusPage() {
   const [freeFlowTime, setFreeFlowTime] = useState(0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  // Team mode context
+  const { isTeamMode, selectedTeam, selectedMembers, isViewingAllMembers } = useTeam();
+
   const currentMode = selectedMode ? FOCUS_MODES.find((m) => m.id === selectedMode)! : FOCUS_MODES[0];
   const today = new Date().toISOString().split('T')[0];
+
+  // Generate demo team focus stats
+  function getTeamFocusStats(): TeamFocusStats[] {
+    if (!isTeamMode || !selectedTeam) return [];
+
+    return selectedMembers.map((member, idx) => ({
+      memberId: member.id,
+      memberName: member.name,
+      focusMinutes: 30 + Math.floor(Math.random() * 150),
+      sessions: 1 + Math.floor(Math.random() * 5),
+      lastFocusAt: new Date(Date.now() - Math.random() * 4 * 60 * 60 * 1000).toISOString(),
+    }));
+  }
+
+  // Team mode view
+  if (isTeamMode && selectedTeam) {
+    const teamStats = getTeamFocusStats();
+
+    const totalTeamMinutes = teamStats.reduce((sum, s) => sum + s.focusMinutes, 0);
+    const totalTeamSessions = teamStats.reduce((sum, s) => sum + s.sessions, 0);
+    const avgMinutesPerMember = teamStats.length > 0
+      ? Math.round(totalTeamMinutes / teamStats.length)
+      : 0;
+
+    // Sort by focus minutes (top performers first)
+    const sortedStats = [...teamStats].sort((a, b) => b.focusMinutes - a.focusMinutes);
+
+    return (
+      <div className="p-6 lg:p-8">
+        {/* Header */}
+        <div className="mb-6">
+          <h1 className="text-2xl lg:text-3xl font-bold text-neutral-textPrimary mb-2">
+            Foco da Equipe
+          </h1>
+          <p className="text-neutral-textSecondary">
+            Acompanhe o tempo de foco dos membros da sua equipe hoje
+          </p>
+        </div>
+
+        {/* Team Member Selector */}
+        <TeamMemberSelector showStats={false} />
+
+        {/* Team Stats Overview */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+          <div className="bg-white rounded-xl p-6 shadow-sm">
+            <div className="flex items-center gap-4">
+              <span className="text-4xl">⏱️</span>
+              <div>
+                <p className="text-sm text-neutral-textMuted">Tempo Total</p>
+                <p className="text-2xl font-bold text-primary-main">{totalTeamMinutes} min</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl p-6 shadow-sm">
+            <div className="flex items-center gap-4">
+              <span className="text-4xl">🎯</span>
+              <div>
+                <p className="text-sm text-neutral-textMuted">Sessoes Completas</p>
+                <p className="text-2xl font-bold text-accent-success">{totalTeamSessions}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl p-6 shadow-sm">
+            <div className="flex items-center gap-4">
+              <span className="text-4xl">📊</span>
+              <div>
+                <p className="text-sm text-neutral-textMuted">Media por Membro</p>
+                <p className="text-2xl font-bold text-secondary-dark">{avgMinutesPerMember} min</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Member Focus Ranking */}
+        <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+          <div className="p-4 border-b border-neutral-border">
+            <h2 className="font-semibold text-neutral-textPrimary">
+              Ranking de Foco Hoje ({isViewingAllMembers ? 'Todos' : `${selectedMembers.length} selecionados`})
+            </h2>
+          </div>
+          <div className="divide-y divide-neutral-border">
+            {sortedStats.map((stats, index) => {
+              const lastFocus = new Date(stats.lastFocusAt);
+
+              return (
+                <div key={stats.memberId} className="p-4 flex items-center gap-4">
+                  {/* Rank */}
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${
+                    index === 0 ? 'bg-yellow-400 text-yellow-900' :
+                    index === 1 ? 'bg-gray-300 text-gray-700' :
+                    index === 2 ? 'bg-orange-300 text-orange-800' :
+                    'bg-neutral-background text-neutral-textMuted'
+                  }`}>
+                    {index + 1}
+                  </div>
+
+                  {/* Avatar */}
+                  <div className="w-10 h-10 bg-primary-light rounded-full flex items-center justify-center text-white font-semibold">
+                    {stats.memberName.charAt(0)}
+                  </div>
+
+                  {/* Info */}
+                  <div className="flex-1">
+                    <p className="font-medium text-neutral-textPrimary">{stats.memberName}</p>
+                    <p className="text-sm text-neutral-textMuted">
+                      Ultimo foco as {lastFocus.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                    </p>
+                  </div>
+
+                  {/* Stats */}
+                  <div className="text-right">
+                    <p className="font-bold text-primary-main">{stats.focusMinutes} min</p>
+                    <p className="text-sm text-neutral-textMuted">{stats.sessions} sessoes</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Help Button */}
+        <HelpButton content={getHelpContent('focus')} />
+      </div>
+    );
+  }
 
   // Load tasks and stats
   useEffect(() => {

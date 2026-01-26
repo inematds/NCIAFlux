@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { getStorageKey } from '@/lib/storage';
 import HelpButton from '@/components/HelpButton';
 import { getHelpContent } from '@/lib/help-content';
+import { useTeam } from '@/contexts/TeamContext';
+import TeamMemberSelector from '@/components/TeamMemberSelector';
 
 interface CalendarEvent {
   id: string;
@@ -88,6 +90,17 @@ function getWeekDays(date: Date): Date[] {
   return days;
 }
 
+// Team event structure
+interface TeamEvent {
+  memberId: string;
+  memberName: string;
+  title: string;
+  date: string;
+  startTime: string;
+  endTime: string;
+  color: string;
+}
+
 export default function CalendarPage() {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -95,6 +108,9 @@ export default function CalendarPage() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [showEventModal, setShowEventModal] = useState(false);
   const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null);
+
+  // Team mode context
+  const { isTeamMode, selectedTeam, selectedMembers, isViewingAllMembers } = useTeam();
 
   // Form state
   const [eventTitle, setEventTitle] = useState('');
@@ -105,6 +121,147 @@ export default function CalendarPage() {
   const [eventDescription, setEventDescription] = useState('');
   const [eventIsAllDay, setEventIsAllDay] = useState(false);
   const [eventRepeat, setEventRepeat] = useState<'none' | 'daily' | 'weekly' | 'monthly'>('none');
+
+  // Generate demo team events
+  function getTeamEvents(): TeamEvent[] {
+    if (!isTeamMode || !selectedTeam) return [];
+
+    const today = new Date();
+    const events: TeamEvent[] = [];
+    const eventTypes = [
+      'Reuniao de equipe',
+      'Check-in semanal',
+      'Revisao de projeto',
+      'Planejamento sprint',
+      'Sessao de foco',
+      'Alinhamento diario',
+    ];
+
+    selectedMembers.forEach((member, idx) => {
+      // Generate 1-3 events per member for this week
+      const eventCount = 1 + Math.floor(Math.random() * 3);
+      for (let i = 0; i < eventCount; i++) {
+        const eventDate = new Date(today);
+        eventDate.setDate(today.getDate() + Math.floor(Math.random() * 7));
+        const hour = 8 + Math.floor(Math.random() * 10);
+        events.push({
+          memberId: member.id,
+          memberName: member.name,
+          title: eventTypes[(idx + i) % eventTypes.length],
+          date: formatDate(eventDate),
+          startTime: `${hour.toString().padStart(2, '0')}:00`,
+          endTime: `${(hour + 1).toString().padStart(2, '0')}:00`,
+          color: COLORS[idx % COLORS.length].id,
+        });
+      }
+    });
+
+    return events.sort((a, b) => {
+      if (a.date !== b.date) return a.date.localeCompare(b.date);
+      return a.startTime.localeCompare(b.startTime);
+    });
+  }
+
+  // Team mode view
+  if (isTeamMode && selectedTeam) {
+    const teamEvents = getTeamEvents();
+    const today = formatDate(new Date());
+    const todayEvents = teamEvents.filter(e => e.date === today);
+    const upcomingEvents = teamEvents.filter(e => e.date > today).slice(0, 10);
+
+    return (
+      <div className="p-6 lg:p-8">
+        {/* Header */}
+        <div className="mb-6">
+          <h1 className="text-2xl lg:text-3xl font-bold text-neutral-textPrimary mb-2">
+            Agenda da Equipe
+          </h1>
+          <p className="text-neutral-textSecondary">
+            Visualize os compromissos dos membros da sua equipe
+          </p>
+        </div>
+
+        {/* Team Member Selector */}
+        <TeamMemberSelector showStats={false} />
+
+        {/* Today's Events */}
+        <div className="bg-white rounded-2xl shadow-sm overflow-hidden mb-6">
+          <div className="p-4 border-b border-neutral-border bg-primary-main/5">
+            <h2 className="font-semibold text-neutral-textPrimary flex items-center gap-2">
+              <span className="text-xl">📅</span>
+              Hoje ({todayEvents.length} eventos)
+            </h2>
+          </div>
+          {todayEvents.length === 0 ? (
+            <div className="p-8 text-center text-neutral-textMuted">
+              Nenhum evento agendado para hoje
+            </div>
+          ) : (
+            <div className="divide-y divide-neutral-border">
+              {todayEvents.map((event, idx) => {
+                const colorConfig = COLORS.find(c => c.id === event.color) || COLORS[0];
+                return (
+                  <div key={idx} className="p-4 flex items-center gap-4">
+                    <div className={`w-3 h-12 rounded-full ${colorConfig.class}`} />
+                    <div className="flex-1">
+                      <p className="font-medium text-neutral-textPrimary">{event.title}</p>
+                      <p className="text-sm text-neutral-textMuted">
+                        {event.memberName} - {event.startTime} - {event.endTime}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Upcoming Events */}
+        <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+          <div className="p-4 border-b border-neutral-border">
+            <h2 className="font-semibold text-neutral-textPrimary flex items-center gap-2">
+              <span className="text-xl">🗓️</span>
+              Proximos Eventos ({isViewingAllMembers ? 'Todos' : `${selectedMembers.length} membros`})
+            </h2>
+          </div>
+          {upcomingEvents.length === 0 ? (
+            <div className="p-8 text-center text-neutral-textMuted">
+              Nenhum evento futuro agendado
+            </div>
+          ) : (
+            <div className="divide-y divide-neutral-border">
+              {upcomingEvents.map((event, idx) => {
+                const colorConfig = COLORS.find(c => c.id === event.color) || COLORS[0];
+                const eventDate = new Date(event.date + 'T12:00:00');
+                return (
+                  <div key={idx} className="p-4 flex items-center gap-4">
+                    <div className={`w-3 h-12 rounded-full ${colorConfig.class}`} />
+                    <div className="flex-1">
+                      <p className="font-medium text-neutral-textPrimary">{event.title}</p>
+                      <p className="text-sm text-neutral-textMuted">
+                        {event.memberName}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-medium text-neutral-textPrimary">
+                        {eventDate.toLocaleDateString('pt-BR', { weekday: 'short', day: 'numeric', month: 'short' })}
+                      </p>
+                      <p className="text-sm text-neutral-textMuted">
+                        {event.startTime} - {event.endTime}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Help Button */}
+        <HelpButton content={getHelpContent('calendar')} />
+      </div>
+    );
+  }
 
   // Load data
   useEffect(() => {
