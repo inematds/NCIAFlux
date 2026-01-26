@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { teamsStorage, userStorage, StoredTeam, StoredTeamMember } from '@/lib/storage';
+import { teamsStorage, globalTeamsStorage, userStorage, StoredTeam, StoredTeamMember } from '@/lib/storage';
 import { userStatsService } from '@/lib/hybrid-storage';
 import HelpButton from '@/components/HelpButton';
 import { getHelpContent } from '@/lib/help-content';
@@ -52,12 +52,24 @@ export default function TeamsPage() {
   const [saving, setSaving] = useState(false);
 
   const user = userStorage.get();
-  const isManager = user?.role === 'manager' || user?.role === 'admin';
 
   useEffect(() => {
-    setTeams(teamsStorage.getAll());
+    // Load teams from both global (admin-created) and personal storage
+    const globalTeams = globalTeamsStorage.getAll();
+    const personalTeams = teamsStorage.getAll();
+    const allTeams = [...globalTeams, ...personalTeams];
+
+    // Filter teams where user is owner or manager
+    const userTeams = allTeams.filter(t =>
+      t.ownerId === user?.id ||
+      t.members.some(m => m.email?.toLowerCase() === user?.email?.toLowerCase() && m.role === 'manager')
+    );
+
+    setTeams(userTeams);
     loadUserFeatures();
-  }, []);
+  }, [user?.id, user?.email]);
+
+  const isManager = user?.role === 'manager' || user?.role === 'admin' || teams.length > 0;
 
   useEffect(() => {
     if (selectedTeam) {
