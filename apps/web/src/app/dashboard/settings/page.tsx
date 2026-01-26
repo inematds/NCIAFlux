@@ -106,13 +106,18 @@ export default function SettingsPage() {
     }, 500);
   }
 
-  const tabs = [
+  const isAdmin = settings.role === 'admin';
+
+  // Admin doesn't have personal features like team settings or personal data
+  const allTabs = [
     { id: 'profile', label: 'Perfil', icon: '👤' },
     { id: 'notifications', label: 'Notificações', icon: '🔔' },
     { id: 'preferences', label: 'Preferências', icon: '⚙️' },
-    { id: 'team', label: 'Equipe', icon: '👥' },
-    { id: 'data', label: 'Dados', icon: '🗄️' },
+    { id: 'team', label: 'Equipe', icon: '👥', hideForAdmin: true },
+    { id: 'data', label: 'Dados', icon: '🗄️', hideForAdmin: true },
   ];
+
+  const tabs = allTabs.filter(tab => !isAdmin || !tab.hideForAdmin);
 
   function handleResetData() {
     // Get all keys that start with nciaflux_

@@ -50,6 +50,42 @@ export default function LoginPage() {
     }
   }, [demoParam]);
 
+  // Auto-login for demo users (when coming from demo page)
+  useEffect(() => {
+    if (demoParam && DEMO_USERS[demoParam] && !isLoading) {
+      // Auto-login demo users without requiring password
+      performDemoLogin(demoParam);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [demoParam]);
+
+  // Direct demo login without form submission
+  async function performDemoLogin(role: DemoRole) {
+    setIsLoading(true);
+
+    // Small delay for UX feedback
+    await new Promise((resolve) => setTimeout(resolve, 300));
+
+    const demoUser = DEMO_USERS[role];
+    const user: StoredUser = {
+      id: `demo_${role}`,
+      email: demoUser.email,
+      name: demoUser.name,
+      role: role,
+    };
+
+    userStorage.set(user);
+    loadDemoSampleData();
+
+    // Update user stats in Supabase (async, don't block login)
+    userStatsService.upsertUserStats(user).catch((err) => {
+      console.error('Failed to update user stats:', err);
+    });
+
+    // Use full page navigation to ensure clean state
+    window.location.href = '/dashboard';
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setIsLoading(true);
