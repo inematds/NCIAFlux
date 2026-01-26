@@ -79,17 +79,43 @@ export default function AdminPage() {
   const [editingCompany, setEditingCompany] = useState<Company | null>(null);
   const [editingTeam, setEditingTeam] = useState<AdminTeam | null>(null);
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
-  const user = userStorage.get();
+  const [isLoading, setIsLoading] = useState(true);
+  const [user, setUser] = useState<ReturnType<typeof userStorage.get>>(null);
 
+  // Load user and data on mount
   useEffect(() => {
-    if (!user || user.role !== 'admin') {
+    const storedUser = userStorage.get();
+    setUser(storedUser);
+
+    if (!storedUser || storedUser.role !== 'admin') {
       router.push('/dashboard');
       return;
     }
+
+    // Load admin data
     setCompanies(getCompanies());
     setAdminTeams(getAdminTeams());
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    setIsLoading(false);
+  }, [router]);
+
+  // Reload data when tab changes (ensures fresh data)
+  useEffect(() => {
+    if (user?.role === 'admin') {
+      setCompanies(getCompanies());
+      setAdminTeams(getAdminTeams());
+    }
+  }, [activeTab, user?.role]);
+
+  if (isLoading) {
+    return (
+      <div className="p-6 flex items-center justify-center min-h-[60vh]">
+        <div className="text-center">
+          <span className="text-4xl block mb-4 animate-pulse">⏳</span>
+          <p className="text-neutral-textSecondary">Carregando...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!user || user.role !== 'admin') {
     return (
