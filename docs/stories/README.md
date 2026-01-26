@@ -12,8 +12,8 @@ Este diretório contém as stories detalhadas do projeto NCIAFlux, organizadas p
 | 4 | [Experiência e Engajamento](./epic-4-experiencia.md) | 4 | ✅ Done | v1.0-1.3 |
 | 5 | [Features Avançadas](./epic-5-features-avancadas.md) | 4 | 📝 Draft | v1.7+ |
 | 6 | [Plano Profissional](./epic-6-profissional.md) | 3 | 📝 Draft | v2.3 |
-| 7 | [Sistema Adaptativo + Cloud](./epic-7-sistema-adaptativo.md) | 13 | 📝 Draft | v1.4 |
-| 8 | [Gestão de Times](./epic-8-gestao-times.md) | 9 | 📝 Draft | v1.5 |
+| 7 | [Sistema Adaptativo + Cloud](./epic-7-sistema-adaptativo.md) | 13 | ✅ Done | v1.4 |
+| 8 | [Gestão de Times](./epic-8-gestao-times.md) | 9 | ✅ Done | v1.5 |
 
 **Total: 49 stories**
 
@@ -92,19 +92,19 @@ Este diretório contém as stories detalhadas do projeto NCIAFlux, organizadas p
 
 | # | Story | Prioridade | Status |
 |---|-------|------------|--------|
-| 7.1 | [Supabase Auth e Setup](./7.1-supabase-auth.md) | P0 | Draft |
-| 7.2 | [Sync Offline-First](./7.2-sync-offline-first.md) | P0 | Draft |
-| 7.3 | [Importação em Massa](./7.3-importacao-massa.md) | P1 | Draft |
-| 7.4 | [Perfil TDAH e Avaliações](./7.4-perfil-tdah.md) | P0 | Draft |
-| 7.5 | Coleta de Padrões | P1 | Pendente |
-| 7.6 | Motor de Adaptação | P1 | Pendente |
-| 7.7 | [Relatório Pessoal](./7.7-relatorio-pessoal.md) | P1 | Draft |
-| 7.8 | Liberação Progressiva | P1 | Pendente |
-| 7.9 | [Gamificação Básica](./7.9-gamificacao-basica.md) | P1 | Draft |
-| 7.10 | Sistema de XP e Níveis | P2 | Pendente |
-| 7.11 | Conquistas e Streaks | P2 | Pendente |
-| 7.12 | Chat 1:1 | P2 | Pendente |
-| 7.13 | Chat em Grupo | P2 | Pendente |
+| 7.1 | [Supabase Auth e Setup](./7.1-supabase-auth.md) | P0 | ✅ Done |
+| 7.2 | [Sync Offline-First](./7.2-sync-offline-first.md) | P0 | ✅ Done |
+| 7.3 | [Importação em Massa](./7.3-importacao-massa.md) | P1 | ✅ Done |
+| 7.4 | [Perfil TDAH e Avaliações](./7.4-perfil-tdah.md) | P0 | ✅ Done |
+| 7.5 | [Coleta de Padrões](./7.5-coleta-padroes.md) | P1 | ✅ Done |
+| 7.6 | [Motor de Adaptação](./7.6-motor-adaptacao.md) | P1 | ✅ Done |
+| 7.7 | [Relatório Pessoal](./7.7-relatorio-pessoal.md) | P1 | ✅ Done |
+| 7.8 | [Liberação Progressiva](./7.8-liberacao-progressiva.md) | P1 | ✅ Done |
+| 7.9 | [Gamificação Básica](./7.9-gamificacao-basica.md) | P1 | ✅ Done |
+| 7.10 | [Sistema de XP e Níveis](./7.10-sistema-xp.md) | P2 | ✅ Done |
+| 7.11 | [Conquistas e Streaks](./7.11-conquistas-streaks.md) | P2 | ✅ Done |
+| 7.12 | [Chat 1:1](./7.12-chat-1-1.md) | P2 | ✅ Done |
+| 7.13 | [Chat em Grupo](./7.13-chat-grupo.md) | P2 | ✅ Done |
 
 ---
 
@@ -112,15 +112,15 @@ Este diretório contém as stories detalhadas do projeto NCIAFlux, organizadas p
 
 | # | Story | Prioridade | Status |
 |---|-------|------------|--------|
-| 8.1 | [Criação e Gestão de Times](./8.1-criacao-times.md) | P0 | Draft |
-| 8.2 | Sistema de Roles | P0 | Pendente |
-| 8.3 | Convites e Onboarding | P0 | Pendente |
-| 8.4 | Dashboard do Gestor | P1 | Pendente |
-| 8.5 | Relatórios de Time | P1 | Pendente |
-| 8.6 | Controle de Features | P1 | Pendente |
-| 8.7 | Desafios de Time | P2 | Pendente |
-| 8.8 | Rankings Amigáveis | P2 | Pendente |
-| 8.9 | Conquistas Colaborativas | P2 | Pendente |
+| 8.1 | [Criação e Gestão de Times](./8.1-criacao-times.md) | P0 | ✅ Done |
+| 8.2 | [Sistema de Roles](./8.2-sistema-roles.md) | P0 | ✅ Done |
+| 8.3 | [Convites e Onboarding](./8.3-convites-onboarding.md) | P0 | ✅ Done |
+| 8.4 | [Dashboard do Gestor](./8.4-dashboard-gestor.md) | P1 | ✅ Done |
+| 8.5 | [Relatórios de Time](./8.5-relatorios-time.md) | P1 | ✅ Done |
+| 8.6 | [Controle de Features](./8.6-controle-features.md) | P1 | ✅ Done |
+| 8.7 | [Desafios de Time](./8.7-desafios-time.md) | P2 | ✅ Done |
+| 8.8 | [Rankings Amigáveis](./8.8-rankings-amigaveis.md) | P2 | ✅ Done |
+| 8.9 | [Conquistas Colaborativas](./8.9-conquistas-colaborativas.md) | P2 | ✅ Done |
 
 ---
 
@@ -149,43 +149,43 @@ Este diretório contém as stories detalhadas do projeto NCIAFlux, organizadas p
 - Epic 3: Acompanhamento ✅
 - Epic 4: Experiência ✅
 
-### v1.4 - Sistema Adaptativo + Cloud
-**Sprint 7: Infraestrutura Cloud**
-- 7.1 Supabase Auth
-- 7.2 Sync Offline-First
-- 7.3 Importação em Massa
+### v1.4 - Sistema Adaptativo + Cloud (Concluído)
+**Sprint 7: Infraestrutura Cloud** ✅
+- 7.1 Supabase Auth ✅
+- 7.2 Sync Offline-First ✅
+- 7.3 Importação em Massa ✅
 
-**Sprint 8: Sistema Adaptativo**
-- 7.4 Perfil TDAH
-- 7.5 Coleta de Padrões
-- 7.6 Motor de Adaptação
-- 7.7 Relatório Pessoal
-- 7.8 Liberação Progressiva
+**Sprint 8: Sistema Adaptativo** ✅
+- 7.4 Perfil TDAH ✅
+- 7.5 Coleta de Padrões ✅
+- 7.6 Motor de Adaptação ✅
+- 7.7 Relatório Pessoal ✅
+- 7.8 Liberação Progressiva ✅
 
-**Sprint 9: Gamificação**
-- 7.9 Gamificação Básica
-- 7.10 XP e Níveis
-- 7.11 Conquistas e Streaks
+**Sprint 9: Gamificação** ✅
+- 7.9 Gamificação Básica ✅
+- 7.10 XP e Níveis ✅
+- 7.11 Conquistas e Streaks ✅
 
-**Sprint 10: Social**
-- 7.12 Chat 1:1
-- 7.13 Chat em Grupo
+**Sprint 10: Social** ✅
+- 7.12 Chat 1:1 ✅
+- 7.13 Chat em Grupo ✅
 
-### v1.5 - Gestão de Times
-**Sprint 11: Estrutura de Times**
-- 8.1 Criação de Times
-- 8.2 Sistema de Roles
-- 8.3 Convites
+### v1.5 - Gestão de Times (Concluído)
+**Sprint 11: Estrutura de Times** ✅
+- 8.1 Criação de Times ✅
+- 8.2 Sistema de Roles ✅
+- 8.3 Convites ✅
 
-**Sprint 12: Dashboard Gestor**
-- 8.4 Dashboard
-- 8.5 Relatórios
-- 8.6 Controle de Features
+**Sprint 12: Dashboard Gestor** ✅
+- 8.4 Dashboard ✅
+- 8.5 Relatórios ✅
+- 8.6 Controle de Features ✅
 
-**Sprint 13: Gamificação Avançada**
-- 8.7 Desafios
-- 8.8 Rankings
-- 8.9 Conquistas Colaborativas
+**Sprint 13: Gamificação Avançada** ✅
+- 8.7 Desafios ✅
+- 8.8 Rankings ✅
+- 8.9 Conquistas Colaborativas ✅
 
 ### v1.7+ Features Avançadas
 - Epic 5: Chat por Voz, Comunidade
