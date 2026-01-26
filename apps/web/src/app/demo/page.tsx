@@ -24,16 +24,23 @@ export default function DemoPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [selectedRole, setSelectedRole] = useState<DemoRole>('user');
+  const [currentUser, setCurrentUser] = useState<string | null>(null);
 
-  // Redirect if already logged in
+  // Check if already logged in (but don't redirect - allow switching to demo)
   useEffect(() => {
-    if (userStorage.isAuthenticated()) {
-      router.push('/dashboard');
+    const user = userStorage.get();
+    if (user) {
+      setCurrentUser(user.email);
     }
-  }, [router]);
+  }, []);
 
   function startDemo() {
     setIsLoading(true);
+
+    // Faz logout se estiver logado, para permitir trocar para demo
+    if (userStorage.isAuthenticated()) {
+      userStorage.remove();
+    }
 
     // Redireciona para login com o role selecionado como parametro
     // A pagina de login vai pre-preencher o email do usuario demo
@@ -86,13 +93,21 @@ export default function DemoPage() {
             ))}
           </div>
 
+          {/* Current user notice */}
+          {currentUser && (
+            <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-sm text-yellow-800">
+              Voce esta logado como <strong>{currentUser}</strong>.
+              Ao entrar no demo, sua sessao atual sera encerrada.
+            </div>
+          )}
+
           {/* Start Button */}
           <button
             onClick={startDemo}
             disabled={isLoading}
             className="w-full bg-primary-main text-white py-3 rounded-lg font-semibold hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isLoading ? 'Entrando...' : 'Entrar no Demo'}
+            {isLoading ? 'Entrando...' : currentUser ? 'Trocar para Demo' : 'Entrar no Demo'}
           </button>
         </div>
 

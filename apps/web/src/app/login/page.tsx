@@ -25,21 +25,21 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [demoRole, setDemoRole] = useState<DemoRole | null>(null);
 
-  // Redirect if already logged in
-  useEffect(() => {
-    if (userStorage.isAuthenticated()) {
-      router.push('/dashboard');
-    }
-  }, [router]);
-
   // Check for demo parameter and pre-fill email
   useEffect(() => {
     const demo = searchParams.get('demo') as DemoRole | null;
     if (demo && DEMO_USERS[demo]) {
       setDemoRole(demo);
       setEmail(DEMO_USERS[demo].email);
+      // Se veio do demo, nao redireciona mesmo se logado
+      return;
     }
-  }, [searchParams]);
+
+    // Redirect if already logged in (only if not coming from demo)
+    if (userStorage.isAuthenticated()) {
+      router.push('/dashboard');
+    }
+  }, [router, searchParams]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
