@@ -38,9 +38,10 @@ export default function DemoPage() {
     // Faz logout se estiver logado, para permitir trocar para demo
     if (userStorage.isAuthenticated()) {
       userStorage.remove();
-      // Limpa todo localStorage de dados do usuario anterior
+      // Limpa localStorage de dados do usuario anterior, mantendo dados globais
+      const keysToKeep = ['nciaflux_demo_user', 'nciaflux_global_teams'];
       Object.keys(localStorage).forEach(key => {
-        if (key.startsWith('nciaflux_') && key !== 'nciaflux_demo_user') {
+        if (key.startsWith('nciaflux_') && !keysToKeep.includes(key)) {
           localStorage.removeItem(key);
         }
       });
