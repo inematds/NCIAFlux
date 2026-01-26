@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 /**
  * Sync Service - Offline-First Architecture
  *

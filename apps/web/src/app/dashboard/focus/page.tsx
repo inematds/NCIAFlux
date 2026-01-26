@@ -96,11 +96,104 @@ export default function FocusPage() {
   const currentMode = selectedMode ? FOCUS_MODES.find((m) => m.id === selectedMode)! : FOCUS_MODES[0];
   const today = new Date().toISOString().split('T')[0];
 
+  // Save stats to localStorage - moved before early return
+  const saveStats = useCallback((addMinutes: number, addSession: boolean) => {
+    const stats = JSON.parse(localStorage.getItem(getStorageKey('nciaflux_focus_stats')) || '{}');
+    if (!stats[today]) {
+      stats[today] = { totalMinutes: 0, sessions: 0 };
+    }
+    stats[today].totalMinutes += addMinutes;
+    if (addSession) {
+      stats[today].sessions += 1;
+    }
+    localStorage.setItem(getStorageKey('nciaflux_focus_stats'), JSON.stringify(stats));
+    setTotalFocusTime(stats[today].totalMinutes);
+    setSessionsCompleted(stats[today].sessions);
+  }, [today]);
+
+  // Load tasks and stats - moved before early return
+  useEffect(() => {
+    // Skip loading for team mode
+    if (isTeamMode) return;
+
+    // Load tasks
+    const savedTasks = localStorage.getItem(getStorageKey('nciaflux_tasks'));
+    if (savedTasks) {
+      const allTasks: Task[] = JSON.parse(savedTasks);
+      const priorityOrder = { high: 0, medium: 1, low: 2 };
+      const filteredTasks = allTasks
+        .filter(t => t.status === 'pending' || t.status === 'in_progress')
+        .sort((a, b) => {
+          if (a.isTop1 && !b.isTop1) return -1;
+          if (!a.isTop1 && b.isTop1) return 1;
+          const priorityDiff = priorityOrder[a.priority] - priorityOrder[b.priority];
+          if (priorityDiff !== 0) return priorityDiff;
+          if (a.dueDate && b.dueDate) return a.dueDate.localeCompare(b.dueDate);
+          if (a.dueDate) return -1;
+          if (b.dueDate) return 1;
+          return 0;
+        });
+      setTasks(filteredTasks);
+    }
+
+    // Load projects
+    const savedProjects = localStorage.getItem(getStorageKey('nciaflux_projects'));
+    if (savedProjects) {
+      setProjects(JSON.parse(savedProjects));
+    }
+
+    // Load focus stats
+    const stats = JSON.parse(localStorage.getItem(getStorageKey('nciaflux_focus_stats')) || '{}');
+    if (stats[today]) {
+      setTotalFocusTime(stats[today].totalMinutes || 0);
+      setSessionsCompleted(stats[today].sessions || 0);
+    }
+  }, [today, isTeamMode]);
+
+  // Timer logic - moved before early return
+  useEffect(() => {
+    // Skip for team mode
+    if (isTeamMode) return;
+
+    if (focusState === 'focusing' || focusState === 'break') {
+      intervalRef.current = setInterval(() => {
+        if (selectedMode === 'free_flow' && focusState === 'focusing') {
+          setFreeFlowTime((prev) => prev + 1);
+        } else {
+          setTimeLeft((prev) => {
+            if (prev <= 1) {
+              if (focusState === 'focusing') {
+                saveStats(currentMode.focusTime, true);
+                if (currentMode.breakTime > 0) {
+                  setFocusState('break');
+                  return currentMode.breakTime * 60;
+                } else {
+                  setFocusState('completed');
+                  return 0;
+                }
+              } else {
+                setFocusState('completed');
+                return 0;
+              }
+            }
+            return prev - 1;
+          });
+        }
+      }, 1000);
+    }
+
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    };
+  }, [focusState, selectedMode, currentMode, saveStats, isTeamMode]);
+
   // Generate demo team focus stats
   function getTeamFocusStats(): TeamFocusStats[] {
     if (!isTeamMode || !selectedTeam) return [];
 
-    return selectedMembers.map((member, idx) => ({
+    return selectedMembers.map((member) => ({
       memberId: member.id,
       memberName: member.name,
       focusMinutes: 30 + Math.floor(Math.random() * 150),
@@ -222,93 +315,6 @@ export default function FocusPage() {
       </div>
     );
   }
-
-  // Load tasks and stats
-  useEffect(() => {
-    // Load tasks
-    const savedTasks = localStorage.getItem(getStorageKey('nciaflux_tasks'));
-    if (savedTasks) {
-      const allTasks: Task[] = JSON.parse(savedTasks);
-      const priorityOrder = { high: 0, medium: 1, low: 2 };
-      const filteredTasks = allTasks
-        .filter(t => t.status === 'pending' || t.status === 'in_progress')
-        .sort((a, b) => {
-          if (a.isTop1 && !b.isTop1) return -1;
-          if (!a.isTop1 && b.isTop1) return 1;
-          const priorityDiff = priorityOrder[a.priority] - priorityOrder[b.priority];
-          if (priorityDiff !== 0) return priorityDiff;
-          if (a.dueDate && b.dueDate) return a.dueDate.localeCompare(b.dueDate);
-          if (a.dueDate) return -1;
-          if (b.dueDate) return 1;
-          return 0;
-        });
-      setTasks(filteredTasks);
-    }
-
-    // Load projects
-    const savedProjects = localStorage.getItem(getStorageKey('nciaflux_projects'));
-    if (savedProjects) {
-      setProjects(JSON.parse(savedProjects));
-    }
-
-    // Load focus stats
-    const stats = JSON.parse(localStorage.getItem(getStorageKey('nciaflux_focus_stats')) || '{}');
-    if (stats[today]) {
-      setTotalFocusTime(stats[today].totalMinutes || 0);
-      setSessionsCompleted(stats[today].sessions || 0);
-    }
-  }, [today]);
-
-  // Save stats to localStorage
-  const saveStats = useCallback((addMinutes: number, addSession: boolean) => {
-    const stats = JSON.parse(localStorage.getItem(getStorageKey('nciaflux_focus_stats')) || '{}');
-    if (!stats[today]) {
-      stats[today] = { totalMinutes: 0, sessions: 0 };
-    }
-    stats[today].totalMinutes += addMinutes;
-    if (addSession) {
-      stats[today].sessions += 1;
-    }
-    localStorage.setItem(getStorageKey('nciaflux_focus_stats'), JSON.stringify(stats));
-    setTotalFocusTime(stats[today].totalMinutes);
-    setSessionsCompleted(stats[today].sessions);
-  }, [today]);
-
-  // Timer logic
-  useEffect(() => {
-    if (focusState === 'focusing' || focusState === 'break') {
-      intervalRef.current = setInterval(() => {
-        if (selectedMode === 'free_flow' && focusState === 'focusing') {
-          setFreeFlowTime((prev) => prev + 1);
-        } else {
-          setTimeLeft((prev) => {
-            if (prev <= 1) {
-              if (focusState === 'focusing') {
-                saveStats(currentMode.focusTime, true);
-                if (currentMode.breakTime > 0) {
-                  setFocusState('break');
-                  return currentMode.breakTime * 60;
-                } else {
-                  setFocusState('completed');
-                  return 0;
-                }
-              } else {
-                setFocusState('completed');
-                return 0;
-              }
-            }
-            return prev - 1;
-          });
-        }
-      }, 1000);
-    }
-
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
-    };
-  }, [focusState, selectedMode, currentMode, saveStats]);
 
   function getProjectName(projectId?: string): string {
     if (!projectId) return '';
