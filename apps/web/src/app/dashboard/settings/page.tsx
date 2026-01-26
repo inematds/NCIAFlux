@@ -763,7 +763,7 @@ export default function SettingsPage() {
                   <p className="text-xs font-mono text-neutral-textSecondary mb-2">Formato do arquivo:</p>
                   <code className="text-xs text-neutral-textMuted block">
                     titulo,descricao,prioridade,data,status,categoria<br/>
-                    "Minha tarefa","Descricao aqui","high","2026-01-28","pending","trabalho"
+                    {'"Minha tarefa","Descricao aqui","high","2026-01-28","pending","trabalho"'}
                   </code>
                   <p className="text-xs text-neutral-textMuted mt-2">
                     <strong>prioridade:</strong> high, medium, low | <strong>status:</strong> pending, in_progress, completed
@@ -822,7 +822,7 @@ export default function SettingsPage() {
                   <p className="text-xs font-mono text-neutral-textSecondary mb-2">Formato do arquivo:</p>
                   <code className="text-xs text-neutral-textMuted block">
                     titulo,conteudo,pasta,tags<br/>
-                    "Minha nota","Conteudo da nota aqui","inbox","tag1;tag2"
+                    {'"Minha nota","Conteudo da nota aqui","inbox","tag1;tag2"'}
                   </code>
                   <p className="text-xs text-neutral-textMuted mt-2">
                     <strong>pasta:</strong> inbox, ideas, reference, archive | <strong>tags:</strong> separadas por ;
