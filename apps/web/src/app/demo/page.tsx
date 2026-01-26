@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { userStorage } from '@/lib/storage';
 
 type DemoRole = 'user' | 'manager' | 'admin';
@@ -21,7 +20,6 @@ const roleOptions: { role: DemoRole; icon: string; title: string; desc: string }
 ];
 
 export default function DemoPage() {
-  const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [selectedRole, setSelectedRole] = useState<DemoRole>('user');
   const [currentUser, setCurrentUser] = useState<string | null>(null);
@@ -40,11 +38,16 @@ export default function DemoPage() {
     // Faz logout se estiver logado, para permitir trocar para demo
     if (userStorage.isAuthenticated()) {
       userStorage.remove();
+      // Limpa todo localStorage de dados do usuario anterior
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith('nciaflux_') && key !== 'nciaflux_demo_user') {
+          localStorage.removeItem(key);
+        }
+      });
     }
 
-    // Redireciona para login com o role selecionado como parametro
-    // A pagina de login vai pre-preencher o email do usuario demo
-    router.push(`/login?demo=${selectedRole}`);
+    // Usa navegacao completa para garantir estado limpo
+    window.location.href = `/login?demo=${selectedRole}`;
   }
 
   return (

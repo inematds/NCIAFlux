@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { userStorage, StoredUser } from '@/lib/storage';
 import { userStatsService, storageModeService } from '@/lib/hybrid-storage';
 
@@ -16,7 +16,6 @@ const DEMO_USERS: Record<DemoRole, { email: string; name: string }> = {
 };
 
 export default function LoginPage() {
-  const router = useRouter();
   const searchParams = useSearchParams();
 
   // Check demo param immediately (before any state)
@@ -47,9 +46,9 @@ export default function LoginPage() {
 
     // So redireciona para dashboard se estiver logado E nao for demo
     if (userStorage.isAuthenticated()) {
-      router.push('/dashboard');
+      window.location.href = '/dashboard';
     }
-  }, [router, demoParam]);
+  }, [demoParam]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -113,7 +112,8 @@ export default function LoginPage() {
       console.error('Failed to update user stats:', err);
     });
 
-    router.push('/dashboard');
+    // Use full page navigation to ensure clean state
+    window.location.href = '/dashboard';
   }
 
   // Clear existing data for new regular users (not demo)

@@ -175,8 +175,8 @@ export default function DashboardLayout({
     // Check authentication
     const storedUser = userStorage.get();
     if (!storedUser) {
-      // Not authenticated - redirect to login
-      router.push('/login');
+      // Not authenticated - redirect to login (full page to clear state)
+      window.location.href = '/login';
       return;
     }
     setUser(storedUser);
