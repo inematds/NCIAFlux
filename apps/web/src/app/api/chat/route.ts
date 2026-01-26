@@ -127,6 +127,11 @@ export async function POST(request: NextRequest) {
     let assistantMessage = choice.message.content || '';
     const toolResults: ChatResponse['toolResults'] = [];
 
+    // Debug logging
+    console.log('[Chat API] Model:', selectedModel);
+    console.log('[Chat API] Tools sent:', openRouterTools ? openRouterTools.length : 0);
+    console.log('[Chat API] Tool calls received:', choice.message.tool_calls?.length || 0);
+
     // Handle tool calls if any
     if (choice.message.tool_calls && choice.message.tool_calls.length > 0) {
       for (const toolCall of choice.message.tool_calls) {
@@ -216,6 +221,12 @@ export async function POST(request: NextRequest) {
           { status: 401 }
         );
       }
+      if (error.message.includes('402')) {
+        return NextResponse.json(
+          { error: 'Sem creditos na OpenRouter. Recarregue sua conta ou use um modelo gratuito.' },
+          { status: 402 }
+        );
+      }
       if (error.message.includes('429')) {
         return NextResponse.json(
           { error: 'Limite de requisicoes atingido. Tente novamente em alguns segundos.' },
@@ -226,6 +237,12 @@ export async function POST(request: NextRequest) {
         return NextResponse.json(
           { error: 'Requisicao invalida. Verifique os parametros.' },
           { status: 400 }
+        );
+      }
+      if (error.message.includes('insufficient') || error.message.includes('credits') || error.message.includes('balance')) {
+        return NextResponse.json(
+          { error: 'Creditos insuficientes na OpenRouter. Recarregue ou use modelo gratuito.' },
+          { status: 402 }
         );
       }
 

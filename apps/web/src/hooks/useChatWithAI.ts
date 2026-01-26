@@ -56,14 +56,52 @@ export function useChatWithAI(): UseChatWithAIReturn {
     const pendingTasks = todayTasks.filter((t) => t.status === 'pending' || t.status === 'in_progress');
     const completedTasks = todayTasks.filter((t) => t.status === 'completed');
 
-    // Get brain dump count
+    // Get brain dump items
     let brainDumpCount = 0;
+    let brainDumpItems: Array<{ id: string; content: string; category?: string }> = [];
     try {
       const brainDumpKey = getStorageKey('nciaflux_brain_dump');
       const brainDumpData = localStorage.getItem(brainDumpKey);
       if (brainDumpData) {
         const brainDump = JSON.parse(brainDumpData);
-        brainDumpCount = brainDump.filter((item: { status: string }) => item.status === 'inbox').length;
+        const inboxItems = brainDump.filter((item: { status: string }) => item.status === 'inbox');
+        brainDumpCount = inboxItems.length;
+        brainDumpItems = inboxItems.slice(0, 10).map((item: { id: string; content: string; category?: string }) => ({
+          id: item.id,
+          content: item.content,
+          category: item.category,
+        }));
+      }
+    } catch {
+      // Ignore errors
+    }
+
+    // Get calendar events
+    let eventsList: Array<{ id: string; title: string; date: string; startTime: string; endTime?: string; category?: string }> = [];
+    try {
+      const eventsKey = getStorageKey('nciaflux_calendar_events');
+      const eventsData = localStorage.getItem(eventsKey);
+      if (eventsData) {
+        const events = JSON.parse(eventsData);
+        // Get events from today onwards (next 7 days)
+        const todayDate = new Date();
+        const weekFromNow = new Date(todayDate);
+        weekFromNow.setDate(weekFromNow.getDate() + 7);
+
+        eventsList = events
+          .filter((e: { date: string }) => {
+            const eventDate = new Date(e.date);
+            return eventDate >= todayDate && eventDate <= weekFromNow;
+          })
+          .slice(0, 10)
+          .map((e: { id: string; title: string; date: string; startTime: string; endTime?: string; category?: string }) => ({
+            id: e.id,
+            title: e.title,
+            date: e.date,
+            startTime: e.startTime,
+            endTime: e.endTime,
+            category: e.category,
+          }));
       }
     } catch {
       // Ignore errors
@@ -113,6 +151,15 @@ export function useChatWithAI(): UseChatWithAIReturn {
       // Ignore errors
     }
 
+    // Format tasks list for context
+    const tasksList = todayTasks.slice(0, 15).map((t) => ({
+      id: t.id,
+      title: t.title,
+      priority: t.priority,
+      status: t.status,
+      dueDate: t.dueDate,
+    }));
+
     return {
       user: {
         id: user.id,
@@ -143,6 +190,9 @@ export function useChatWithAI(): UseChatWithAIReturn {
         top1Task: pendingTasks.find((t) => t.priority === 'high')?.title || pendingTasks[0]?.title || null,
         brainDumpInbox: brainDumpCount,
       },
+      tasksList,
+      eventsList,
+      brainDumpList: brainDumpItems,
       recentMessages: messages.slice(-10),
     };
   }, [messages]);
@@ -246,12 +296,16 @@ export function useChatWithAI(): UseChatWithAIReturn {
         addMessage(assistantMessage);
 
         // Handle tool results (execute client-side actions)
-        if (data.toolResults) {
+        if (data.toolResults && data.toolResults.length > 0) {
+          console.log('[AI Chat] Tool results received:', data.toolResults.length);
           for (const result of data.toolResults) {
+            console.log('[AI Chat] Processing tool:', result.tool, 'success:', result.success);
             if (result.success && result.result) {
-              await handleToolResult(result.result, user.id);
+              await handleToolResult(result.result as Record<string, unknown>, user.id);
             }
           }
+        } else {
+          console.log('[AI Chat] No tool results in response');
         }
 
         // Increment message count
@@ -300,6 +354,7 @@ export function useChatWithAI(): UseChatWithAIReturn {
    */
   const handleToolResult = async (result: Record<string, unknown>, userId: string) => {
     const action = result.action as string;
+    console.log('[AI Chat] Executing action:', action, result);
 
     switch (action) {
       case 'create_task': {

@@ -38,6 +38,38 @@ Porque acreditamos que cérebros neurodivergentes não são defeituosos - são d
 
 ---
 
+## Autismo e TDAH em Números (2026)
+
+Este projeto existe porque **milhões de pessoas** precisam de ferramentas que entendam como seus cérebros funcionam.
+
+### Brasil
+
+| Condição | Estimativa 2026 | Fonte |
+|----------|-----------------|-------|
+| **Autismo (TEA)** | 2,4 - 2,6 milhões | IBGE Censo 2022 (~1,2% da população) |
+| **TDAH** | ~11 milhões | Estudos epidemiológicos (~7,6% crianças/adolescentes) |
+
+> O Censo 2022 foi o **primeiro levantamento oficial brasileiro** a incluir dados sobre autismo.
+
+### Mundo
+
+| Condição | Estimativa 2026 | Prevalência |
+|----------|-----------------|-------------|
+| **Autismo (TEA)** | ~65 milhões | 1 em cada 127 pessoas (OMS) |
+| **TDAH** | ~94 milhões | ~1,13% da população (GBD) |
+
+### Por que isso importa?
+
+Apps de produtividade tradicionais são feitos para cérebros neurotípicos. Pessoas com TDAH e autismo frequentemente:
+- Têm dificuldade com listas rígidas e horários fixos
+- Experimentam paralisia por análise e sobrecarga sensorial
+- Precisam de lembretes gentis, não cobranças
+- Funcionam melhor com recompensas imediatas e micro-vitórias
+
+O NeuroFluxo foi projetado **desde o início** para essas necessidades.
+
+---
+
 ## Funcionalidades
 
 ### v1.0 - Base

@@ -94,6 +94,27 @@ export interface AIChatContext {
     top1Task: string | null;
     brainDumpInbox: number;
   };
+  // Detailed data for listing
+  tasksList?: Array<{
+    id: string;
+    title: string;
+    priority: string;
+    status: string;
+    dueDate: string;
+  }>;
+  eventsList?: Array<{
+    id: string;
+    title: string;
+    date: string;
+    startTime: string;
+    endTime?: string;
+    category?: string;
+  }>;
+  brainDumpList?: Array<{
+    id: string;
+    content: string;
+    category?: string;
+  }>;
   recentMessages: AIMessage[];
 }
 
