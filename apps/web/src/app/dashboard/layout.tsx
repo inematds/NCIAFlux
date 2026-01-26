@@ -186,22 +186,15 @@ export default function DashboardLayout({
     const personalTeams = teamsStorage.getAll();
     const allTeams = [...globalTeams, ...personalTeams];
 
-    // DEBUG: Log what's being loaded
-    console.log('[DEBUG] Global teams:', globalTeams);
-    console.log('[DEBUG] Personal teams:', personalTeams);
-    console.log('[DEBUG] User email:', storedUser.email);
-
     // Filter teams where user is owner or has manager role in members
     const userTeams = allTeams.filter(t => {
       const isOwner = t.ownerId === storedUser.id;
       const isManager = t.members.some(m =>
         m.email?.toLowerCase() === storedUser.email?.toLowerCase() && m.role === 'manager'
       );
-      console.log('[DEBUG] Team:', t.name, '- isOwner:', isOwner, '- isManager:', isManager, '- members:', t.members);
       return isOwner || isManager;
     });
 
-    console.log('[DEBUG] Filtered user teams:', userTeams);
     setManagedTeams(userTeams.map(t => ({ id: t.id, name: t.name })));
 
     // Check if in demo mode
