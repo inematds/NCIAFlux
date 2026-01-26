@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { userStorage, clearAllStorage, StoredUser, getStorageKey, profileManager, LocalProfile, ViewMode } from '@/lib/storage';
+import { userStorage, clearAllStorage, StoredUser, getStorageKey, profileManager, teamsStorage } from '@/lib/storage';
 import { storageModeService } from '@/lib/hybrid-storage';
 import { ChatWidget } from '@/components/chat';
 import { useChatStore } from '@/stores/chatStore';
@@ -105,9 +105,9 @@ export default function DashboardLayout({
     pendingTasks: 0,
     completedTasks: 0,
   });
-  const [profiles, setProfiles] = useState<LocalProfile[]>([]);
-  const [viewMode, setViewMode] = useState<ViewMode>('personal');
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [managedTeams, setManagedTeams] = useState<Array<{ id: string; name: string }>>([]);
+  const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
   const openChat = useChatStore((state) => state.openChat);
 
   // Load day status from localStorage (uses user-prefixed keys)
@@ -182,13 +182,16 @@ export default function DashboardLayout({
     setUser(storedUser);
     setIsLoading(false);
 
-    // Load profiles
-    const allProfiles = profileManager.getProfiles();
-    setProfiles(allProfiles);
-
-    // Load view mode
-    const currentViewMode = profileManager.getViewMode();
-    setViewMode(currentViewMode);
+    // Load managed teams for manager/admin users
+    if (storedUser.role === 'manager' || storedUser.role === 'admin') {
+      const allTeams = teamsStorage.getAll();
+      // Filter teams where user is owner or manager
+      const userTeams = allTeams.filter(t =>
+        t.ownerId === storedUser.id ||
+        t.members.some(m => m.email === storedUser.email && m.role === 'manager')
+      );
+      setManagedTeams(userTeams.map(t => ({ id: t.id, name: t.name })));
+    }
 
     // Check if in demo mode
     const demoMode = localStorage.getItem(getStorageKey('nciaflux_demo_mode'));
@@ -216,35 +219,10 @@ export default function DashboardLayout({
     router.push('/');
   }
 
-  function handleSwitchProfile(profileId: string) {
-    const profile = profileManager.switchProfile(profileId);
-    if (profile) {
-      // Update user storage with new profile
-      userStorage.set({
-        id: profile.id,
-        email: profile.email,
-        name: profile.name,
-        role: profile.role,
-        company: profile.company,
-        avatar_url: profile.avatar_url,
-      });
-      setUser({
-        id: profile.id,
-        email: profile.email,
-        name: profile.name,
-        role: profile.role,
-        company: profile.company,
-        avatar_url: profile.avatar_url,
-      });
-      setViewMode('personal');
-      setShowProfileMenu(false);
-      loadDayStatus(); // Reload data for new profile
-    }
-  }
-
-  function handleAddProfile() {
+  function handleSelectTeam(teamId: string | null) {
+    setSelectedTeamId(teamId);
+    profileManager.setViewMode(teamId ? 'management' : 'personal');
     setShowProfileMenu(false);
-    router.push('/login?add_profile=true');
   }
 
   const isAdmin = user?.role === 'admin';
@@ -376,7 +354,9 @@ export default function DashboardLayout({
                   </p>
                   <p className="text-xs text-neutral-textMuted truncate">
                     {canAccessManagement
-                      ? (viewMode === 'management' ? 'Visao Gestao' : 'Visao Pessoal')
+                      ? (selectedTeamId
+                        ? `Gestao: ${managedTeams.find(t => t.id === selectedTeamId)?.name || ''}`
+                        : 'Visao Pessoal')
                       : user?.email}
                   </p>
                 </div>
@@ -390,66 +370,62 @@ export default function DashboardLayout({
           {/* Profile Menu Dropdown */}
           {showProfileMenu && sidebarOpen && (
             <div className="absolute bottom-full left-0 right-0 mb-2 mx-4 bg-white rounded-xl shadow-lg border border-neutral-border overflow-hidden z-50">
-              {/* View Mode Toggle (for managers) */}
-              {canAccessManagement && (
-                <div className="p-3 border-b border-neutral-border">
-                  <p className="text-xs text-neutral-textMuted mb-2">Modo de Visualizacao</p>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => { profileManager.setViewMode('personal'); setViewMode('personal'); }}
-                      className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                        viewMode === 'personal'
-                          ? 'bg-primary-main text-white'
-                          : 'bg-neutral-background text-neutral-textSecondary hover:bg-neutral-border'
-                      }`}
-                    >
-                      Pessoal
-                    </button>
-                    <button
-                      onClick={() => { profileManager.setViewMode('management'); setViewMode('management'); }}
-                      className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                        viewMode === 'management'
-                          ? 'bg-secondary-main text-white'
-                          : 'bg-neutral-background text-neutral-textSecondary hover:bg-neutral-border'
-                      }`}
-                    >
-                      Gestao
-                    </button>
+              {/* Context Selection (Pessoal + Teams) */}
+              <div className="p-2 border-b border-neutral-border">
+                <p className="text-xs text-neutral-textMuted px-2 mb-2">Contexto</p>
+                {/* Pessoal option - always shown */}
+                <button
+                  onClick={() => handleSelectTeam(null)}
+                  className={`w-full flex items-center gap-3 px-2 py-2 rounded-lg transition-colors ${
+                    selectedTeamId === null
+                      ? 'bg-primary-main/10 border border-primary-main'
+                      : 'hover:bg-neutral-background'
+                  }`}
+                >
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-semibold ${
+                    selectedTeamId === null ? 'bg-primary-main' : 'bg-neutral-textMuted'
+                  }`}>
+                    {user?.name?.charAt(0) || 'U'}
                   </div>
-                </div>
-              )}
+                  <div className="flex-1 text-left">
+                    <p className="text-sm font-medium text-neutral-textPrimary">Pessoal</p>
+                    <p className="text-xs text-neutral-textMuted">Minha visao pessoal</p>
+                  </div>
+                  {selectedTeamId === null && <span className="text-primary-main">✓</span>}
+                </button>
 
-              {/* Profiles List */}
-              {profiles.length > 1 && (
-                <div className="p-2 border-b border-neutral-border">
-                  <p className="text-xs text-neutral-textMuted px-2 mb-1">Trocar Perfil</p>
-                  {profiles.filter(p => p.id !== user?.id).map((profile) => (
-                    <button
-                      key={profile.id}
-                      onClick={() => handleSwitchProfile(profile.id)}
-                      className="w-full flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-neutral-background transition-colors"
-                    >
-                      <div className="w-8 h-8 bg-secondary-main rounded-full flex items-center justify-center text-white text-sm font-semibold">
-                        {profile.name.charAt(0)}
-                      </div>
-                      <div className="flex-1 text-left">
-                        <p className="text-sm font-medium text-neutral-textPrimary">{profile.name}</p>
-                        <p className="text-xs text-neutral-textMuted">{profile.email}</p>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              )}
+                {/* Managed Teams - only for managers */}
+                {canAccessManagement && managedTeams.length > 0 && (
+                  <>
+                    <p className="text-xs text-neutral-textMuted px-2 mt-3 mb-2">Equipes que gerencio</p>
+                    {managedTeams.map((team) => (
+                      <button
+                        key={team.id}
+                        onClick={() => handleSelectTeam(team.id)}
+                        className={`w-full flex items-center gap-3 px-2 py-2 rounded-lg transition-colors ${
+                          selectedTeamId === team.id
+                            ? 'bg-secondary-main/10 border border-secondary-main'
+                            : 'hover:bg-neutral-background'
+                        }`}
+                      >
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-semibold ${
+                          selectedTeamId === team.id ? 'bg-secondary-main' : 'bg-neutral-textMuted'
+                        }`}>
+                          👥
+                        </div>
+                        <div className="flex-1 text-left">
+                          <p className="text-sm font-medium text-neutral-textPrimary">{team.name}</p>
+                          <p className="text-xs text-neutral-textMuted">Visao de gestao</p>
+                        </div>
+                        {selectedTeamId === team.id && <span className="text-secondary-main">✓</span>}
+                      </button>
+                    ))}
+                  </>
+                )}
+              </div>
 
               {/* Actions */}
               <div className="p-2">
-                <button
-                  onClick={handleAddProfile}
-                  className="w-full flex items-center gap-2 px-2 py-2 rounded-lg text-sm text-neutral-textSecondary hover:bg-neutral-background transition-colors"
-                >
-                  <span>➕</span>
-                  <span>Adicionar Perfil</span>
-                </button>
                 <button
                   onClick={handleLogout}
                   className="w-full flex items-center gap-2 px-2 py-2 rounded-lg text-sm text-accent-error hover:bg-accent-error/10 transition-colors"
