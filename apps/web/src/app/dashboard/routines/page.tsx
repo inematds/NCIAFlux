@@ -3,6 +3,8 @@
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { getStorageKey } from '@/lib/storage';
+import HelpButton from '@/components/HelpButton';
+import { getHelpContent } from '@/lib/help-content';
 
 interface RoutineStats {
   morningCompletedDays: number;
@@ -209,6 +211,8 @@ export default function RoutinesPage() {
           </Link>
         </div>
       )}
+
+      <HelpButton content={getHelpContent('routines')} />
     </div>
   );
 }

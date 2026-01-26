@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { getStorageKey } from '@/lib/storage';
+import HelpButton from '@/components/HelpButton';
+import { getHelpContent } from '@/lib/help-content';
 
 interface DayPlan {
   date: string;
@@ -703,6 +705,8 @@ export default function PlannerPage() {
           </div>
         </div>
       )}
+
+      <HelpButton content={getHelpContent('planner')} />
     </div>
   );
 }

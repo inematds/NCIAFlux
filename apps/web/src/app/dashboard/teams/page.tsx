@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import { teamsStorage, userStorage, StoredTeam, StoredTeamMember } from '@/lib/storage';
 import { userStatsService } from '@/lib/hybrid-storage';
+import HelpButton from '@/components/HelpButton';
+import { getHelpContent } from '@/lib/help-content';
 
 const STATUS_CONFIG = {
   active: { label: 'Ativo', color: 'bg-accent-success', textColor: 'text-accent-success' },
@@ -426,6 +428,8 @@ export default function TeamsPage() {
           </div>
         </div>
       )}
+
+      <HelpButton content={getHelpContent('teams')} />
     </div>
   );
 }

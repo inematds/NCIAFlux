@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { getStorageKey } from '@/lib/storage';
+import HelpButton from '@/components/HelpButton';
+import { getHelpContent } from '@/lib/help-content';
 
 interface BrainDumpItem {
   id: string;
@@ -412,6 +414,8 @@ export default function BrainDumpPage() {
           </div>
         </div>
       )}
+
+      <HelpButton content={getHelpContent('brain-dump')} />
     </div>
   );
 }

@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import { userStorage } from '@/lib/storage';
 import { useRouter } from 'next/navigation';
+import HelpButton from '@/components/HelpButton';
+import { getHelpContent } from '@/lib/help-content';
 
 // Demo data types
 interface Company {
@@ -481,6 +483,8 @@ export default function AdminPage() {
           onAdd={handleAddCompany}
         />
       )}
+
+      <HelpButton content={getHelpContent('admin')} />
     </div>
   );
 }

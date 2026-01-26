@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { userStorage, tasksStorage, StoredUser, StoredTask, getStorageKey } from '@/lib/storage';
+import HelpButton from '@/components/HelpButton';
+import { getHelpContent } from '@/lib/help-content';
 
 // Mock data for managers
 const MOCK_TEAM_MEMBERS = [
@@ -417,6 +419,9 @@ export default function DashboardPage() {
           </div>
         </div>
       )}
+
+      {/* Help Button */}
+      <HelpButton content={getHelpContent('dashboard')} />
     </div>
   );
 }

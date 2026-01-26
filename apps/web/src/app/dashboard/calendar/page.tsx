@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { getStorageKey } from '@/lib/storage';
+import HelpButton from '@/components/HelpButton';
+import { getHelpContent } from '@/lib/help-content';
 
 interface CalendarEvent {
   id: string;
@@ -712,6 +714,8 @@ export default function CalendarPage() {
           </div>
         </div>
       )}
+
+      <HelpButton content={getHelpContent('calendar')} />
     </div>
   );
 }

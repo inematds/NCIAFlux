@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { getStorageKey } from '@/lib/storage';
+import HelpButton from '@/components/HelpButton';
+import { getHelpContent } from '@/lib/help-content';
 
 interface Project {
   id: string;
@@ -407,6 +409,8 @@ export default function ProjectsPage() {
           </div>
         </div>
       )}
+
+      <HelpButton content={getHelpContent('projects')} />
     </div>
   );
 }

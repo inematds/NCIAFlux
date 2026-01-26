@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { getStorageKey } from '@/lib/storage';
+import HelpButton from '@/components/HelpButton';
+import { getHelpContent } from '@/lib/help-content';
 
 type Chronotype = 'bear' | 'dolphin' | 'owl' | 'lion' | null;
 
@@ -411,6 +413,8 @@ export default function ChronotypePage() {
           </div>
         </div>
       )}
+
+      <HelpButton content={getHelpContent('chronotype')} />
     </div>
   );
 }

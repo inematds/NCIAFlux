@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { getStorageKey } from '@/lib/storage';
+import HelpButton from '@/components/HelpButton';
+import { getHelpContent } from '@/lib/help-content';
 
 interface WeeklyReview {
   id: string;
@@ -886,6 +888,8 @@ export default function ReviewPage() {
           </div>
         </div>
       )}
+
+      <HelpButton content={getHelpContent('review')} />
     </div>
   );
 }

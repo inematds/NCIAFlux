@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { userStorage, getStorageKey } from '@/lib/storage';
 import { userStatsService } from '@/lib/hybrid-storage';
+import HelpButton from '@/components/HelpButton';
+import { getHelpContent } from '@/lib/help-content';
 
 type TaskStatus = 'pending' | 'in_progress' | 'completed' | 'skipped';
 type TaskPriority = 'high' | 'medium' | 'low';
@@ -448,6 +450,9 @@ export default function TasksPage() {
           </div>
         </div>
       )}
+
+      {/* Help Button */}
+      <HelpButton content={getHelpContent('tasks')} />
     </div>
   );
 }

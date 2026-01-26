@@ -3,6 +3,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { getStorageKey } from '@/lib/storage';
+import HelpButton from '@/components/HelpButton';
+import { getHelpContent } from '@/lib/help-content';
 
 type FocusMode = 'pomodoro' | 'deep_work' | 'timeboxing' | 'free_flow';
 type FocusState = 'idle' | 'selecting_task' | 'focusing' | 'break' | 'paused' | 'completed';
@@ -331,6 +333,9 @@ export default function FocusPage() {
             Deep Work para trabalhos criativos. Timeboxing para tarefas rapidas.
           </p>
         </div>
+
+        {/* Help Button */}
+        <HelpButton content={getHelpContent('focus')} />
       </div>
     );
   }

@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { getStorageKey } from '@/lib/storage';
+import HelpButton from '@/components/HelpButton';
+import { getHelpContent } from '@/lib/help-content';
 
 interface Note {
   id: string;
@@ -663,6 +665,8 @@ export default function NotesPage() {
           </div>
         </div>
       )}
+
+      <HelpButton content={getHelpContent('notes')} />
     </div>
   );
 }

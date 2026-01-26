@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { userStorage, tasksStorage, StoredUser, StoredTask } from '@/lib/storage';
+import HelpButton from '@/components/HelpButton';
+import { getHelpContent } from '@/lib/help-content';
 
 // Mock data for managers
 const MOCK_PRODUCTIVITY_DATA = [
@@ -569,6 +571,8 @@ export default function ReportsPage() {
           </div>
         </div>
       </div>
+
+      <HelpButton content={getHelpContent('reports')} />
     </div>
   );
 }

@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { getStorageKey } from '@/lib/storage';
+import HelpButton from '@/components/HelpButton';
+import { getHelpContent } from '@/lib/help-content';
 
 type QuestionType = 'single_choice' | 'multiple_choice' | 'slider';
 
@@ -463,6 +465,8 @@ export default function DiscoveryPage() {
           </button>
         </div>
       </div>
+
+      <HelpButton content={getHelpContent('discovery')} />
     </div>
   );
 }

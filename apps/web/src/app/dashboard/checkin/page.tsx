@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { userStorage, getStorageKey } from '@/lib/storage';
+import HelpButton from '@/components/HelpButton';
+import { getHelpContent } from '@/lib/help-content';
 
 type CheckInStep = 'mood' | 'energy' | 'notes' | 'complete';
 
@@ -431,6 +433,9 @@ export default function CheckInPage() {
           </div>
         )}
       </div>
+
+      {/* Help Button */}
+      <HelpButton content={getHelpContent('checkin')} />
     </div>
   );
 }

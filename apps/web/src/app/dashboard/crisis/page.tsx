@@ -3,6 +3,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { getStorageKey } from '@/lib/storage';
+import HelpButton from '@/components/HelpButton';
+import { getHelpContent } from '@/lib/help-content';
 
 type CrisisStep = 'initial' | 'breathing' | 'grounding' | 'action' | 'game_bubbles' | 'game_colors' | 'game_clicks' | 'game_breathing' | 'complete';
 
@@ -690,6 +692,7 @@ export default function CrisisPage() {
           </div>
         )}
       </div>
+      <HelpButton content={getHelpContent('crisis')} />
     </div>
   );
 }

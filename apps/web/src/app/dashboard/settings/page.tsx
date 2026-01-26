@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { userStorage, settingsStorage, tasksStorage, getStorageKey } from '@/lib/storage';
+import HelpButton from '@/components/HelpButton';
+import { getHelpContent } from '@/lib/help-content';
 
 interface UserSettings {
   name: string;
@@ -935,6 +937,8 @@ export default function SettingsPage() {
           </div>
         </div>
       </div>
+
+      <HelpButton content={getHelpContent('settings')} />
     </div>
   );
 }
