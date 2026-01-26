@@ -118,7 +118,8 @@ export default function LoginPage() {
 
   // Clear existing data for new regular users (not demo)
   function clearExistingData() {
-    const keysToKeep = ['nciaflux_user'];
+    // A chave do usuario e 'nciaflux_demo_user' - NAO apagar!
+    const keysToKeep = ['nciaflux_demo_user', 'nciaflux_user'];
     Object.keys(localStorage).forEach(key => {
       if (key.startsWith('nciaflux_') && !keysToKeep.includes(key)) {
         localStorage.removeItem(key);
