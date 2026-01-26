@@ -2,11 +2,11 @@
 
 <div align="center">
 
-**v1.2** | Produtividade que entende você
+**v1.3** | Produtividade que entende você
 
 Sistema de organização pessoal baseado em neurociência para pessoas com TDAH.
 
-[![Version](https://img.shields.io/badge/Version-1.2-purple)](https://github.com/inematds/NCIAFlux)
+[![Version](https://img.shields.io/badge/Version-1.3-purple)](https://github.com/inematds/NCIAFlux)
 [![Next.js](https://img.shields.io/badge/Next.js-14-black?logo=next.js)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?logo=typescript)](https://www.typescriptlang.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.4-38B2AC?logo=tailwind-css)](https://tailwindcss.com/)
@@ -104,7 +104,7 @@ O NeuroFluxo foi projetado **desde o início** para essas necessidades.
 | **Modo Crise com Jogos** | Mini-games para acalmar: bolhas, cores, respiracao |
 | **Dados Demo** | Dados de exemplo completos para demonstracao |
 
-### v1.2 - Multi-Perfil (Atual)
+### v1.2 - Multi-Perfil
 
 | Feature | Descrição |
 |---------|-----------|
@@ -117,11 +117,7 @@ O NeuroFluxo foi projetado **desde o início** para essas necessidades.
 | **Botao Chat IA** | Teaser da versao Pro com chat por texto/voz |
 | **Migracao Automatica** | Dados antigos migrados para novo formato |
 
----
-
-## Roadmap
-
-### v1.3 - Chat com IA (Input)
+### v1.3 - Chat com IA (Atual)
 
 | Feature | Descrição |
 |---------|-----------|
@@ -131,40 +127,51 @@ O NeuroFluxo foi projetado **desde o início** para essas necessidades.
 | **Tool Use** | IA executa ações na app (criar tarefas, ativar modo crise) |
 | **Assistente Contextual** | Sugestões baseadas no perfil cognitivo e cronotipo |
 | **Brain Dump por Voz** | Fale pensamentos, IA organiza automaticamente |
+| **Listagem por Chat** | IA lista tarefas, eventos e brain dump do usuário |
 
-### v1.5 - Times (Plano Team)
+---
+
+## Roadmap
+
+### v1.4 - Sistema Adaptativo + Cloud (Plano Plus)
 
 | Feature | Descrição |
 |---------|-----------|
-| **Interação entre Usuários** | Usuários locais podem interagir dentro do time |
-| **Central de Descoberta** | Servidor central para usuários se encontrarem |
-| **Convites por ID** | Gestor convida membros via ID único |
-| **Chat de Equipe** | Comunicação entre membros do time |
-| **Peer-to-Peer** | Após descoberta, comunicação direta P2P |
-| **Dashboard do Gestor** | Visão geral da equipe (dados anonimizados) |
-| **Sincronização de Time** | Dados do time sincronizados via central |
+| **Supabase Auth** | Login com Google/Email, sessão persistente |
+| **Sync Offline-First** | Dados locais + sincronização quando online |
+| **Multi-Device** | Acesse seus dados em qualquer dispositivo |
+| **Importação em Massa** | Importar tarefas, eventos, notas, brain dump (CSV/ICS/JSON) |
+| **Sistema Adaptativo** | App detecta padrões e ajusta experiência automaticamente |
+| **Perfil TDAH** | Questionário de subtipo (hiperativo/desatento/combinado) |
+| **Ferramentas de Avaliação** | Refazer questionários, editar perfil manualmente |
+| **Relatório Pessoal** | Mapa de energia, padrões de humor, recomendações |
+| **Liberação Progressiva** | Features liberadas conforme estabilidade do usuário |
+| **Gamificação Básica** | Celebrações suaves, streaks gentis (sem punição por falha) |
+| **Chat 1:1** | Conversa privada (parceiro accountability) |
+| **Chat em Grupo** | Comunidades de apoio |
 
-### v1.6 - PWA e Testes
+> Documentação: [docs/v1.4-adaptive-system.md](docs/v1.4-adaptive-system.md)
+
+### v1.5 - Gestão de Times (Plano Pro)
+
+| Feature | Descrição |
+|---------|-----------|
+| **Criar Times** | Gestor cria equipe e convida membros |
+| **Roles** | Admin, Gestor, Membro com permissões diferentes |
+| **Dashboard do Gestor** | Visão geral da equipe (dados anonimizados) |
+| **Liberar Features** | Gestor pode habilitar features para membros |
+| **Relatórios de Time** | Métricas agregadas da equipe |
+| **Gamificação Avançada** | Conquistas, XP, níveis, desafios (liberado por estabilidade) |
+
+### v1.6 - PWA e Notificações
 
 | Feature | Descrição |
 |---------|-----------|
 | **PWA Instalável** | Instale no celular como app nativo |
-| **Modo Offline** | Funciona sem internet, sincroniza depois |
-| **Testes Automatizados** | Cobertura de testes unitários e E2E |
-| **CI/CD Pipeline** | Integração e deploy contínuos |
+| **Notificações Push** | Lembretes de tarefas, rotinas, check-in |
 | **Modo Escuro** | Tema escuro para uso noturno |
 
-### v1.7 - Notificações e Terapeutas
-
-| Feature | Descrição |
-|---------|-----------|
-| **Notificações Locais** | Lembretes de tarefas, rotinas, check-in |
-| **Notificações de Time** | Alertas de mensagens e convites |
-| **Integração Terapeutas** | Compartilhe progresso com profissionais |
-| **Relatórios para Terapeuta** | Exportar dados de humor, energia, produtividade |
-| **Modo Acompanhamento** | Terapeuta visualiza progresso (com permissão) |
-
-### v1.8 - Voice Output (TTS)
+### v1.7 - Voice Output (TTS)
 
 | Feature | Descrição |
 |---------|-----------|
@@ -173,24 +180,51 @@ O NeuroFluxo foi projetado **desde o início** para essas necessidades.
 | **Auto-Read Modo Crise** | Leitura automática quando sobrecarregado |
 | **Controles de Voz** | Ajuste de velocidade e tom |
 
-### v2.0 - Sync Cloud (Plano Premium)
+### v1.8 - Messaging Integration
 
 | Feature | Descrição |
 |---------|-----------|
-| **Sync na Nuvem** | Dados sincronizados para usuários Premium |
+| **Telegram Bot** | Interaja com o app via Telegram |
+| **WhatsApp** | Integração via Business API ou web.js |
+| **Email** | Resumos e lembretes por email |
+
+> Documentação: [docs/v1.9-messaging-integration.md](docs/v1.9-messaging-integration.md)
+
+### v1.9 - Integrações Externas
+
+| Feature | Descrição |
+|---------|-----------|
+| **Google Calendar** | Sincronizar eventos com Google Agenda |
+| **Apple Calendar** | Sincronizar com calendário Apple |
+| **Outlook** | Integração com Microsoft 365 |
+| **Importação Automática** | Sync contínuo de eventos externos |
+
+### v2.0 - IA Avançada (Plano Premium)
+
+| Feature | Descrição |
+|---------|-----------|
 | **IA Ilimitada** | Sem limite de mensagens no chat |
 | **Resumo Diário** | IA resume seu dia e sugere próximos passos |
-| **Backup Automático** | Dados salvos automaticamente na nuvem |
+| **Análise Preditiva** | IA prevê dias difíceis e sugere preparação |
+
+### v2.3 - Integração com Terapeutas
+
+| Feature | Descrição |
+|---------|-----------|
+| **Vincular Terapeuta** | Usuário convida profissional de saúde |
+| **Relatórios Clínicos** | Exportar humor, energia, padrões para terapeuta |
+| **Modo Acompanhamento** | Terapeuta visualiza progresso (com permissão) |
+| **Liberar Features** | Terapeuta pode habilitar features sensíveis |
 
 ### v2.5 - Testes e Estabilização
 
 | Feature | Descrição |
 |---------|-----------|
-| **Testes de Carga** | Performance sob alta demanda |
+| **Testes Automatizados** | Cobertura de testes unitários e E2E |
+| **CI/CD Pipeline** | Integração e deploy contínuos |
 | **Testes de Segurança** | Auditoria de segurança completa |
 | **Testes de Acessibilidade** | WCAG 2.1 compliance |
 | **Beta Testing** | Programa de beta testers |
-| **Documentação API** | Documentação completa para integrações |
 
 ### v3.0 - App Nativo (Plano Empresarial)
 
@@ -209,19 +243,22 @@ O NeuroFluxo foi projetado **desde o início** para essas necessidades.
 ```
 v1.0 ████████████████████ 100% - Base completa
 v1.1 ████████████████████ 100% - Storage local aprimorado
-v1.2 ████████████████████ 100% - Multi-perfil ← ATUAL
+v1.2 ████████████████████ 100% - Multi-perfil
+v1.3 ████████████████████ 100% - Chat com IA ← ATUAL
 ─────────────────────────────────────────────────
-v1.3 ░░░░░░░░░░░░░░░░░░░░   0% - Chat com IA (Input)
-v1.5 ░░░░░░░░░░░░░░░░░░░░   0% - Times
-v1.6 ░░░░░░░░░░░░░░░░░░░░   0% - PWA e Testes
-v1.7 ░░░░░░░░░░░░░░░░░░░░   0% - Notificações e Terapeutas
-v1.8 ░░░░░░░░░░░░░░░░░░░░   0% - Voice Output (TTS)
-v2.0 ░░░░░░░░░░░░░░░░░░░░   0% - Sync Cloud (Premium)
+v1.4 ░░░░░░░░░░░░░░░░░░░░   0% - Sistema Adaptativo + Cloud + Gamificação
+v1.5 ░░░░░░░░░░░░░░░░░░░░   0% - Gestão de Times (Pro)
+v1.6 ░░░░░░░░░░░░░░░░░░░░   0% - PWA e Notificações
+v1.7 ░░░░░░░░░░░░░░░░░░░░   0% - Voice Output (TTS)
+v1.8 ░░░░░░░░░░░░░░░░░░░░   0% - Messaging (Telegram/WhatsApp)
+v1.9 ░░░░░░░░░░░░░░░░░░░░   0% - Integrações Externas (Calendários)
+v2.0 ░░░░░░░░░░░░░░░░░░░░   0% - IA Avançada (Premium)
+v2.3 ░░░░░░░░░░░░░░░░░░░░   0% - Integração Terapeutas
 v2.5 ░░░░░░░░░░░░░░░░░░░░   0% - Testes e Estabilização
 v3.0 ░░░░░░░░░░░░░░░░░░░░   0% - App Nativo (Empresarial)
 ```
 
-> **Nota:** Na versão atual (v1.2), a Demo simula os 3 perfis (Usuario/Gestor/Admin) para demonstração. O login normal cria apenas usuários comuns com experiência limpa.
+> **Nota:** Versão atual (v1.3). Demo simula 3 perfis (Usuario/Gestor/Admin) para demonstração.
 
 ---
 
