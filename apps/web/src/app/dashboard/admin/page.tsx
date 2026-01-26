@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { userStorage, globalTeamsStorage } from '@/lib/storage';
+import { userStorage, globalTeamsStorage, StoredTeam } from '@/lib/storage';
 import { useRouter } from 'next/navigation';
 import HelpButton from '@/components/HelpButton';
 import { getHelpContent } from '@/lib/help-content';
@@ -562,6 +562,7 @@ export default function AdminPage() {
         <CompanyDetailsModal
           company={selectedCompany}
           teams={adminTeams.filter(t => t.companyId === selectedCompany.id)}
+          globalTeams={globalTeamsStorage.getAll()}
           onClose={() => setSelectedCompany(null)}
         />
       )}
@@ -791,12 +792,30 @@ function TeamModal({
 function CompanyDetailsModal({
   company,
   teams,
+  globalTeams,
   onClose,
 }: {
   company: Company;
   teams: AdminTeam[];
+  globalTeams: StoredTeam[];
   onClose: () => void;
 }) {
+  // Get all users from all teams of this company
+  const companyUsers: { name: string; email: string; role: string; teamName: string }[] = [];
+  teams.forEach((adminTeam) => {
+    const globalTeam = globalTeams.find(t => t.name === adminTeam.name);
+    if (globalTeam) {
+      globalTeam.members.forEach(member => {
+        companyUsers.push({
+          name: member.name,
+          email: member.email,
+          role: member.role,
+          teamName: adminTeam.name,
+        });
+      });
+    }
+  });
+
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-2xl w-full max-w-lg max-h-[80vh] overflow-auto">
@@ -829,6 +848,38 @@ function CompanyDetailsModal({
             </div>
           </div>
 
+          {/* Users */}
+          <div>
+            <h3 className="font-semibold text-neutral-textPrimary mb-3">Usuarios ({companyUsers.length})</h3>
+            {companyUsers.length === 0 ? (
+              <p className="text-neutral-textMuted text-sm">Nenhum usuario cadastrado nesta empresa.</p>
+            ) : (
+              <div className="space-y-2">
+                {companyUsers.map((user, idx) => (
+                  <div key={idx} className="p-3 bg-neutral-background rounded-lg flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-primary-main/20 rounded-full flex items-center justify-center text-sm font-medium">
+                        {user.name.charAt(0).toUpperCase()}
+                      </div>
+                      <div>
+                        <p className="font-medium text-neutral-textPrimary">{user.name}</p>
+                        <p className="text-xs text-neutral-textMuted">{user.email}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <span className={`text-xs px-2 py-0.5 rounded ${
+                        user.role === 'manager' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'
+                      }`}>
+                        {user.role}
+                      </span>
+                      <p className="text-xs text-neutral-textMuted mt-1">{user.teamName}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
           {/* Teams */}
           <div>
             <h3 className="font-semibold text-neutral-textPrimary mb-3">Equipes ({teams.length})</h3>
@@ -836,12 +887,19 @@ function CompanyDetailsModal({
               <p className="text-neutral-textMuted text-sm">Nenhuma equipe cadastrada para esta empresa.</p>
             ) : (
               <div className="space-y-2">
-                {teams.map((team) => (
-                  <div key={team.id} className="p-3 bg-neutral-background rounded-lg">
-                    <p className="font-medium text-neutral-textPrimary">{team.name}</p>
-                    <p className="text-sm text-neutral-textMuted">Gestor: {team.managerEmail}</p>
-                  </div>
-                ))}
+                {teams.map((team) => {
+                  const globalTeam = globalTeams.find(t => t.name === team.name);
+                  const memberCount = globalTeam?.members.length || 0;
+                  return (
+                    <div key={team.id} className="p-3 bg-neutral-background rounded-lg">
+                      <div className="flex items-center justify-between">
+                        <p className="font-medium text-neutral-textPrimary">{team.name}</p>
+                        <span className="text-xs text-neutral-textMuted">{memberCount} membros</span>
+                      </div>
+                      <p className="text-sm text-neutral-textMuted">Gestor: {team.managerEmail}</p>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
