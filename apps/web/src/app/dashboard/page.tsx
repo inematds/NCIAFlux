@@ -6,6 +6,7 @@ import { useTeam } from '@/contexts/TeamContext';
 import TeamMemberSelector from '@/components/TeamMemberSelector';
 import HelpButton from '@/components/HelpButton';
 import { getHelpContent } from '@/lib/help-content';
+import { getAggregatedManagerStats, getAllManagedTeamsDashboard, TeamDashboardData } from '@/lib/manager-dashboard-service';
 
 export default function DashboardPage() {
   const [user, setUser] = useState<StoredUser | null>(null);
@@ -17,6 +18,19 @@ export default function DashboardPage() {
     totalUsers: 0,
     totalManagers: 0,
   });
+  const [managerStats, setManagerStats] = useState({
+    totalTeams: 0,
+    totalMembers: 0,
+    activeMembers: 0,
+    totalTasks: 0,
+    completedTasks: 0,
+    overdueTasks: 0,
+    avgProductivity: 0,
+    avgEngagement: 0,
+    criticalAlerts: 0,
+    warningAlerts: 0,
+  });
+  const [managerDashboards, setManagerDashboards] = useState<TeamDashboardData[]>([]);
 
   const {
     isTeamMode,
@@ -49,6 +63,14 @@ export default function DashboardPage() {
           totalUsers: allMembers.length,
           totalManagers: managers.length,
         });
+      }
+
+      // Load manager stats
+      if (storedUser?.role === 'manager' && storedUser?.email) {
+        const stats = getAggregatedManagerStats(storedUser.email);
+        setManagerStats(stats);
+        const dashboards = getAllManagedTeamsDashboard(storedUser.email);
+        setManagerDashboards(dashboards);
       }
     }
 
@@ -339,10 +361,34 @@ export default function DashboardPage() {
       ) : isManager ? (
         // Manager Stats - Visao de gestao de equipes (dados reais)
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-8">
-          <StatCard icon="👥" label="Membros da Equipe" value={teamStats.totalMembers} trend="" trendUp />
-          <StatCard icon="🟢" label="Membros Ativos" value={teamStats.activeMembers} trend="" trendUp />
-          <StatCard icon="📈" label="Produtividade Media" value={`${teamStats.avgProductivity}%`} trend="" trendUp />
-          <StatCard icon="✅" label="Tarefas Concluidas" value={personalStats.completedTasks} trend="" trendUp />
+          <StatCard
+            icon="👥"
+            label="Total de Membros"
+            value={managerStats.totalMembers}
+            trend={managerStats.totalTeams > 0 ? `${managerStats.totalTeams} equipe(s)` : ''}
+            trendUp
+          />
+          <StatCard
+            icon="🟢"
+            label="Membros Ativos"
+            value={managerStats.activeMembers}
+            trend={managerStats.totalMembers > 0 ? `${managerStats.avgEngagement}% engajamento` : ''}
+            trendUp
+          />
+          <StatCard
+            icon="📈"
+            label="Produtividade Media"
+            value={`${managerStats.avgProductivity}%`}
+            trend=""
+            trendUp={managerStats.avgProductivity >= 60}
+          />
+          <StatCard
+            icon="⚠️"
+            label="Alertas"
+            value={managerStats.criticalAlerts + managerStats.warningAlerts}
+            trend={managerStats.criticalAlerts > 0 ? `${managerStats.criticalAlerts} critico(s)` : ''}
+            trendUp={managerStats.criticalAlerts === 0}
+          />
         </div>
       ) : (
         // User Stats - Personal
@@ -390,8 +436,51 @@ export default function DashboardPage() {
                 </a>
               </div>
             </div>
+          ) : isManager && managerDashboards.length > 0 ? (
+            // Manager team overview
+            <div className="space-y-4">
+              <div className="grid grid-cols-3 gap-4 mb-4">
+                <div className="text-center p-3 bg-neutral-background rounded-lg">
+                  <p className="text-2xl font-bold text-accent-success">{managerStats.completedTasks}</p>
+                  <p className="text-xs text-neutral-textMuted">Concluidas</p>
+                </div>
+                <div className="text-center p-3 bg-neutral-background rounded-lg">
+                  <p className="text-2xl font-bold text-secondary-main">{managerStats.totalTasks - managerStats.completedTasks - managerStats.overdueTasks}</p>
+                  <p className="text-xs text-neutral-textMuted">Em Andamento</p>
+                </div>
+                <div className="text-center p-3 bg-neutral-background rounded-lg">
+                  <p className="text-2xl font-bold text-accent-error">{managerStats.overdueTasks}</p>
+                  <p className="text-xs text-neutral-textMuted">Atrasadas</p>
+                </div>
+              </div>
+              {managerDashboards.slice(0, 2).map((dashboard) => (
+                <div key={dashboard.teamId} className="p-4 bg-neutral-background/50 rounded-lg">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-medium text-neutral-textPrimary">{dashboard.teamName}</span>
+                    <span className="text-sm text-neutral-textMuted">{dashboard.totalMembers} membros</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 h-2 bg-neutral-border rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full ${
+                          dashboard.avgProductivity >= 60 ? 'bg-accent-success' : 'bg-secondary-main'
+                        }`}
+                        style={{ width: `${dashboard.avgProductivity}%` }}
+                      />
+                    </div>
+                    <span className="text-sm font-medium">{dashboard.avgProductivity}%</span>
+                  </div>
+                </div>
+              ))}
+              {managerDashboards.length === 0 && (
+                <div className="text-center py-8">
+                  <span className="text-4xl block mb-2">👥</span>
+                  <p className="text-neutral-textMuted">Nenhuma equipe atribuida</p>
+                </div>
+              )}
+            </div>
           ) : (
-            // User/Manager personal progress - show task breakdown
+            // User personal progress - show task breakdown
             <div className="h-64 flex items-center justify-center">
               {personalStats.totalTasks === 0 ? (
                 <div className="text-center">
@@ -442,6 +531,16 @@ export default function DashboardPage() {
             <div className="space-y-3">
               <QuickActionButton href="/dashboard/admin" icon="👥" label="Gerenciar Usuarios" />
               <QuickActionButton href="/dashboard/settings" icon="⚙️" label="Configuracoes" />
+            </div>
+          ) : isManager ? (
+            // Manager quick actions
+            <div className="space-y-3">
+              <QuickActionButton href="/dashboard/teams" icon="👥" label="Gerenciar Equipes" />
+              <QuickActionButton href="/dashboard/reports" icon="📊" label="Relatorios" />
+              <QuickActionButton href="/dashboard/tasks" icon="📋" label="Ver Tarefas" />
+              {managerStats.criticalAlerts > 0 && (
+                <QuickActionButton href="/dashboard/teams" icon="🚨" label={`${managerStats.criticalAlerts} Alerta(s) Critico(s)`} highlight />
+              )}
             </div>
           ) : (
             // User quick actions

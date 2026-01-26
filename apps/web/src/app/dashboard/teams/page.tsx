@@ -27,6 +27,7 @@ import {
   resetUserFeaturesToDefaults,
   resetTeamFeaturesToDefaults,
 } from '@/lib/feature-management-service';
+import { getManagerDashboard, TeamDashboardData, DashboardAlert } from '@/lib/manager-dashboard-service';
 
 const STATUS_CONFIG = {
   active: { label: 'Ativo', color: 'bg-accent-success', textColor: 'text-accent-success' },
@@ -64,6 +65,10 @@ export default function TeamsPage() {
   const [hasChanges, setHasChanges] = useState(false);
   const [saving, setSaving] = useState(false);
 
+  // Manager dashboard data
+  const [teamDashboard, setTeamDashboard] = useState<TeamDashboardData | null>(null);
+  const [teamAlerts, setTeamAlerts] = useState<DashboardAlert[]>([]);
+
   const user = userStorage.get();
 
   useEffect(() => {
@@ -88,6 +93,13 @@ export default function TeamsPage() {
     if (selectedTeam) {
       loadTeamFeatures(selectedTeam.id, selectedTeam.name);
       loadTeamInvitations(selectedTeam.id);
+      // Load dashboard data for this team
+      const dashboard = getManagerDashboard(selectedTeam.id);
+      setTeamDashboard(dashboard);
+      setTeamAlerts(dashboard?.alerts || []);
+    } else {
+      setTeamDashboard(null);
+      setTeamAlerts([]);
     }
   }, [selectedTeam]);
 
@@ -391,7 +403,7 @@ export default function TeamsPage() {
           </div>
 
           {/* Summary */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             <div className="bg-white rounded-xl p-5 shadow-sm">
               <p className="text-sm text-neutral-textSecondary">Total de Equipes</p>
               <p className="text-3xl font-bold text-neutral-textPrimary mt-1">{teams.length}</p>
@@ -403,16 +415,58 @@ export default function TeamsPage() {
             <div className="bg-white rounded-xl p-5 shadow-sm">
               <p className="text-sm text-neutral-textSecondary">Membros Ativos</p>
               <p className="text-3xl font-bold text-accent-success mt-1">{activeCount}</p>
-            </div>
-            <div className="bg-white rounded-xl p-5 shadow-sm">
-              <p className="text-sm text-neutral-textSecondary">Produtividade Media</p>
-              <p className="text-3xl font-bold text-primary-main mt-1">
-                {allMembers.length > 0
-                  ? Math.round(allMembers.reduce((a, m) => a + m.productivity, 0) / allMembers.length)
-                  : 0}%
+              <p className="text-xs text-neutral-textMuted mt-1">
+                {allMembers.length > 0 ? Math.round((activeCount / allMembers.length) * 100) : 0}% engajamento
               </p>
             </div>
+            <div className="bg-white rounded-xl p-5 shadow-sm">
+              <p className="text-sm text-neutral-textSecondary">Alertas</p>
+              <p className={`text-3xl font-bold mt-1 ${teamAlerts.length > 0 ? 'text-accent-error' : 'text-accent-success'}`}>
+                {teamAlerts.length}
+              </p>
+              {teamAlerts.filter(a => a.severity === 'critical').length > 0 && (
+                <p className="text-xs text-accent-error mt-1">
+                  {teamAlerts.filter(a => a.severity === 'critical').length} critico(s)
+                </p>
+              )}
+            </div>
           </div>
+
+          {/* Alerts Section */}
+          {teamAlerts.length > 0 && (
+            <div className="bg-accent-error/5 border border-accent-error/20 rounded-xl p-4 mb-6">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-xl">⚠️</span>
+                <h3 className="font-medium text-neutral-textPrimary">Alertas da Equipe</h3>
+              </div>
+              <div className="space-y-2">
+                {teamAlerts.slice(0, 3).map((alert) => (
+                  <div
+                    key={alert.id}
+                    className={`flex items-start gap-3 p-3 rounded-lg ${
+                      alert.severity === 'critical' ? 'bg-accent-error/10' : 'bg-secondary-main/10'
+                    }`}
+                  >
+                    <span className="text-lg">
+                      {alert.type === 'inactive_member' ? '😴' :
+                       alert.type === 'overdue_task' ? '⏰' :
+                       alert.type === 'low_productivity' ? '📉' :
+                       alert.type === 'low_mood' ? '😔' : '⚠️'}
+                    </span>
+                    <div className="flex-1">
+                      <p className="font-medium text-neutral-textPrimary text-sm">{alert.title}</p>
+                      <p className="text-xs text-neutral-textMuted">{alert.description}</p>
+                    </div>
+                  </div>
+                ))}
+                {teamAlerts.length > 3 && (
+                  <p className="text-sm text-neutral-textMuted text-center">
+                    +{teamAlerts.length - 3} alerta(s) adicional(is)
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Teams Grid/List */}
           {teams.length === 0 ? (
@@ -710,24 +764,58 @@ export default function TeamsPage() {
             <div className="flex-1 overflow-y-auto p-6">
               {detailTab === 'members' ? (
                 <>
+                  {/* Dashboard Overview */}
+                  {teamDashboard && (
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+                      <div className="bg-neutral-background rounded-lg p-3 text-center">
+                        <p className="text-2xl font-bold text-neutral-textPrimary">{teamDashboard.totalTasks}</p>
+                        <p className="text-xs text-neutral-textMuted">Tarefas</p>
+                      </div>
+                      <div className="bg-accent-success/10 rounded-lg p-3 text-center">
+                        <p className="text-2xl font-bold text-accent-success">{teamDashboard.completedTasks}</p>
+                        <p className="text-xs text-neutral-textMuted">Concluidas</p>
+                      </div>
+                      <div className="bg-accent-error/10 rounded-lg p-3 text-center">
+                        <p className="text-2xl font-bold text-accent-error">{teamDashboard.overdueTasks}</p>
+                        <p className="text-xs text-neutral-textMuted">Atrasadas</p>
+                      </div>
+                      <div className="bg-primary-main/10 rounded-lg p-3 text-center">
+                        <p className="text-2xl font-bold text-primary-main">{teamDashboard.avgProductivity}%</p>
+                        <p className="text-xs text-neutral-textMuted">Produtividade</p>
+                      </div>
+                    </div>
+                  )}
+
                   <div className="space-y-3">
-                    {selectedTeam.members.map((member) => (
-                      <div key={member.id} className="flex items-center justify-between p-4 bg-neutral-background rounded-xl">
+                    {selectedTeam.members.map((member) => {
+                      // Get enhanced stats from dashboard if available
+                      const memberStats = teamDashboard?.members.find(
+                        m => m.memberId === member.id || m.email === member.email
+                      );
+                      const displayProductivity = memberStats?.productivity ?? member.productivity;
+                      const displayStatus = memberStats?.status ?? member.status;
+                      return (
+                        <div key={member.id} className="flex items-center justify-between p-4 bg-neutral-background rounded-xl">
                         <div className="flex items-center gap-3">
                           <div className="relative">
                             <div className="w-12 h-12 bg-primary-light/20 rounded-full flex items-center justify-center font-medium text-primary-main">
                               {member.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
                             </div>
-                            <div className={`absolute bottom-0 right-0 w-3 h-3 ${STATUS_CONFIG[member.status].color} rounded-full border-2 border-white`} />
+                            <div className={`absolute bottom-0 right-0 w-3 h-3 ${STATUS_CONFIG[displayStatus].color} rounded-full border-2 border-white`} />
                           </div>
                           <div>
                             <p className="font-medium text-neutral-textPrimary">{member.name}</p>
                             <p className="text-sm text-neutral-textMuted">{member.role}</p>
+                            {memberStats && (
+                              <p className="text-xs text-neutral-textMuted mt-0.5">
+                                {memberStats.completedTasks}/{memberStats.totalTasks} tarefas • {memberStats.focusSessionsWeek} sessoes foco
+                              </p>
+                            )}
                           </div>
                         </div>
                         <div className="flex items-center gap-4">
                           <div className="text-right">
-                            <p className="font-medium text-primary-main">{member.productivity}%</p>
+                            <p className="font-medium text-primary-main">{displayProductivity}%</p>
                             <p className="text-xs text-neutral-textMuted">produtividade</p>
                           </div>
                           {member.id !== user?.id && (
@@ -741,7 +829,8 @@ export default function TeamsPage() {
                           )}
                         </div>
                       </div>
-                    ))}
+                      );
+                    })}
                   </div>
                   <button
                     onClick={() => setShowInviteModal(true)}

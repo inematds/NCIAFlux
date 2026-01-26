@@ -4,58 +4,77 @@ import { useState, useEffect } from 'react';
 import { userStorage, tasksStorage, StoredUser, StoredTask } from '@/lib/storage';
 import HelpButton from '@/components/HelpButton';
 import { getHelpContent } from '@/lib/help-content';
-
-// Mock data for managers
-const MOCK_PRODUCTIVITY_DATA = [
-  { week: 'Sem 1', value: 72 },
-  { week: 'Sem 2', value: 78 },
-  { week: 'Sem 3', value: 74 },
-  { week: 'Sem 4', value: 82 },
-];
-
-const MOCK_MOOD_DISTRIBUTION = [
-  { mood: 'Otimo', count: 45, color: 'bg-accent-success' },
-  { mood: 'Bom', count: 32, color: 'bg-primary-main' },
-  { mood: 'Neutro', count: 18, color: 'bg-secondary-main' },
-  { mood: 'Baixo', count: 5, color: 'bg-accent-error' },
-];
-
-const MOCK_TASK_COMPLETION = [
-  { category: 'Trabalho', completed: 156, total: 180 },
-  { category: 'Pessoal', completed: 42, total: 50 },
-  { category: 'Saude', completed: 28, total: 35 },
-  { category: 'Aprendizado', completed: 15, total: 20 },
-];
-
-const MOCK_FOCUS_SESSIONS = [
-  { technique: 'Pomodoro', sessions: 145, avgDuration: 25 },
-  { technique: 'Deep Work', sessions: 38, avgDuration: 90 },
-  { technique: 'Timeboxing', sessions: 62, avgDuration: 45 },
-  { technique: 'Free Flow', sessions: 24, avgDuration: 60 },
-];
-
-const MOCK_INDIVIDUAL_REPORTS = [
-  { name: 'Ana Silva', productivity: 92, tasksCompleted: 48, focusSessions: 32, trend: 'up' },
-  { name: 'Carlos Santos', productivity: 78, tasksCompleted: 35, focusSessions: 28, trend: 'stable' },
-  { name: 'Maria Oliveira', productivity: 95, tasksCompleted: 52, focusSessions: 38, trend: 'up' },
-  { name: 'Joao Pereira', productivity: 65, tasksCompleted: 28, focusSessions: 18, trend: 'down' },
-  { name: 'Fernanda Costa', productivity: 88, tasksCompleted: 42, focusSessions: 30, trend: 'up' },
-];
+import {
+  getAggregatedManagerStats,
+  getAllManagedTeamsDashboard,
+  TeamDashboardData,
+  MemberStats,
+} from '@/lib/manager-dashboard-service';
 
 export default function ReportsPage() {
   const [user, setUser] = useState<StoredUser | null>(null);
   const [tasks, setTasks] = useState<StoredTask[]>([]);
   const [period, setPeriod] = useState('month');
   const [reportType, setReportType] = useState<'team' | 'individual'>('team');
+  const [teamDashboards, setTeamDashboards] = useState<TeamDashboardData[]>([]);
+  const [managerStats, setManagerStats] = useState({
+    totalTeams: 0,
+    totalMembers: 0,
+    activeMembers: 0,
+    totalTasks: 0,
+    completedTasks: 0,
+    overdueTasks: 0,
+    avgProductivity: 0,
+    avgEngagement: 0,
+    avgMood: 0,
+    avgEnergy: 0,
+    totalFocusSessions: 0,
+    criticalAlerts: 0,
+    warningAlerts: 0,
+  });
 
   useEffect(() => {
     const storedUser = userStorage.get();
     setUser(storedUser);
     setTasks(tasksStorage.getAll());
+
+    // Load manager data if user is manager
+    if (storedUser && (storedUser.role === 'manager' || storedUser.role === 'admin')) {
+      const dashboards = getAllManagedTeamsDashboard(storedUser.email);
+      setTeamDashboards(dashboards);
+
+      const aggregatedStats = getAggregatedManagerStats(storedUser.email);
+      setManagerStats({
+        totalTeams: aggregatedStats.totalTeams,
+        totalMembers: aggregatedStats.totalMembers,
+        activeMembers: aggregatedStats.activeMembers,
+        totalTasks: aggregatedStats.totalTasks,
+        completedTasks: aggregatedStats.completedTasks,
+        overdueTasks: aggregatedStats.overdueTasks,
+        avgProductivity: aggregatedStats.avgProductivity,
+        avgEngagement: aggregatedStats.avgEngagement,
+        avgMood: 0,
+        avgEnergy: 0,
+        totalFocusSessions: 0,
+        criticalAlerts: aggregatedStats.criticalAlerts,
+        warningAlerts: aggregatedStats.warningAlerts,
+      });
+    }
   }, []);
 
   const isManager = user?.role === 'manager' || user?.role === 'admin';
-  const totalMoods = MOCK_MOOD_DISTRIBUTION.reduce((acc, m) => acc + m.count, 0);
+
+  // Aggregate all members from all team dashboards
+  const allMembers: MemberStats[] = teamDashboards.flatMap(d => d.members);
+
+  // Calculate mood distribution from real check-in data
+  const moodDistribution = [
+    { mood: 'Otimo', count: allMembers.filter(m => m.lastCheckIn.mood === 5).length, color: 'bg-accent-success' },
+    { mood: 'Bom', count: allMembers.filter(m => m.lastCheckIn.mood === 4).length, color: 'bg-primary-main' },
+    { mood: 'Neutro', count: allMembers.filter(m => m.lastCheckIn.mood === 3).length, color: 'bg-secondary-main' },
+    { mood: 'Baixo', count: allMembers.filter(m => m.lastCheckIn.mood && m.lastCheckIn.mood <= 2).length, color: 'bg-accent-error' },
+  ];
+  const totalMoods = moodDistribution.reduce((acc, m) => acc + m.count, 0) || 1; // Avoid division by zero
 
   // Calculate personal stats
   const personalStats = {
@@ -342,47 +361,63 @@ export default function ReportsPage() {
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
             <div className="bg-white rounded-xl p-5 shadow-sm">
               <p className="text-sm text-neutral-textSecondary mb-1">Produtividade Media</p>
-              <p className="text-3xl font-bold text-primary-main">78%</p>
-              <p className="text-sm text-accent-success mt-1">+5% vs periodo anterior</p>
+              <p className="text-3xl font-bold text-primary-main">{managerStats.avgProductivity}%</p>
+              <p className="text-sm text-neutral-textMuted mt-1">
+                {managerStats.totalMembers} membro{managerStats.totalMembers !== 1 ? 's' : ''}
+              </p>
             </div>
             <div className="bg-white rounded-xl p-5 shadow-sm">
               <p className="text-sm text-neutral-textSecondary mb-1">Tarefas Concluidas</p>
-              <p className="text-3xl font-bold text-neutral-textPrimary">241</p>
-              <p className="text-sm text-accent-success mt-1">+12% vs periodo anterior</p>
+              <p className="text-3xl font-bold text-neutral-textPrimary">{managerStats.completedTasks}</p>
+              <p className="text-sm text-neutral-textMuted mt-1">de {managerStats.totalTasks} total</p>
             </div>
             <div className="bg-white rounded-xl p-5 shadow-sm">
-              <p className="text-sm text-neutral-textSecondary mb-1">Sessoes de Foco</p>
-              <p className="text-3xl font-bold text-neutral-textPrimary">269</p>
-              <p className="text-sm text-accent-success mt-1">+8% vs periodo anterior</p>
+              <p className="text-sm text-neutral-textSecondary mb-1">Membros Ativos</p>
+              <p className="text-3xl font-bold text-accent-success">{managerStats.activeMembers}</p>
+              <p className="text-sm text-neutral-textMuted mt-1">{managerStats.avgEngagement}% engajamento</p>
             </div>
             <div className="bg-white rounded-xl p-5 shadow-sm">
-              <p className="text-sm text-neutral-textSecondary mb-1">Check-ins Realizados</p>
-              <p className="text-3xl font-bold text-neutral-textPrimary">98</p>
-              <p className="text-sm text-neutral-textMuted mt-1">= Igual ao periodo anterior</p>
+              <p className="text-sm text-neutral-textSecondary mb-1">Alertas</p>
+              <p className={`text-3xl font-bold ${managerStats.criticalAlerts > 0 ? 'text-accent-error' : 'text-accent-success'}`}>
+                {managerStats.criticalAlerts + managerStats.warningAlerts}
+              </p>
+              <p className="text-sm text-neutral-textMuted mt-1">
+                {managerStats.criticalAlerts > 0 ? `${managerStats.criticalAlerts} critico(s)` : 'Tudo em ordem'}
+              </p>
             </div>
           </div>
 
           {/* Charts Grid */}
           <div className="grid lg:grid-cols-2 gap-6 mb-8">
-            {/* Productivity Trend */}
+            {/* Team Productivity */}
             <div className="bg-white rounded-2xl p-6 shadow-sm">
               <h3 className="text-lg font-semibold text-neutral-textPrimary mb-6">
-                Tendencia de Produtividade
+                Produtividade por Equipe
               </h3>
-              <div className="h-48 flex items-end justify-between gap-4">
-                {MOCK_PRODUCTIVITY_DATA.map((item) => (
-                  <div key={item.week} className="flex-1 flex flex-col items-center gap-2">
-                    <span className="text-sm font-medium text-neutral-textPrimary">{item.value}%</span>
-                    <div className="w-full bg-neutral-background rounded-lg overflow-hidden h-32 flex flex-col-reverse">
-                      <div
-                        className="bg-primary-main rounded-lg transition-all duration-500"
-                        style={{ height: `${item.value}%` }}
-                      />
+              {teamDashboards.length === 0 ? (
+                <div className="h-48 flex items-center justify-center">
+                  <p className="text-neutral-textSecondary">Nenhuma equipe gerenciada</p>
+                </div>
+              ) : (
+                <div className="h-48 flex items-end justify-between gap-4">
+                  {teamDashboards.map((team) => (
+                    <div key={team.teamId} className="flex-1 flex flex-col items-center gap-2">
+                      <span className="text-sm font-medium text-neutral-textPrimary">{team.avgProductivity}%</span>
+                      <div className="w-full bg-neutral-background rounded-lg overflow-hidden h-32 flex flex-col-reverse">
+                        <div
+                          className={`rounded-lg transition-all duration-500 ${
+                            team.avgProductivity >= 80 ? 'bg-accent-success' : team.avgProductivity >= 60 ? 'bg-primary-main' : 'bg-accent-error'
+                          }`}
+                          style={{ height: `${team.avgProductivity}%` }}
+                        />
+                      </div>
+                      <span className="text-xs text-neutral-textMuted truncate max-w-full" title={team.teamName}>
+                        {team.teamName.length > 10 ? team.teamName.slice(0, 10) + '...' : team.teamName}
+                      </span>
                     </div>
-                    <span className="text-xs text-neutral-textMuted">{item.week}</span>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Mood Distribution */}
@@ -391,7 +426,7 @@ export default function ReportsPage() {
                 Distribuicao de Humor
               </h3>
               <div className="space-y-4">
-                {MOCK_MOOD_DISTRIBUTION.map((mood) => (
+                {moodDistribution.map((mood) => (
                   <div key={mood.mood}>
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-sm font-medium text-neutral-textPrimary">{mood.mood}</span>
@@ -410,54 +445,74 @@ export default function ReportsPage() {
               </div>
             </div>
 
-            {/* Task Completion by Category */}
+            {/* Task Completion by Team */}
             <div className="bg-white rounded-2xl p-6 shadow-sm">
               <h3 className="text-lg font-semibold text-neutral-textPrimary mb-6">
-                Conclusao por Categoria
+                Conclusao por Equipe
               </h3>
               <div className="space-y-4">
-                {MOCK_TASK_COMPLETION.map((cat) => {
-                  const percentage = Math.round((cat.completed / cat.total) * 100);
-                  return (
-                    <div key={cat.category}>
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-sm font-medium text-neutral-textPrimary">{cat.category}</span>
-                        <span className="text-sm text-neutral-textSecondary">
-                          {cat.completed}/{cat.total} ({percentage}%)
-                        </span>
+                {teamDashboards.length === 0 ? (
+                  <p className="text-neutral-textSecondary text-center py-4">Nenhuma equipe gerenciada</p>
+                ) : (
+                  teamDashboards.map((team) => {
+                    const percentage = team.totalTasks > 0 ? Math.round((team.completedTasks / team.totalTasks) * 100) : 0;
+                    return (
+                      <div key={team.teamId}>
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-sm font-medium text-neutral-textPrimary">{team.teamName}</span>
+                          <span className="text-sm text-neutral-textSecondary">
+                            {team.completedTasks}/{team.totalTasks} ({percentage}%)
+                          </span>
+                        </div>
+                        <div className="h-3 bg-neutral-background rounded-full overflow-hidden">
+                          <div
+                            className={`h-full rounded-full transition-all duration-500 ${
+                              percentage >= 80 ? 'bg-accent-success' : percentage >= 60 ? 'bg-secondary-main' : 'bg-accent-error'
+                            }`}
+                            style={{ width: `${percentage}%` }}
+                          />
+                        </div>
                       </div>
-                      <div className="h-3 bg-neutral-background rounded-full overflow-hidden">
-                        <div
-                          className={`h-full rounded-full transition-all duration-500 ${
-                            percentage >= 80 ? 'bg-accent-success' : percentage >= 60 ? 'bg-secondary-main' : 'bg-accent-error'
-                          }`}
-                          style={{ width: `${percentage}%` }}
-                        />
-                      </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })
+                )}
               </div>
             </div>
 
-            {/* Focus Sessions */}
+            {/* Top Members by Productivity */}
             <div className="bg-white rounded-2xl p-6 shadow-sm">
               <h3 className="text-lg font-semibold text-neutral-textPrimary mb-6">
-                Sessoes de Foco por Tecnica
+                Top Membros por Produtividade
               </h3>
               <div className="space-y-4">
-                {MOCK_FOCUS_SESSIONS.map((session) => (
-                  <div key={session.technique} className="flex items-center justify-between p-3 bg-neutral-background rounded-lg">
-                    <div>
-                      <p className="font-medium text-neutral-textPrimary">{session.technique}</p>
-                      <p className="text-sm text-neutral-textMuted">Media: {session.avgDuration} min</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-xl font-bold text-primary-main">{session.sessions}</p>
-                      <p className="text-xs text-neutral-textMuted">sessoes</p>
-                    </div>
-                  </div>
-                ))}
+                {allMembers.length === 0 ? (
+                  <p className="text-neutral-textSecondary text-center py-4">Nenhum membro nas equipes</p>
+                ) : (
+                  [...allMembers]
+                    .sort((a, b) => b.productivity - a.productivity)
+                    .slice(0, 5)
+                    .map((member) => (
+                      <div key={member.memberId} className="flex items-center justify-between p-3 bg-neutral-background rounded-lg">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-primary-light/20 rounded-full flex items-center justify-center font-medium text-primary-main text-sm">
+                            {member.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                          </div>
+                          <div>
+                            <p className="font-medium text-neutral-textPrimary">{member.name}</p>
+                            <p className="text-sm text-neutral-textMuted">
+                              {member.completedTasks} tarefas • {member.focusSessionsWeek} sessoes
+                            </p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className={`text-xl font-bold ${
+                            member.productivity >= 80 ? 'text-accent-success' : member.productivity >= 60 ? 'text-primary-main' : 'text-accent-error'
+                          }`}>{member.productivity}%</p>
+                          <p className="text-xs text-neutral-textMuted">produtividade</p>
+                        </div>
+                      </div>
+                    ))
+                )}
               </div>
             </div>
           </div>
@@ -490,60 +545,75 @@ export default function ReportsPage() {
                 </tr>
               </thead>
               <tbody>
-                {MOCK_INDIVIDUAL_REPORTS.map((report) => (
-                  <tr
-                    key={report.name}
-                    className="border-b border-neutral-border last:border-0 hover:bg-neutral-background/50"
-                  >
-                    <td className="py-4 px-6">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-primary-light/20 rounded-full flex items-center justify-center font-medium text-primary-main">
-                          {report.name.split(' ').map(n => n[0]).join('')}
-                        </div>
-                        <span className="font-medium text-neutral-textPrimary">{report.name}</span>
-                      </div>
-                    </td>
-                    <td className="py-4 px-6">
-                      <div className="flex items-center justify-center gap-2">
-                        <div className="w-20 h-2 bg-neutral-background rounded-full overflow-hidden">
-                          <div
-                            className={`h-full rounded-full ${
-                              report.productivity >= 80
-                                ? 'bg-accent-success'
-                                : report.productivity >= 60
-                                ? 'bg-secondary-main'
-                                : 'bg-accent-error'
-                            }`}
-                            style={{ width: `${report.productivity}%` }}
-                          />
-                        </div>
-                        <span className="text-sm font-medium">{report.productivity}%</span>
-                      </div>
-                    </td>
-                    <td className="py-4 px-6 text-center font-medium text-neutral-textPrimary">
-                      {report.tasksCompleted}
-                    </td>
-                    <td className="py-4 px-6 text-center font-medium text-neutral-textPrimary">
-                      {report.focusSessions}
-                    </td>
-                    <td className="py-4 px-6 text-center">
-                      <span className={`text-lg ${
-                        report.trend === 'up'
-                          ? 'text-accent-success'
-                          : report.trend === 'down'
-                          ? 'text-accent-error'
-                          : 'text-neutral-textMuted'
-                      }`}>
-                        {report.trend === 'up' ? '📈' : report.trend === 'down' ? '📉' : '➡️'}
-                      </span>
-                    </td>
-                    <td className="py-4 px-6 text-center">
-                      <button className="text-primary-main hover:underline text-sm font-medium">
-                        Ver Detalhes
-                      </button>
+                {allMembers.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="py-8 text-center text-neutral-textSecondary">
+                      Nenhum membro nas equipes gerenciadas
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  allMembers.map((member) => {
+                    // Determine trend based on productivity level
+                    const trend = member.productivity >= 80 ? 'up' : member.productivity >= 60 ? 'stable' : 'down';
+                    return (
+                      <tr
+                        key={member.memberId}
+                        className="border-b border-neutral-border last:border-0 hover:bg-neutral-background/50"
+                      >
+                        <td className="py-4 px-6">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-primary-light/20 rounded-full flex items-center justify-center font-medium text-primary-main">
+                              {member.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                            </div>
+                            <div>
+                              <span className="font-medium text-neutral-textPrimary block">{member.name}</span>
+                              <span className="text-xs text-neutral-textMuted">{member.role}</span>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="py-4 px-6">
+                          <div className="flex items-center justify-center gap-2">
+                            <div className="w-20 h-2 bg-neutral-background rounded-full overflow-hidden">
+                              <div
+                                className={`h-full rounded-full ${
+                                  member.productivity >= 80
+                                    ? 'bg-accent-success'
+                                    : member.productivity >= 60
+                                    ? 'bg-secondary-main'
+                                    : 'bg-accent-error'
+                                }`}
+                                style={{ width: `${member.productivity}%` }}
+                              />
+                            </div>
+                            <span className="text-sm font-medium">{member.productivity}%</span>
+                          </div>
+                        </td>
+                        <td className="py-4 px-6 text-center font-medium text-neutral-textPrimary">
+                          {member.completedTasks}
+                        </td>
+                        <td className="py-4 px-6 text-center font-medium text-neutral-textPrimary">
+                          {member.focusSessionsWeek}
+                        </td>
+                        <td className="py-4 px-6 text-center">
+                          <span className={`text-lg ${
+                            trend === 'up'
+                              ? 'text-accent-success'
+                              : trend === 'down'
+                              ? 'text-accent-error'
+                              : 'text-neutral-textMuted'
+                          }`}>
+                            {trend === 'up' ? '📈' : trend === 'down' ? '📉' : '➡️'}
+                          </span>
+                        </td>
+                        <td className="py-4 px-6 text-center">
+                          <span className="text-sm text-neutral-textMuted">
+                            {member.status === 'active' ? '🟢' : member.status === 'away' ? '🟡' : '⚫'} {member.status}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
               </tbody>
             </table>
           </div>
@@ -552,22 +622,30 @@ export default function ReportsPage() {
 
       {/* Insights */}
       <div className="mt-8 bg-gradient-to-r from-primary-main to-primary-dark rounded-2xl p-6 text-white">
-        <h3 className="text-lg font-semibold mb-4">Insights da Semana</h3>
+        <h3 className="text-lg font-semibold mb-4">Insights das Equipes</h3>
         <div className="grid md:grid-cols-3 gap-4">
           <div className="bg-white/10 rounded-xl p-4">
-            <p className="text-sm opacity-80 mb-2">Melhor Dia</p>
-            <p className="font-semibold">Quarta-feira</p>
-            <p className="text-xs opacity-70 mt-1">52 tarefas concluidas</p>
+            <p className="text-sm opacity-80 mb-2">Total de Equipes</p>
+            <p className="font-semibold">{managerStats.totalTeams}</p>
+            <p className="text-xs opacity-70 mt-1">{managerStats.totalMembers} membros no total</p>
           </div>
           <div className="bg-white/10 rounded-xl p-4">
-            <p className="text-sm opacity-80 mb-2">Tecnica Mais Eficaz</p>
-            <p className="font-semibold">Pomodoro</p>
-            <p className="text-xs opacity-70 mt-1">89% de sessoes concluidas</p>
+            <p className="text-sm opacity-80 mb-2">Membros Ativos</p>
+            <p className="font-semibold">{managerStats.activeMembers}</p>
+            <p className="text-xs opacity-70 mt-1">{managerStats.avgEngagement}% de engajamento</p>
           </div>
           <div className="bg-white/10 rounded-xl p-4">
             <p className="text-sm opacity-80 mb-2">Destaque</p>
-            <p className="font-semibold">Maria Oliveira</p>
-            <p className="text-xs opacity-70 mt-1">Maior produtividade: 95%</p>
+            <p className="font-semibold">
+              {allMembers.length > 0
+                ? [...allMembers].sort((a, b) => b.productivity - a.productivity)[0]?.name || '-'
+                : '-'}
+            </p>
+            <p className="text-xs opacity-70 mt-1">
+              Maior produtividade: {allMembers.length > 0
+                ? [...allMembers].sort((a, b) => b.productivity - a.productivity)[0]?.productivity || 0
+                : 0}%
+            </p>
           </div>
         </div>
       </div>
