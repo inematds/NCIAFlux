@@ -422,7 +422,7 @@ export const invitationsStorage = {
     return invitations.filter(i => i.teamId === teamId);
   },
 
-  respond(invitationId: string, accept: boolean, userEmail: string): StoredInvitation | null {
+  respond(invitationId: string, accept: boolean, _userEmail: string): StoredInvitation | null {
     const invitations = this.getAll();
     const index = invitations.findIndex(i => i.id === invitationId);
     if (index === -1) return null;
