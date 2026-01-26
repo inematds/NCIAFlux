@@ -42,6 +42,7 @@ interface MenuItem {
   requiresRole?: 'manager' | 'admin';
   isPersonal?: boolean; // true = recursos pessoais (nao aparece para admin)
   isAdminOnly?: boolean; // true = so aparece para admin
+  requiresManagedTeams?: boolean; // true = aparece se usuario gerencia equipes
 }
 
 const baseMenuItems: MenuItem[] = [
@@ -73,8 +74,8 @@ const baseMenuItems: MenuItem[] = [
   { icon: '📈', label: 'Relatorios', href: '/dashboard/reports', isPersonal: true },
   { icon: '🔮', label: 'Adaptativo', href: '/dashboard/adaptive', isPersonal: true },
 
-  // Gestao (apenas para managers/admins)
-  { icon: '👥', label: 'Equipes', href: '/dashboard/teams', section: 'Gestao', requiresRole: 'manager' },
+  // Gestao (aparece se usuario gerencia equipes)
+  { icon: '👥', label: 'Equipes', href: '/dashboard/teams', section: 'Gestao', requiresManagedTeams: true },
 
   // Admin (apenas para admins - nao tem recursos pessoais)
   { icon: '🏢', label: 'Organizacao', href: '/dashboard/admin', section: 'Administracao', isAdminOnly: true },
@@ -180,16 +181,14 @@ export default function DashboardLayout({
     setUser(storedUser);
     setIsLoading(false);
 
-    // Load managed teams for manager/admin users
-    if (storedUser.role === 'manager' || storedUser.role === 'admin') {
-      const allTeams = teamsStorage.getAll();
-      // Filter teams where user is owner or manager
-      const userTeams = allTeams.filter(t =>
-        t.ownerId === storedUser.id ||
-        t.members.some(m => m.email === storedUser.email && m.role === 'manager')
-      );
-      setManagedTeams(userTeams.map(t => ({ id: t.id, name: t.name })));
-    }
+    // Load managed teams for ALL users (admin assigns manager by email)
+    const allTeams = teamsStorage.getAll();
+    // Filter teams where user is owner or has manager role in members
+    const userTeams = allTeams.filter(t =>
+      t.ownerId === storedUser.id ||
+      t.members.some(m => m.email?.toLowerCase() === storedUser.email?.toLowerCase() && m.role === 'manager')
+    );
+    setManagedTeams(userTeams.map(t => ({ id: t.id, name: t.name })));
 
     // Check if in demo mode
     const demoMode = localStorage.getItem(getStorageKey('nciaflux_demo_mode'));
@@ -224,7 +223,7 @@ export default function DashboardLayout({
   }
 
   const isAdmin = user?.role === 'admin';
-  const canAccessManagement = user?.role === 'manager' || isAdmin;
+  const canAccessManagement = user?.role === 'manager' || isAdmin || managedTeams.length > 0;
 
   // Show loading while checking auth
   if (isLoading) {
@@ -267,10 +266,16 @@ export default function DashboardLayout({
               .filter((item) => {
                 const isAdmin = user?.role === 'admin';
                 const isManager = user?.role === 'manager';
+                const hasManagedTeams = managedTeams.length > 0;
+
+                // Item que requer equipes gerenciadas - so mostra se usuario gerencia equipes
+                if (item.requiresManagedTeams && !hasManagedTeams && !isAdmin) {
+                  return false;
+                }
 
                 // Admin: NAO ve recursos pessoais, apenas administracao
                 if (isAdmin) {
-                  // Admin so ve: Dashboard, itens adminOnly, e Configuracoes
+                  // Admin so ve: Dashboard, itens adminOnly, Equipes (se gerencia), e Configuracoes
                   if (item.isPersonal) return false;
                   if (item.requiresRole === 'manager' && !item.isAdminOnly) return false;
                   return true;
@@ -282,7 +287,7 @@ export default function DashboardLayout({
                   return true;
                 }
 
-                // Usuario comum: Ve recursos pessoais, NAO ve gestao nem admin
+                // Usuario comum: Ve recursos pessoais + Equipes (se gerencia), NAO ve admin
                 if (item.requiresRole === 'manager') return false;
                 if (item.requiresRole === 'admin') return false;
                 if (item.isAdminOnly) return false;
