@@ -203,7 +203,7 @@ export default function AdminPage() {
           email: teamData.managerEmail,
           role: 'manager',
           status: 'active',
-          productivity: 80,
+          productivity: 0,
           lastCheckIn: 'Aguardando',
         }],
       });
