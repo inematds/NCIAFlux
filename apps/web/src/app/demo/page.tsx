@@ -235,16 +235,16 @@ function generateSampleData() {
     },
   ];
 
-  // Teams (for manager view)
+  // Teams (for manager view) - usando emails padrao de demo
   const teams = [
     {
       id: 'team_1',
       name: 'Desenvolvimento',
       description: 'Equipe de desenvolvimento de software',
-      ownerId: 'demo_user',
+      ownerId: 'demo_manager',
       createdAt: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString(),
       members: [
-        { id: 'demo_user', name: 'Usuario Demo', email: 'demo@mentesbrilhantes.app', role: 'Líder', status: 'active' as const, productivity: 85, lastCheckIn: 'Agora' },
+        { id: 'demo_manager', name: 'Gestor Demo NF', email: 'gestorNF@gmail.com', role: 'Líder', status: 'active' as const, productivity: 85, lastCheckIn: 'Agora' },
         { id: 'member_1', name: 'Ana Silva', email: 'ana@email.com', role: 'Desenvolvedor', status: 'active' as const, productivity: 92, lastCheckIn: '10 min' },
         { id: 'member_2', name: 'Carlos Santos', email: 'carlos@email.com', role: 'Desenvolvedor', status: 'active' as const, productivity: 78, lastCheckIn: '30 min' },
         { id: 'member_3', name: 'Maria Oliveira', email: 'maria@email.com', role: 'QA', status: 'away' as const, productivity: 88, lastCheckIn: '2h' },
@@ -254,10 +254,10 @@ function generateSampleData() {
       id: 'team_2',
       name: 'Design',
       description: 'Equipe de UX/UI Design',
-      ownerId: 'demo_user',
+      ownerId: 'demo_manager',
       createdAt: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000).toISOString(),
       members: [
-        { id: 'demo_user', name: 'Usuario Demo', email: 'demo@mentesbrilhantes.app', role: 'Gestor', status: 'active' as const, productivity: 85, lastCheckIn: 'Agora' },
+        { id: 'demo_manager', name: 'Gestor Demo NF', email: 'gestorNF@gmail.com', role: 'Gestor', status: 'active' as const, productivity: 85, lastCheckIn: 'Agora' },
         { id: 'member_4', name: 'Fernanda Costa', email: 'fernanda@email.com', role: 'UX Designer', status: 'active' as const, productivity: 90, lastCheckIn: '15 min' },
         { id: 'member_5', name: 'Joao Pereira', email: 'joao@email.com', role: 'UI Designer', status: 'offline' as const, productivity: 75, lastCheckIn: '1 dia' },
       ],
@@ -320,6 +320,13 @@ function loadSampleData() {
 
 type DemoRole = 'user' | 'manager' | 'admin';
 
+// Usuarios padrao de demonstracao - nao confundir com perfis reais
+const DEMO_USERS: Record<DemoRole, { email: string; name: string }> = {
+  user: { email: 'UserNF@gmail.com', name: 'Usuario Demo NF' },
+  manager: { email: 'gestorNF@gmail.com', name: 'Gestor Demo NF' },
+  admin: { email: 'adminNF@gmail.com', name: 'Admin Demo NF' },
+};
+
 const roleOptions: { role: DemoRole; icon: string; title: string; desc: string }[] = [
   { role: 'user', icon: '👤', title: 'Usuario', desc: 'Experiencia pessoal completa' },
   { role: 'manager', icon: '👥', title: 'Gestor', desc: 'Gerencia equipes + visao pessoal' },
@@ -344,24 +351,21 @@ export default function DemoPage() {
     // Simulate loading
     await new Promise((resolve) => setTimeout(resolve, 800));
 
-    // Create demo user with selected role
-    const roleNames = {
-      user: 'Usuario Demo',
-      manager: 'Gestor Demo',
-      admin: 'Admin Demo',
-    };
+    // Create demo user with selected role using standard demo emails
+    const demoConfig = DEMO_USERS[selectedRole];
 
     const demoUser: StoredUser = {
       id: `demo_${selectedRole}`,
-      email: `demo.${selectedRole}@mentesbrilhantes.app`,
-      name: roleNames[selectedRole],
+      email: demoConfig.email,
+      name: demoConfig.name,
       role: selectedRole,
     };
 
     // Store user
     userStorage.set(demoUser);
 
-    // Load sample data
+    // Demo TEM dados de exemplo para mostrar o sistema funcionando
+    // Usuarios reais criados via registro comecam limpos
     loadSampleData();
 
     // Redirect to dashboard
@@ -441,10 +445,15 @@ export default function DemoPage() {
         </div>
 
         {/* Info */}
-        <div className="mt-6 bg-secondary-main/20 rounded-xl p-4 text-center">
-          <p className="text-sm text-neutral-textSecondary">
+        <div className="mt-6 bg-secondary-main/20 rounded-xl p-4">
+          <p className="text-sm text-neutral-textSecondary text-center mb-3">
             O demo usa dados de exemplo salvos localmente no navegador.
           </p>
+          <div className="text-xs text-neutral-textMuted space-y-1">
+            <p><span className="font-medium">Usuario:</span> {DEMO_USERS.user.email}</p>
+            <p><span className="font-medium">Gestor:</span> {DEMO_USERS.manager.email}</p>
+            <p><span className="font-medium">Admin:</span> {DEMO_USERS.admin.email}</p>
+          </div>
         </div>
       </div>
     </div>

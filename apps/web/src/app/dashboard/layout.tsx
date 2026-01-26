@@ -40,40 +40,46 @@ interface MenuItem {
   href: string;
   section?: string;
   requiresRole?: 'manager' | 'admin';
+  isPersonal?: boolean; // true = recursos pessoais (nao aparece para admin)
+  isAdminOnly?: boolean; // true = so aparece para admin
 }
 
 const baseMenuItems: MenuItem[] = [
   // Principal
   { icon: '🏠', label: 'Dashboard', href: '/dashboard', section: 'Principal' },
-  { icon: '📝', label: 'Brain Dump', href: '/dashboard/brain-dump' },
-  { icon: '📅', label: 'Planner', href: '/dashboard/planner' },
-  { icon: '🔄', label: 'Rotinas', href: '/dashboard/routines' },
+  { icon: '📝', label: 'Brain Dump', href: '/dashboard/brain-dump', isPersonal: true },
+  { icon: '📅', label: 'Planner', href: '/dashboard/planner', isPersonal: true },
+  { icon: '🔄', label: 'Rotinas', href: '/dashboard/routines', isPersonal: true },
 
   // Organizacao
-  { icon: '📆', label: 'Agenda', href: '/dashboard/calendar', section: 'Organizacao' },
-  { icon: '📁', label: 'Projetos', href: '/dashboard/projects' },
-  { icon: '📋', label: 'Tarefas', href: '/dashboard/tasks' },
-  { icon: '📓', label: 'Notas', href: '/dashboard/notes' },
+  { icon: '📆', label: 'Agenda', href: '/dashboard/calendar', section: 'Organizacao', isPersonal: true },
+  { icon: '📁', label: 'Projetos', href: '/dashboard/projects', isPersonal: true },
+  { icon: '📋', label: 'Tarefas', href: '/dashboard/tasks', isPersonal: true },
+  { icon: '📓', label: 'Notas', href: '/dashboard/notes', isPersonal: true },
 
   // Produtividade
-  { icon: '🎯', label: 'Timer de Foco', href: '/dashboard/focus', section: 'Produtividade' },
-  { icon: '😊', label: 'Check-in', href: '/dashboard/checkin' },
-  { icon: '🆘', label: 'Modo Crise', href: '/dashboard/crisis' },
-  { icon: '🎮', label: 'Gamificacao', href: '/dashboard/gamification' },
+  { icon: '🎯', label: 'Timer de Foco', href: '/dashboard/focus', section: 'Produtividade', isPersonal: true },
+  { icon: '😊', label: 'Check-in', href: '/dashboard/checkin', isPersonal: true },
+  { icon: '🆘', label: 'Modo Crise', href: '/dashboard/crisis', isPersonal: true },
+  { icon: '🎮', label: 'Gamificacao', href: '/dashboard/gamification', isPersonal: true },
 
   // Social
-  { icon: '🤝', label: 'Parcerias', href: '/dashboard/partnerships', section: 'Social' },
-  { icon: '👪', label: 'Comunidades', href: '/dashboard/communities' },
+  { icon: '🤝', label: 'Parcerias', href: '/dashboard/partnerships', section: 'Social', isPersonal: true },
+  { icon: '👪', label: 'Comunidades', href: '/dashboard/communities', isPersonal: true },
 
   // Perfil & Revisao
-  { icon: '🧠', label: 'Cronotipo', href: '/dashboard/chronotype', section: 'Perfil' },
-  { icon: '📊', label: 'Revisoes', href: '/dashboard/review' },
-  { icon: '📈', label: 'Relatorios', href: '/dashboard/reports' },
-  { icon: '🔮', label: 'Adaptativo', href: '/dashboard/adaptive' },
+  { icon: '🧠', label: 'Cronotipo', href: '/dashboard/chronotype', section: 'Perfil', isPersonal: true },
+  { icon: '📊', label: 'Revisoes', href: '/dashboard/review', isPersonal: true },
+  { icon: '📈', label: 'Relatorios', href: '/dashboard/reports', isPersonal: true },
+  { icon: '🔮', label: 'Adaptativo', href: '/dashboard/adaptive', isPersonal: true },
 
   // Gestao (apenas para managers/admins)
   { icon: '👥', label: 'Equipes', href: '/dashboard/teams', section: 'Gestao', requiresRole: 'manager' },
-  { icon: '🏢', label: 'Admin', href: '/dashboard/admin', requiresRole: 'admin' },
+
+  // Admin (apenas para admins - nao tem recursos pessoais)
+  { icon: '🏢', label: 'Organizacao', href: '/dashboard/admin', section: 'Administracao', isAdminOnly: true },
+  { icon: '👥', label: 'Usuarios', href: '/dashboard/admin/users', isAdminOnly: true },
+  { icon: '📊', label: 'Relatorios Org', href: '/dashboard/admin/reports', isAdminOnly: true },
 
   // Sistema
   { icon: '⚙️', label: 'Configuracoes', href: '/dashboard/settings', section: 'Sistema' },
@@ -241,7 +247,8 @@ export default function DashboardLayout({
     router.push('/login?add_profile=true');
   }
 
-  const canAccessManagement = user?.role === 'manager' || user?.role === 'admin';
+  const isAdmin = user?.role === 'admin';
+  const canAccessManagement = user?.role === 'manager' || isAdmin;
 
   // Show loading while checking auth
   if (isLoading) {
@@ -282,14 +289,27 @@ export default function DashboardLayout({
           <ul className="space-y-1">
             {baseMenuItems
               .filter((item) => {
-                // Filter items based on role
-                if (!item.requiresRole) return true;
-                if (item.requiresRole === 'manager') {
-                  return user?.role === 'manager' || user?.role === 'admin';
+                const isAdmin = user?.role === 'admin';
+                const isManager = user?.role === 'manager';
+
+                // Admin: NAO ve recursos pessoais, apenas administracao
+                if (isAdmin) {
+                  // Admin so ve: Dashboard, itens adminOnly, e Configuracoes
+                  if (item.isPersonal) return false;
+                  if (item.requiresRole === 'manager' && !item.isAdminOnly) return false;
+                  return true;
                 }
-                if (item.requiresRole === 'admin') {
-                  return user?.role === 'admin';
+
+                // Manager: Ve recursos pessoais + gestao, mas NAO ve adminOnly
+                if (isManager) {
+                  if (item.isAdminOnly) return false;
+                  return true;
                 }
+
+                // Usuario comum: Ve recursos pessoais, NAO ve gestao nem admin
+                if (item.requiresRole === 'manager') return false;
+                if (item.requiresRole === 'admin') return false;
+                if (item.isAdminOnly) return false;
                 return true;
               })
               .map((item, index, filteredItems) => {
@@ -481,78 +501,97 @@ export default function DashboardLayout({
             </div>
           </div>
 
-          {/* Mood & Energy */}
-          <div className="flex items-center gap-4">
-            {dayStatus.mood ? (
-              <div className="flex items-center gap-1 px-3 py-1 bg-primary-main/10 rounded-lg">
-                <span className="text-xl">{MOOD_EMOJI[dayStatus.mood] || '😐'}</span>
-                <span className="text-sm text-neutral-textSecondary">Humor</span>
+          {/* Admin: mostra apenas info de admin, nao recursos pessoais */}
+          {isAdmin ? (
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2 px-3 py-1 bg-primary-main/10 rounded-lg">
+                <span className="text-xl">🏢</span>
+                <span className="text-sm text-neutral-textSecondary">Modo Administrador</span>
               </div>
-            ) : (
               <Link
-                href="/dashboard/checkin"
-                className="flex items-center gap-1 px-3 py-1 bg-secondary-main/20 rounded-lg hover:bg-secondary-main/30 transition-colors"
+                href="/dashboard/admin"
+                className="flex items-center gap-2 px-3 py-1 bg-secondary-main/10 rounded-lg hover:bg-secondary-main/20 transition-colors"
               >
-                <span className="text-xl">😊</span>
-                <span className="text-sm text-secondary-dark">Check-in</span>
+                <span className="text-xl">👥</span>
+                <span className="text-sm font-medium text-secondary-dark">Gerenciar</span>
               </Link>
-            )}
-            {dayStatus.energy ? (
-              <div className="flex items-center gap-1 px-3 py-1 bg-accent-success/10 rounded-lg">
-                <span className="text-xl">{ENERGY_EMOJI[dayStatus.energy] || '😐'}</span>
-                <span className="text-sm text-neutral-textSecondary">Energia</span>
+            </div>
+          ) : (
+            <>
+              {/* Mood & Energy - apenas para usuarios e gestores */}
+              <div className="flex items-center gap-4">
+                {dayStatus.mood ? (
+                  <div className="flex items-center gap-1 px-3 py-1 bg-primary-main/10 rounded-lg">
+                    <span className="text-xl">{MOOD_EMOJI[dayStatus.mood] || '😐'}</span>
+                    <span className="text-sm text-neutral-textSecondary">Humor</span>
+                  </div>
+                ) : (
+                  <Link
+                    href="/dashboard/checkin"
+                    className="flex items-center gap-1 px-3 py-1 bg-secondary-main/20 rounded-lg hover:bg-secondary-main/30 transition-colors"
+                  >
+                    <span className="text-xl">😊</span>
+                    <span className="text-sm text-secondary-dark">Check-in</span>
+                  </Link>
+                )}
+                {dayStatus.energy ? (
+                  <div className="flex items-center gap-1 px-3 py-1 bg-accent-success/10 rounded-lg">
+                    <span className="text-xl">{ENERGY_EMOJI[dayStatus.energy] || '😐'}</span>
+                    <span className="text-sm text-neutral-textSecondary">Energia</span>
+                  </div>
+                ) : null}
               </div>
-            ) : null}
-          </div>
 
-          {/* Focus Stats */}
-          <div className="flex items-center gap-4">
-            <Link
-              href="/dashboard/focus"
-              className="flex items-center gap-2 px-3 py-1 bg-primary-main/10 rounded-lg hover:bg-primary-main/20 transition-colors"
-            >
-              <span className="text-xl">🎯</span>
-              <div className="text-sm">
-                <span className="font-semibold text-primary-main">{dayStatus.focusMinutes} min</span>
-                <span className="text-neutral-textMuted ml-1">foco</span>
+              {/* Focus Stats */}
+              <div className="flex items-center gap-4">
+                <Link
+                  href="/dashboard/focus"
+                  className="flex items-center gap-2 px-3 py-1 bg-primary-main/10 rounded-lg hover:bg-primary-main/20 transition-colors"
+                >
+                  <span className="text-xl">🎯</span>
+                  <div className="text-sm">
+                    <span className="font-semibold text-primary-main">{dayStatus.focusMinutes} min</span>
+                    <span className="text-neutral-textMuted ml-1">foco</span>
+                  </div>
+                </Link>
+                {dayStatus.focusSessions > 0 && (
+                  <div className="text-sm text-neutral-textSecondary">
+                    {dayStatus.focusSessions} {dayStatus.focusSessions === 1 ? 'sessao' : 'sessoes'}
+                  </div>
+                )}
               </div>
-            </Link>
-            {dayStatus.focusSessions > 0 && (
-              <div className="text-sm text-neutral-textSecondary">
-                {dayStatus.focusSessions} {dayStatus.focusSessions === 1 ? 'sessao' : 'sessoes'}
-              </div>
-            )}
-          </div>
 
-          {/* Tasks Summary */}
-          <div className="flex items-center gap-3">
-            <Link
-              href="/dashboard/tasks"
-              className="flex items-center gap-2 px-3 py-1 bg-secondary-main/10 rounded-lg hover:bg-secondary-main/20 transition-colors"
-            >
-              <span className="text-xl">📋</span>
-              <div className="text-sm">
-                <span className="font-semibold text-secondary-dark">{dayStatus.pendingTasks}</span>
-                <span className="text-neutral-textMuted ml-1">pendentes</span>
+              {/* Tasks Summary */}
+              <div className="flex items-center gap-3">
+                <Link
+                  href="/dashboard/tasks"
+                  className="flex items-center gap-2 px-3 py-1 bg-secondary-main/10 rounded-lg hover:bg-secondary-main/20 transition-colors"
+                >
+                  <span className="text-xl">📋</span>
+                  <div className="text-sm">
+                    <span className="font-semibold text-secondary-dark">{dayStatus.pendingTasks}</span>
+                    <span className="text-neutral-textMuted ml-1">pendentes</span>
+                  </div>
+                </Link>
+                {dayStatus.completedTasks > 0 && (
+                  <div className="flex items-center gap-1 text-sm text-accent-success">
+                    <span>✅</span>
+                    <span>{dayStatus.completedTasks}</span>
+                  </div>
+                )}
               </div>
-            </Link>
-            {dayStatus.completedTasks > 0 && (
-              <div className="flex items-center gap-1 text-sm text-accent-success">
-                <span>✅</span>
-                <span>{dayStatus.completedTasks}</span>
-              </div>
-            )}
+            </>
+          )}
 
-            {/* Chat Button */}
-            <button
-              onClick={openChat}
-              className="flex items-center gap-2 px-3 py-1 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-lg hover:from-purple-500/20 hover:to-pink-500/20 transition-colors border border-purple-500/20"
-              title="Chat com IA"
-            >
-              <span className="text-xl">💬</span>
-              <span className="text-sm font-medium text-purple-600">Chat</span>
-            </button>
-          </div>
+          {/* Chat Button - disponivel para todos */}
+          <button
+            onClick={openChat}
+            className="flex items-center gap-2 px-3 py-1 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-lg hover:from-purple-500/20 hover:to-pink-500/20 transition-colors border border-purple-500/20"
+            title="Chat com IA"
+          >
+            <span className="text-xl">💬</span>
+            <span className="text-sm font-medium text-purple-600">Chat</span>
+          </button>
         </div>
 
         <div className="flex-1 overflow-auto">

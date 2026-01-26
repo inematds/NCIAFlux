@@ -68,7 +68,9 @@ export default function DashboardPage() {
     year: 'numeric',
   });
 
-  const isManager = user?.role === 'manager' || user?.role === 'admin';
+  const isAdmin = user?.role === 'admin';
+  const isManager = user?.role === 'manager';
+  const isManagerOrAdmin = isManager || isAdmin;
 
   // Calculate user's personal stats from their tasks
   const personalStats = {
@@ -88,13 +90,13 @@ export default function DashboardPage() {
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-2xl lg:text-3xl font-bold text-neutral-textPrimary">
-          {isManager ? 'Dashboard' : `Olá, ${user?.name?.split(' ')[0] || 'Usuário'}!`}
+          {isAdmin ? 'Painel de Administracao' : isManager ? 'Dashboard' : `Olá, ${user?.name?.split(' ')[0] || 'Usuário'}!`}
         </h1>
         <p className="text-neutral-textSecondary mt-1 capitalize">{today}</p>
       </div>
 
-      {/* Discovery Prompt - For users who haven't completed it */}
-      {!isManager && !hasProfile && (
+      {/* Discovery Prompt - For users who haven't completed it (not for admin) */}
+      {!isManagerOrAdmin && !hasProfile && (
         <div className="mb-8 bg-gradient-to-r from-primary-main/10 to-secondary-main/10 rounded-2xl p-6 border border-primary-main/20">
           <div className="flex items-start gap-4">
             <span className="text-4xl">🧠</span>
@@ -117,13 +119,45 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* Stats Grid - Different for user vs manager */}
-      {isManager ? (
-        // Manager Stats
+      {/* Stats Grid - Different for admin vs manager vs user */}
+      {isAdmin ? (
+        // Admin Stats - Visao organizacional
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-8">
+          <StatCard
+            icon="🏢"
+            label="Organizacoes"
+            value={1}
+            trend=""
+            trendUp
+          />
+          <StatCard
+            icon="👥"
+            label="Total de Usuarios"
+            value={24}
+            trend="+2 esta semana"
+            trendUp
+          />
+          <StatCard
+            icon="👔"
+            label="Gestores"
+            value={5}
+            trend=""
+            trendUp
+          />
+          <StatCard
+            icon="📊"
+            label="Engajamento"
+            value="72%"
+            trend="+3% esta semana"
+            trendUp
+          />
+        </div>
+      ) : isManager ? (
+        // Manager Stats - Visao de gestao de equipes
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-8">
           <StatCard
             icon="👥"
-            label="Total de Usuários"
+            label="Total de Usuarios"
             value={24}
             trend="+2 esta semana"
             trendUp
@@ -189,9 +223,26 @@ export default function DashboardPage() {
         {/* Weekly Chart */}
         <div className="lg:col-span-2 bg-white rounded-2xl p-6 shadow-sm">
           <h2 className="text-lg font-semibold text-neutral-textPrimary mb-4">
-            {isManager ? 'Progresso Semanal da Equipe' : 'Seu Progresso'}
+            {isAdmin ? 'Visao Geral da Organizacao' : isManager ? 'Progresso Semanal da Equipe' : 'Seu Progresso'}
           </h2>
-          {isManager ? (
+          {isAdmin ? (
+            // Admin - Organization overview
+            <div className="h-64 flex items-center justify-center">
+              <div className="text-center">
+                <span className="text-6xl mb-4 block">🏢</span>
+                <p className="text-neutral-textSecondary mb-2">Administracao da Organizacao</p>
+                <p className="text-sm text-neutral-textMuted mb-4">
+                  Gerencie usuarios, permissoes e configuracoes da organizacao.
+                </p>
+                <a
+                  href="/dashboard/admin"
+                  className="inline-block px-6 py-2 rounded-xl bg-primary-main text-white font-medium hover:bg-primary-dark transition-colors"
+                >
+                  Ir para Administracao
+                </a>
+              </div>
+            </div>
+          ) : isManager ? (
             <div className="h-64 flex items-end justify-between gap-2">
               {MOCK_WEEKLY_DATA.map((day) => {
                 const percentage = (day.completed / day.total) * 100;
@@ -256,9 +307,16 @@ export default function DashboardPage() {
         {/* Recent Activity / Quick Actions */}
         <div className="bg-white rounded-2xl p-6 shadow-sm">
           <h2 className="text-lg font-semibold text-neutral-textPrimary mb-4">
-            {isManager ? 'Atividade Recente' : 'Ações Rápidas'}
+            {isAdmin ? 'Acoes de Admin' : isManager ? 'Atividade Recente' : 'Ações Rápidas'}
           </h2>
-          {isManager ? (
+          {isAdmin ? (
+            // Admin quick actions
+            <div className="space-y-3">
+              <QuickActionButton href="/dashboard/admin" icon="👥" label="Gerenciar Usuarios" />
+              <QuickActionButton href="/dashboard/admin/reports" icon="📊" label="Relatorios Org" />
+              <QuickActionButton href="/dashboard/settings" icon="⚙️" label="Configuracoes" />
+            </div>
+          ) : isManager ? (
             <div className="space-y-4">
               {MOCK_RECENT_ACTIVITIES.map((activity) => (
                 <div key={activity.id} className="flex items-start gap-3">
@@ -292,8 +350,8 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Team Overview - Only for managers */}
-      {isManager && (
+      {/* Team Overview - Only for managers (not admin, they have separate admin page) */}
+      {isManager && !isAdmin && (
         <div className="bg-white rounded-2xl p-6 shadow-sm">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-lg font-semibold text-neutral-textPrimary">
@@ -373,8 +431,8 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* My Tasks - Only for regular users */}
-      {!isManager && tasks.length > 0 && (
+      {/* My Tasks - Only for regular users (not admin or manager) */}
+      {!isManagerOrAdmin && tasks.length > 0 && (
         <div className="bg-white rounded-2xl p-6 shadow-sm">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-lg font-semibold text-neutral-textPrimary">
