@@ -62,17 +62,30 @@ export default function LoginPage() {
     // Simulate network delay for UX
     await new Promise((resolve) => setTimeout(resolve, 500));
 
-    // Check if this is a demo user login
-    const isDemoUser = demoRole && DEMO_USERS[demoRole]?.email === email;
+    // Check if this is a demo user login (by query param OR by email)
+    const emailLower = email.toLowerCase();
+    let detectedDemoRole: DemoRole | null = demoRole;
+
+    // Also detect demo by email even without query param
+    if (!detectedDemoRole) {
+      for (const [role, config] of Object.entries(DEMO_USERS)) {
+        if (config.email.toLowerCase() === emailLower) {
+          detectedDemoRole = role as DemoRole;
+          break;
+        }
+      }
+    }
+
+    const isDemoUser = detectedDemoRole !== null;
 
     // Create user with appropriate role
     const user: StoredUser = {
-      id: isDemoUser ? `demo_${demoRole}` : `user_${Date.now()}`,
+      id: isDemoUser ? `demo_${detectedDemoRole}` : `user_${Date.now()}`,
       email: email,
       name: isDemoUser
-        ? DEMO_USERS[demoRole].name
+        ? DEMO_USERS[detectedDemoRole!].name
         : email.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
-      role: isDemoUser ? demoRole : 'user',
+      role: isDemoUser ? detectedDemoRole! : 'user',
     };
 
     userStorage.set(user);
@@ -80,6 +93,9 @@ export default function LoginPage() {
     // Demo users get sample data, regular users start clean
     if (isDemoUser) {
       loadDemoSampleData();
+    } else {
+      // Clear any existing demo data for new regular users
+      clearExistingData();
     }
 
     // Update user stats in Supabase (async, don't block login)
@@ -88,6 +104,18 @@ export default function LoginPage() {
     });
 
     router.push('/dashboard');
+  }
+
+  // Clear existing data for new regular users (not demo)
+  function clearExistingData() {
+    const keysToKeep = ['nciaflux_user'];
+    Object.keys(localStorage).forEach(key => {
+      if (key.startsWith('nciaflux_') && !keysToKeep.includes(key)) {
+        localStorage.removeItem(key);
+      }
+    });
+    // Make sure demo mode is off
+    localStorage.removeItem('nciaflux_demo_mode');
   }
 
   // Load sample data for demo users (same as demo page)
