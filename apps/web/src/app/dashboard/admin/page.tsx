@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { userStorage, globalTeamsStorage, getStorageKey } from '@/lib/storage';
+import { userStorage, globalTeamsStorage } from '@/lib/storage';
 import { useRouter } from 'next/navigation';
 import HelpButton from '@/components/HelpButton';
 import { getHelpContent } from '@/lib/help-content';
@@ -46,27 +46,27 @@ const STATUS_COLORS = {
 
 type TabType = 'overview' | 'companies' | 'teams';
 
-// Storage functions
+// Storage functions - use global keys (not user-prefixed) for admin data
 function getCompanies(): Company[] {
   if (typeof window === 'undefined') return [];
-  const data = localStorage.getItem(getStorageKey(STORAGE_KEYS.COMPANIES));
+  const data = localStorage.getItem(STORAGE_KEYS.COMPANIES);
   return data ? JSON.parse(data) : [];
 }
 
 function saveCompanies(companies: Company[]) {
   if (typeof window === 'undefined') return;
-  localStorage.setItem(getStorageKey(STORAGE_KEYS.COMPANIES), JSON.stringify(companies));
+  localStorage.setItem(STORAGE_KEYS.COMPANIES, JSON.stringify(companies));
 }
 
 function getAdminTeams(): AdminTeam[] {
   if (typeof window === 'undefined') return [];
-  const data = localStorage.getItem(getStorageKey(STORAGE_KEYS.ADMIN_TEAMS));
+  const data = localStorage.getItem(STORAGE_KEYS.ADMIN_TEAMS);
   return data ? JSON.parse(data) : [];
 }
 
 function saveAdminTeams(teams: AdminTeam[]) {
   if (typeof window === 'undefined') return;
-  localStorage.setItem(getStorageKey(STORAGE_KEYS.ADMIN_TEAMS), JSON.stringify(teams));
+  localStorage.setItem(STORAGE_KEYS.ADMIN_TEAMS, JSON.stringify(teams));
 }
 
 export default function AdminPage() {
@@ -88,7 +88,8 @@ export default function AdminPage() {
     }
     setCompanies(getCompanies());
     setAdminTeams(getAdminTeams());
-  }, [user, router]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   if (!user || user.role !== 'admin') {
     return (
