@@ -228,6 +228,12 @@ export default function DashboardLayout({
     setSelectedTeamId(teamId);
     profileManager.setViewMode(teamId ? 'management' : 'personal');
     setShowProfileMenu(false);
+    // Navigate to appropriate page based on context
+    if (teamId) {
+      router.push('/dashboard/teams');
+    } else {
+      router.push('/dashboard');
+    }
   }
 
   const isAdmin = user?.role === 'admin';
