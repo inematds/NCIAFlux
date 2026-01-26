@@ -59,11 +59,17 @@ const baseMenuItems: MenuItem[] = [
   { icon: '🎯', label: 'Timer de Foco', href: '/dashboard/focus', section: 'Produtividade' },
   { icon: '😊', label: 'Check-in', href: '/dashboard/checkin' },
   { icon: '🆘', label: 'Modo Crise', href: '/dashboard/crisis' },
+  { icon: '🎮', label: 'Gamificacao', href: '/dashboard/gamification' },
+
+  // Social
+  { icon: '🤝', label: 'Parcerias', href: '/dashboard/partnerships', section: 'Social' },
+  { icon: '👪', label: 'Comunidades', href: '/dashboard/communities' },
 
   // Perfil & Revisao
   { icon: '🧠', label: 'Cronotipo', href: '/dashboard/chronotype', section: 'Perfil' },
   { icon: '📊', label: 'Revisoes', href: '/dashboard/review' },
   { icon: '📈', label: 'Relatorios', href: '/dashboard/reports' },
+  { icon: '🔮', label: 'Adaptativo', href: '/dashboard/adaptive' },
 
   // Gestao (apenas para managers/admins)
   { icon: '👥', label: 'Equipes', href: '/dashboard/teams', section: 'Gestao', requiresRole: 'manager' },
