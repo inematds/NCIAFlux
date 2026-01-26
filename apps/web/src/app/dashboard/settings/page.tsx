@@ -108,10 +108,10 @@ export default function SettingsPage() {
 
   const isAdmin = settings.role === 'admin';
 
-  // Admin doesn't have personal features like team settings or personal data
+  // Admin doesn't have personal features like notifications, team settings, or personal data
   const allTabs = [
     { id: 'profile', label: 'Perfil', icon: '👤' },
-    { id: 'notifications', label: 'Notificações', icon: '🔔' },
+    { id: 'notifications', label: 'Notificações', icon: '🔔', hideForAdmin: true },
     { id: 'preferences', label: 'Preferências', icon: '⚙️' },
     { id: 'team', label: 'Equipe', icon: '👥', hideForAdmin: true },
     { id: 'data', label: 'Dados', icon: '🗄️', hideForAdmin: true },
@@ -514,26 +514,29 @@ export default function SettingsPage() {
                   </button>
                 </div>
 
-                <div className="pt-4 border-t border-neutral-border">
-                  <h3 className="font-medium text-neutral-textPrimary mb-2">Perfil Cognitivo</h3>
-                  <p className="text-sm text-neutral-textMuted mb-4">
-                    Refaca o questionario para atualizar seu perfil cognitivo e receber recomendacoes mais precisas.
-                  </p>
-                  <div className="flex gap-3">
-                    <button
-                      onClick={() => window.location.href = '/dashboard/discovery'}
-                      className="px-4 py-2 bg-primary-main text-white rounded-lg hover:bg-primary-dark transition-colors"
-                    >
-                      🧠 Refazer Questionario
-                    </button>
-                    <button
-                      onClick={() => window.location.href = '/dashboard/discovery/result'}
-                      className="px-4 py-2 border border-neutral-border rounded-lg text-neutral-textSecondary hover:bg-neutral-background transition-colors"
-                    >
-                      📊 Ver Meu Perfil
-                    </button>
+                {/* Perfil Cognitivo - only for non-admin users */}
+                {settings.role !== 'admin' && (
+                  <div className="pt-4 border-t border-neutral-border">
+                    <h3 className="font-medium text-neutral-textPrimary mb-2">Perfil Cognitivo</h3>
+                    <p className="text-sm text-neutral-textMuted mb-4">
+                      Refaca o questionario para atualizar seu perfil cognitivo e receber recomendacoes mais precisas.
+                    </p>
+                    <div className="flex gap-3">
+                      <button
+                        onClick={() => window.location.href = '/dashboard/discovery'}
+                        className="px-4 py-2 bg-primary-main text-white rounded-lg hover:bg-primary-dark transition-colors"
+                      >
+                        🧠 Refazer Questionario
+                      </button>
+                      <button
+                        onClick={() => window.location.href = '/dashboard/discovery/result'}
+                        className="px-4 py-2 border border-neutral-border rounded-lg text-neutral-textSecondary hover:bg-neutral-background transition-colors"
+                      >
+                        📊 Ver Meu Perfil
+                      </button>
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             </div>
           )}
@@ -572,7 +575,7 @@ export default function SettingsPage() {
             />
           )}
 
-          {activeTab === 'notifications' && (
+          {activeTab === 'notifications' && !isAdmin && (
             <div className="bg-white rounded-2xl shadow-sm p-6">
               <h2 className="text-lg font-semibold text-neutral-textPrimary mb-6">
                 Notificações

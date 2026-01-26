@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { userStorage, tasksStorage, StoredUser, StoredTask, getStorageKey } from '@/lib/storage';
+import { userStorage, tasksStorage, globalTeamsStorage, StoredUser, StoredTask, getStorageKey } from '@/lib/storage';
 import { useTeam } from '@/contexts/TeamContext';
 import TeamMemberSelector from '@/components/TeamMemberSelector';
 import HelpButton from '@/components/HelpButton';
@@ -11,6 +11,12 @@ export default function DashboardPage() {
   const [user, setUser] = useState<StoredUser | null>(null);
   const [tasks, setTasks] = useState<StoredTask[]>([]);
   const [hasProfile, setHasProfile] = useState(true);
+  const [adminStats, setAdminStats] = useState({
+    totalCompanies: 0,
+    totalTeams: 0,
+    totalUsers: 0,
+    totalManagers: 0,
+  });
 
   const {
     isTeamMode,
@@ -28,6 +34,22 @@ export default function DashboardPage() {
       // Check if user has completed discovery
       const profile = localStorage.getItem(getStorageKey('nciaflux_cognitive_profile'));
       setHasProfile(!!profile);
+
+      // Load admin stats
+      if (storedUser?.role === 'admin') {
+        const companiesData = localStorage.getItem('nciaflux_admin_companies');
+        const companies = companiesData ? JSON.parse(companiesData) : [];
+        const teams = globalTeamsStorage.getAll();
+        const allMembers = teams.flatMap(t => t.members);
+        const managers = allMembers.filter(m => m.role === 'manager');
+
+        setAdminStats({
+          totalCompanies: companies.length,
+          totalTeams: teams.length,
+          totalUsers: allMembers.length,
+          totalManagers: managers.length,
+        });
+      }
     }
 
     loadData();
@@ -307,20 +329,20 @@ export default function DashboardPage() {
 
       {/* Stats Grid - Different for admin vs manager vs user */}
       {isAdmin ? (
-        // Admin Stats - Visao organizacional
+        // Admin Stats - Visao organizacional (dados reais do storage)
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-8">
-          <StatCard icon="🏢" label="Organizacoes" value={1} trend="" trendUp />
-          <StatCard icon="👥" label="Total de Usuarios" value={24} trend="+2 esta semana" trendUp />
-          <StatCard icon="👔" label="Gestores" value={5} trend="" trendUp />
-          <StatCard icon="📊" label="Engajamento" value="72%" trend="+3% esta semana" trendUp />
+          <StatCard icon="🏢" label="Empresas" value={adminStats.totalCompanies} trend="" trendUp />
+          <StatCard icon="👔" label="Equipes" value={adminStats.totalTeams} trend="" trendUp />
+          <StatCard icon="👥" label="Total de Usuarios" value={adminStats.totalUsers} trend="" trendUp />
+          <StatCard icon="⭐" label="Gestores" value={adminStats.totalManagers} trend="" trendUp />
         </div>
       ) : isManager ? (
-        // Manager Stats - Visao de gestao de equipes
+        // Manager Stats - Visao de gestao de equipes (dados reais)
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-8">
-          <StatCard icon="👥" label="Total de Usuarios" value={24} trend="+2 esta semana" trendUp />
-          <StatCard icon="📋" label="Tarefas Ativas" value={156} trend="-12 vs ontem" trendUp={false} />
-          <StatCard icon="✅" label="Concluidas Hoje" value={38} trend="+8 vs ontem" trendUp />
-          <StatCard icon="📈" label="Produtividade Media" value="78%" trend="+5% esta semana" trendUp />
+          <StatCard icon="👥" label="Membros da Equipe" value={teamStats.totalMembers} trend="" trendUp />
+          <StatCard icon="🟢" label="Membros Ativos" value={teamStats.activeMembers} trend="" trendUp />
+          <StatCard icon="📈" label="Produtividade Media" value={`${teamStats.avgProductivity}%`} trend="" trendUp />
+          <StatCard icon="✅" label="Tarefas Concluidas" value={personalStats.completedTasks} trend="" trendUp />
         </div>
       ) : (
         // User Stats - Personal
