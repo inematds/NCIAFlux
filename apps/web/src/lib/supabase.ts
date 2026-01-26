@@ -513,7 +513,8 @@ export async function getUserTeams(userId: string): Promise<DbTeam[]> {
     return [];
   }
 
-  return data.map((d: { team: DbTeam }) => d.team);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return data.map((d: any) => d.team).filter(Boolean) as DbTeam[];
 }
 
 /**

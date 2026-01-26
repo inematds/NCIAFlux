@@ -14,7 +14,20 @@
  */
 
 import { supabase } from './supabase';
-import { getItem, setItem, removeItem } from './storage';
+import { getUserStorageKey } from './profile-manager';
+
+// Storage helper functions
+function getItem(key: string): string | null {
+  if (typeof window === 'undefined') return null;
+  const storageKey = getUserStorageKey(key);
+  return localStorage.getItem(storageKey);
+}
+
+function setItem(key: string, value: string): void {
+  if (typeof window === 'undefined') return;
+  const storageKey = getUserStorageKey(key);
+  localStorage.setItem(storageKey, value);
+}
 
 // ============================================================================
 // Types
@@ -328,7 +341,8 @@ export async function getUserTeams(): Promise<Team[]> {
         .eq('user_id', userId);
 
       if (!error && data) {
-        return data.map(d => d.teams).filter(Boolean) as Team[];
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        return (data as any[]).map(d => d.teams).filter(Boolean) as Team[];
       }
     } catch (e) {
       console.warn('Supabase unavailable', e);

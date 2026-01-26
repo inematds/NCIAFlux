@@ -122,7 +122,7 @@ export async function generatePartnershipCode(userId: string): Promise<string> {
     });
   } else {
     // Demo mode - store locally
-    const codes = getLocalData('partnership_codes') || [];
+    const codes = getLocalData<Array<{ code: string; userId: string; expiresAt: string }>>('partnership_codes') || [];
     codes.push({ code, userId, expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() });
     setLocalData('partnership_codes', codes);
   }
@@ -187,8 +187,8 @@ export async function acceptPartnershipCode(code: string, userId: string): Promi
   }
 
   // Demo mode
-  const codes = getLocalData('partnership_codes') || [];
-  const codeData = codes.find((c: { code: string }) => c.code === code);
+  const codes = getLocalData<Array<{ code: string; userId: string; expiresAt: string }>>('partnership_codes') || [];
+  const codeData = codes.find((c) => c.code === code);
 
   if (!codeData) {
     return { success: false, error: 'Codigo invalido ou expirado' };
@@ -206,7 +206,7 @@ export async function acceptPartnershipCode(code: string, userId: string): Promi
     unreadCount: 0,
   };
 
-  const partnerships = getLocalData(STORAGE_KEYS.PARTNERSHIPS) || [];
+  const partnerships = getLocalData<Partnership[]>(STORAGE_KEYS.PARTNERSHIPS) || [];
   partnerships.push(partnership);
   setLocalData(STORAGE_KEYS.PARTNERSHIPS, partnerships);
 
@@ -252,7 +252,7 @@ export async function getPartnerships(userId: string): Promise<Partnership[]> {
     });
   }
 
-  return getLocalData(STORAGE_KEYS.PARTNERSHIPS) || [];
+  return getLocalData<Partnership[]>(STORAGE_KEYS.PARTNERSHIPS) || [];
 }
 
 /**
@@ -302,7 +302,7 @@ export async function sendDirectMessage(
   }
 
   // Demo mode - store locally
-  const messages = getLocalData(STORAGE_KEYS.DM_CACHE) || {};
+  const messages = getLocalData<Record<string, DirectMessage[]>>(STORAGE_KEYS.DM_CACHE) || {};
   if (!messages[partnershipId]) {
     messages[partnershipId] = [];
   }
@@ -340,7 +340,7 @@ export async function getDirectMessages(partnershipId: string, limit: number = 5
     })).reverse();
   }
 
-  const messages = getLocalData(STORAGE_KEYS.DM_CACHE) || {};
+  const messages = getLocalData<Record<string, DirectMessage[]>>(STORAGE_KEYS.DM_CACHE) || {};
   return (messages[partnershipId] || []).slice(-limit);
 }
 
@@ -445,7 +445,7 @@ export async function createCommunity(
     unreadCount: 0,
   };
 
-  const communities = getLocalData(STORAGE_KEYS.COMMUNITIES) || [];
+  const communities = getLocalData<Community[]>(STORAGE_KEYS.COMMUNITIES) || [];
   communities.push(community);
   setLocalData(STORAGE_KEYS.COMMUNITIES, communities);
 
@@ -519,8 +519,8 @@ export async function joinCommunityWithCode(code: string, userId: string): Promi
   }
 
   // Demo mode
-  const communities = getLocalData(STORAGE_KEYS.COMMUNITIES) || [];
-  const community = communities.find((c: Community) => c.inviteCode === code);
+  const communities = getLocalData<Community[]>(STORAGE_KEYS.COMMUNITIES) || [];
+  const community = communities.find((c) => c.inviteCode === code);
 
   if (!community) {
     return { success: false, error: 'Codigo invalido' };
@@ -570,7 +570,7 @@ export async function getCommunities(userId: string): Promise<Community[]> {
     });
   }
 
-  return getLocalData(STORAGE_KEYS.COMMUNITIES) || [];
+  return getLocalData<Community[]>(STORAGE_KEYS.COMMUNITIES) || [];
 }
 
 /**
@@ -628,7 +628,7 @@ export async function sendCommunityMessage(
   }
 
   // Demo mode
-  const messages = getLocalData(STORAGE_KEYS.COMMUNITY_MESSAGES) || {};
+  const messages = getLocalData<Record<string, CommunityMessage[]>>(STORAGE_KEYS.COMMUNITY_MESSAGES) || {};
   if (!messages[communityId]) {
     messages[communityId] = [];
   }
@@ -673,7 +673,7 @@ export async function getCommunityMessages(communityId: string, limit: number = 
     })).reverse();
   }
 
-  const messages = getLocalData(STORAGE_KEYS.COMMUNITY_MESSAGES) || {};
+  const messages = getLocalData<Record<string, CommunityMessage[]>>(STORAGE_KEYS.COMMUNITY_MESSAGES) || {};
   return (messages[communityId] || []).slice(-limit);
 }
 
@@ -731,11 +731,11 @@ export function subscribeToCommunity(
 // STORAGE HELPERS
 // ============================================
 
-function getLocalData(key: string): unknown {
+function getLocalData<T = unknown>(key: string): T | null {
   if (typeof window === 'undefined') return null;
   const storageKey = getUserStorageKey(key);
   const data = localStorage.getItem(storageKey);
-  return data ? JSON.parse(data) : null;
+  return data ? JSON.parse(data) as T : null;
 }
 
 function setLocalData(key: string, data: unknown): void {

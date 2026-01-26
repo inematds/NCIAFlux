@@ -9,7 +9,7 @@
  */
 
 import { getUserStorageKey } from './profile-manager';
-import { queueForSync, EntityType } from './sync-service';
+import { queueForSync } from './sync-service';
 
 // ============================================
 // TYPES
@@ -602,10 +602,10 @@ export function exportAllData(): string {
     'nciaflux_discovery_answers',
   ];
 
-  const exportData: Record<string, unknown> = {
+  const exportData = {
     exportedAt: new Date().toISOString(),
     version: '1.4',
-    data: {},
+    data: {} as Record<string, unknown>,
   };
 
   for (const baseKey of keys) {

@@ -283,8 +283,9 @@ async function pullChanges(userId: string): Promise<{ success: number; conflicts
 
           if (localItem) {
             // Check for conflict
-            const localUpdated = new Date(localItem.updatedAt || localItem.updated_at || 0);
-            const cloudUpdated = new Date(cloudItem.updated_at);
+            const localUpdatedValue = (localItem.updatedAt || localItem.updated_at || 0) as string | number;
+            const localUpdated = new Date(localUpdatedValue);
+            const cloudUpdated = new Date(cloudItem.updated_at as string);
 
             if (localUpdated > cloudUpdated) {
               // Local is newer - conflict
