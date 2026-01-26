@@ -117,7 +117,6 @@ export default function AdminPage() {
   // Stats
   const totalUsers = companies.reduce((a, c) => a + c.users, 0);
   const totalTeams = companies.reduce((a, c) => a + c.teams, 0);
-  const activeCompanies = companies.filter(c => c.status === 'active').length;
   const enterpriseCompanies = companies.filter(c => c.plan === 'enterprise').length;
 
   function handleAddCompany(company: Omit<Company, 'id' | 'createdAt'>) {
@@ -266,7 +265,7 @@ export default function AdminPage() {
           <div className="bg-white rounded-xl p-6 shadow-sm">
             <h3 className="font-semibold text-neutral-textPrimary mb-4">Crescimento Mensal</h3>
             <div className="h-64 flex items-end justify-around gap-2 px-4">
-              {['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'].map((month, i) => {
+              {['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'].map((month) => {
                 const height = 30 + Math.random() * 70;
                 return (
                   <div key={month} className="flex-1 flex flex-col items-center gap-2">

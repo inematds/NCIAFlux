@@ -42,11 +42,6 @@ function generateProfile(answers: Record<string, DiscoveryAnswer>): CognitivePro
   const accountability = answers['7']?.value as string || 'sometimes';
   const pressureResponse = answers['8']?.value as string || 'mixed';
 
-  // Map wake energy to energy level
-  const wakeEnergyLevel = ['low', 'poor_sleep', 'anxious'].includes(wakeEnergy) ? 'low'
-    : wakeEnergy === 'high' ? 'high'
-    : 'medium';
-
   // Generate energy pattern based on chronotype and productive time
   let energyPattern = {
     morning: 'medium',
