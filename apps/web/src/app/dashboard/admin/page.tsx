@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { userStorage, teamsStorage, getStorageKey } from '@/lib/storage';
+import { userStorage, globalTeamsStorage, getStorageKey } from '@/lib/storage';
 import { useRouter } from 'next/navigation';
 import HelpButton from '@/components/HelpButton';
 import { getHelpContent } from '@/lib/help-content';
@@ -165,8 +165,8 @@ export default function AdminPage() {
       setCompanies(updatedCompanies);
       saveCompanies(updatedCompanies);
 
-      // Also add to teamsStorage so manager can see it
-      teamsStorage.add({
+      // Add to global teams storage so manager can see it when they login
+      globalTeamsStorage.add({
         name: teamData.name,
         description: teamData.description,
         ownerId: 'admin',
@@ -461,8 +461,8 @@ export default function AdminPage() {
             <div className="grid lg:grid-cols-2 gap-6">
               {adminTeams.map((team) => {
                 const company = companies.find(c => c.id === team.companyId);
-                // Get team members from teamsStorage
-                const allTeams = teamsStorage.getAll();
+                // Get team members from globalTeamsStorage
+                const allTeams = globalTeamsStorage.getAll();
                 const teamWithMembers = allTeams.find(t => t.name === team.name);
                 const members = teamWithMembers?.members || [];
                 return (

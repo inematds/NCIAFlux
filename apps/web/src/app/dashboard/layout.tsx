@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { userStorage, clearAllStorage, StoredUser, getStorageKey, profileManager, teamsStorage } from '@/lib/storage';
+import { userStorage, clearAllStorage, StoredUser, getStorageKey, profileManager, teamsStorage, globalTeamsStorage } from '@/lib/storage';
 import { storageModeService } from '@/lib/hybrid-storage';
 import { ChatWidget } from '@/components/chat';
 import { useChatStore } from '@/stores/chatStore';
@@ -181,8 +181,11 @@ export default function DashboardLayout({
     setUser(storedUser);
     setIsLoading(false);
 
-    // Load managed teams for ALL users (admin assigns manager by email)
-    const allTeams = teamsStorage.getAll();
+    // Load managed teams from BOTH global (admin-created) and personal storage
+    const globalTeams = globalTeamsStorage.getAll();
+    const personalTeams = teamsStorage.getAll();
+    const allTeams = [...globalTeams, ...personalTeams];
+
     // Filter teams where user is owner or has manager role in members
     const userTeams = allTeams.filter(t =>
       t.ownerId === storedUser.id ||

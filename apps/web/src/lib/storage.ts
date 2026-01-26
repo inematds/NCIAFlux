@@ -228,7 +228,57 @@ export const settingsStorage = {
   },
 };
 
-// Teams Storage - uses user-prefixed keys
+// Global Teams Storage - NOT user-prefixed (for admin-created teams)
+export const globalTeamsStorage = {
+  getAll(): StoredTeam[] {
+    if (!isBrowser) return [];
+    const data = localStorage.getItem('nciaflux_global_teams');
+    return data ? JSON.parse(data) : [];
+  },
+
+  setAll(teams: StoredTeam[]): void {
+    if (!isBrowser) return;
+    localStorage.setItem('nciaflux_global_teams', JSON.stringify(teams));
+  },
+
+  add(team: Omit<StoredTeam, 'id' | 'createdAt'>): StoredTeam {
+    const teams = this.getAll();
+    const newTeam: StoredTeam = {
+      ...team,
+      id: `global_team_${Date.now()}`,
+      createdAt: new Date().toISOString(),
+    };
+    teams.push(newTeam);
+    this.setAll(teams);
+    return newTeam;
+  },
+
+  update(id: string, updates: Partial<StoredTeam>): StoredTeam | null {
+    const teams = this.getAll();
+    const index = teams.findIndex((t) => t.id === id);
+    if (index === -1) return null;
+    teams[index] = { ...teams[index], ...updates };
+    this.setAll(teams);
+    return teams[index];
+  },
+
+  delete(id: string): boolean {
+    const teams = this.getAll();
+    const filtered = teams.filter((t) => t.id !== id);
+    if (filtered.length === teams.length) return false;
+    this.setAll(filtered);
+    return true;
+  },
+
+  getByManagerEmail(email: string): StoredTeam[] {
+    const teams = this.getAll();
+    return teams.filter(t =>
+      t.members.some(m => m.email?.toLowerCase() === email?.toLowerCase() && m.role === 'manager')
+    );
+  },
+};
+
+// Teams Storage - uses user-prefixed keys (for personal teams)
 export const teamsStorage = {
   getAll(): StoredTeam[] {
     if (!isBrowser) return [];
