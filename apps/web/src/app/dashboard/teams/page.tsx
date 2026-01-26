@@ -303,13 +303,10 @@ export default function TeamsPage() {
                 Lista
               </button>
             </div>
-            <button
-              onClick={() => setShowAddModal(true)}
-              className="bg-primary-main text-white px-6 py-2 rounded-lg font-medium hover:bg-primary-dark transition-colors flex items-center gap-2"
-            >
-              <span>+</span>
-              Nova Equipe
-            </button>
+            {/* Info text for managers - only admin can create teams */}
+            <div className="text-sm text-neutral-textMuted">
+              Equipes gerenciadas por voce
+            </div>
           </div>
 
           {/* Summary */}
@@ -343,17 +340,13 @@ export default function TeamsPage() {
                 <span className="text-3xl">👥</span>
               </div>
               <h3 className="text-lg font-semibold text-neutral-textPrimary mb-2">
-                Nenhuma equipe criada
+                Nenhuma equipe atribuida
               </h3>
               <p className="text-neutral-textSecondary mb-6">
-                Crie sua primeira equipe para comecar a gerenciar membros e recursos.
+                Voce ainda nao foi designado como gestor de nenhuma equipe.
+                <br />
+                <span className="text-sm">Entre em contato com o administrador da organizacao.</span>
               </p>
-              <button
-                onClick={() => setShowAddModal(true)}
-                className="bg-primary-main text-white px-6 py-3 rounded-lg font-medium hover:bg-primary-dark transition-colors"
-              >
-                + Criar Primeira Equipe
-              </button>
             </div>
           ) : viewMode === 'grid' ? (
             <div className="grid lg:grid-cols-3 gap-6">
@@ -369,13 +362,6 @@ export default function TeamsPage() {
                         <h3 className="text-lg font-semibold text-neutral-textPrimary">{team.name}</h3>
                         <p className="text-sm text-neutral-textMuted">{team.description}</p>
                       </div>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); setDeleteConfirm(team.id); }}
-                        className="text-neutral-textMuted hover:text-accent-error p-1"
-                        title="Excluir equipe"
-                      >
-                        🗑️
-                      </button>
                     </div>
                     <div className="flex -space-x-2 mb-4">
                       {team.members.slice(0, 4).map((member) => (

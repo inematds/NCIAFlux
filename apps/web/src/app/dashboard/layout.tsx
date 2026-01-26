@@ -227,7 +227,8 @@ export default function DashboardLayout({
 
   function handleLogout() {
     clearAllStorage();
-    router.push('/');
+    // Use full page navigation to ensure clean state
+    window.location.href = '/';
   }
 
   function handleSelectTeam(teamId: string | null) {

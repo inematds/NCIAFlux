@@ -28,6 +28,7 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [demoRole, setDemoRole] = useState<DemoRole | null>(isValidDemo ? demoParam : null);
+  const [loginAsAdmin, setLoginAsAdmin] = useState(false);
 
   // Update email when demo param changes
   useEffect(() => {
@@ -123,14 +124,22 @@ export default function LoginPage() {
 
     const isDemoUser = detectedDemoRole !== null;
 
+    // Determine role: demo role > admin checkbox > default user
+    let userRole: 'user' | 'admin' | 'manager' = 'user';
+    if (isDemoUser) {
+      userRole = detectedDemoRole!;
+    } else if (loginAsAdmin) {
+      userRole = 'admin';
+    }
+
     // Create user with appropriate role
     const user: StoredUser = {
-      id: isDemoUser ? `demo_${detectedDemoRole}` : `user_${Date.now()}`,
+      id: isDemoUser ? `demo_${detectedDemoRole}` : `${userRole}_${Date.now()}`,
       email: email,
       name: isDemoUser
         ? DEMO_USERS[detectedDemoRole!].name
         : email.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
-      role: isDemoUser ? detectedDemoRole! : 'user',
+      role: userRole,
     };
 
     userStorage.set(user);
@@ -328,6 +337,25 @@ export default function LoginPage() {
                 Esqueceu a senha?
               </Link>
             </div>
+
+            {/* Admin Login Toggle - only show for non-demo users */}
+            {!demoRole && (
+              <label className="flex items-center gap-2 p-3 bg-neutral-background rounded-lg cursor-pointer hover:bg-neutral-border/50 transition-colors">
+                <input
+                  type="checkbox"
+                  checked={loginAsAdmin}
+                  onChange={(e) => setLoginAsAdmin(e.target.checked)}
+                  className="w-4 h-4 rounded border-neutral-border text-primary-main focus:ring-primary-main"
+                />
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">🏢</span>
+                  <div>
+                    <span className="text-sm font-medium text-neutral-textPrimary">Entrar como Administrador</span>
+                    <p className="text-xs text-neutral-textMuted">Acesso ao painel de organizacao</p>
+                  </div>
+                </div>
+              </label>
+            )}
 
             <button
               type="submit"
