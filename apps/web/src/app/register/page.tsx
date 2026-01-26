@@ -13,7 +13,7 @@ export default function RegisterPage() {
     email: '',
     password: '',
     confirmPassword: '',
-    role: 'user' as 'user' | 'manager' | 'admin',
+    role: 'user' as 'user' | 'admin',
     company: '',
   });
   const [showPassword, setShowPassword] = useState(false);
@@ -157,8 +157,7 @@ export default function RegisterPage() {
                 onChange={(e) => updateField('role', e.target.value)}
                 className="w-full px-4 py-3 rounded-lg border border-neutral-border focus:outline-none focus:ring-2 focus:ring-primary-main focus:border-transparent bg-white"
               >
-                <option value="user">Usuário Individual (apenas minhas tarefas)</option>
-                <option value="manager">Gestor / Líder (gerencia equipes)</option>
+                <option value="user">Usuario Individual (apenas minhas tarefas)</option>
                 <option value="admin">Administrador (acesso total)</option>
               </select>
             </div>

@@ -461,6 +461,10 @@ export default function AdminPage() {
             <div className="grid lg:grid-cols-2 gap-6">
               {adminTeams.map((team) => {
                 const company = companies.find(c => c.id === team.companyId);
+                // Get team members from teamsStorage
+                const allTeams = teamsStorage.getAll();
+                const teamWithMembers = allTeams.find(t => t.name === team.name);
+                const members = teamWithMembers?.members || [];
                 return (
                   <div key={team.id} className="bg-white rounded-xl p-6 shadow-sm">
                     <div className="flex items-start justify-between mb-4">
@@ -492,10 +496,37 @@ export default function AdminPage() {
 
                     <p className="text-sm text-neutral-textSecondary mb-4">{team.description}</p>
 
-                    <div className="p-3 bg-neutral-background rounded-lg">
+                    <div className="p-3 bg-neutral-background rounded-lg mb-3">
                       <p className="text-xs text-neutral-textMuted mb-1">Gestor</p>
                       <p className="font-medium text-neutral-textPrimary">{team.managerEmail}</p>
                     </div>
+
+                    {/* Team Members */}
+                    {members.length > 0 && (
+                      <div className="p-3 bg-neutral-background rounded-lg">
+                        <p className="text-xs text-neutral-textMuted mb-2">Membros ({members.length})</p>
+                        <div className="space-y-2">
+                          {members.slice(0, 5).map((member) => (
+                            <div key={member.id} className="flex items-center justify-between text-sm">
+                              <div className="flex items-center gap-2">
+                                <div className="w-6 h-6 bg-primary-main/20 rounded-full flex items-center justify-center text-xs">
+                                  {member.name.charAt(0)}
+                                </div>
+                                <span className="text-neutral-textPrimary">{member.name}</span>
+                              </div>
+                              <span className={`text-xs px-2 py-0.5 rounded ${
+                                member.role === 'manager' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'
+                              }`}>
+                                {member.role}
+                              </span>
+                            </div>
+                          ))}
+                          {members.length > 5 && (
+                            <p className="text-xs text-neutral-textMuted">+{members.length - 5} mais</p>
+                          )}
+                        </div>
+                      </div>
+                    )}
 
                     <p className="text-xs text-neutral-textMuted mt-3">Criada em {team.createdAt}</p>
                   </div>

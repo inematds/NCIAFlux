@@ -78,8 +78,6 @@ const baseMenuItems: MenuItem[] = [
 
   // Admin (apenas para admins - nao tem recursos pessoais)
   { icon: '🏢', label: 'Organizacao', href: '/dashboard/admin', section: 'Administracao', isAdminOnly: true },
-  { icon: '👥', label: 'Usuarios', href: '/dashboard/admin/users', isAdminOnly: true },
-  { icon: '📊', label: 'Relatorios Org', href: '/dashboard/admin/reports', isAdminOnly: true },
 
   // Sistema
   { icon: '⚙️', label: 'Configuracoes', href: '/dashboard/settings', section: 'Sistema' },
