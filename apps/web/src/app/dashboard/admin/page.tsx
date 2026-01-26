@@ -315,6 +315,34 @@ export default function AdminPage() {
               >
                 + Nova Equipe
               </button>
+              <button
+                onClick={() => {
+                  if (confirm('ATENCAO: Isso excluira TODAS as empresas, equipes e convites do sistema. Esta acao nao pode ser desfeita. Deseja continuar?')) {
+                    // Clear ALL team-related data from localStorage
+                    const keysToRemove = [
+                      STORAGE_KEYS.COMPANIES,
+                      STORAGE_KEYS.ADMIN_TEAMS,
+                      'nciaflux_global_teams',
+                      'nciaflux_teams',
+                      'nciaflux_invitations',
+                      'nciaflux_invitation_logs',
+                    ];
+                    // Also clear any user-prefixed team keys
+                    Object.keys(localStorage).forEach(key => {
+                      if (key.includes('_teams') || key.includes('_invitations')) {
+                        keysToRemove.push(key);
+                      }
+                    });
+                    keysToRemove.forEach(key => localStorage.removeItem(key));
+                    setCompanies([]);
+                    setAdminTeams([]);
+                    alert('Todos os dados de empresas e equipes foram excluidos com sucesso.');
+                  }
+                }}
+                className="px-4 py-2 bg-accent-error/10 text-accent-error rounded-lg font-medium hover:bg-accent-error/20 transition-colors"
+              >
+                🗑️ Limpar Tudo
+              </button>
             </div>
           </div>
 
