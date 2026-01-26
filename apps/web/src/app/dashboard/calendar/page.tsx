@@ -122,6 +122,36 @@ export default function CalendarPage() {
   const [eventIsAllDay, setEventIsAllDay] = useState(false);
   const [eventRepeat, setEventRepeat] = useState<'none' | 'daily' | 'weekly' | 'monthly'>('none');
 
+  // Load data - must be before early return
+  useEffect(() => {
+    // Skip for team mode
+    if (isTeamMode) return;
+
+    function loadData() {
+      const savedEvents = localStorage.getItem(getStorageKey('nciaflux_calendar_events'));
+      if (savedEvents) {
+        setEvents(JSON.parse(savedEvents));
+      }
+
+      const savedTasks = localStorage.getItem(getStorageKey('nciaflux_tasks'));
+      if (savedTasks) {
+        setTasks(JSON.parse(savedTasks));
+      }
+    }
+
+    loadData();
+
+    // Listen for refresh events from chat
+    const handleRefresh = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail.type === 'events' || detail.type === 'tasks' || detail.type === 'all') {
+        loadData();
+      }
+    };
+    window.addEventListener('nciaflux-data-refresh', handleRefresh);
+    return () => window.removeEventListener('nciaflux-data-refresh', handleRefresh);
+  }, [isTeamMode]);
+
   // Generate demo team events
   function getTeamEvents(): TeamEvent[] {
     if (!isTeamMode || !selectedTeam) return [];
@@ -262,33 +292,6 @@ export default function CalendarPage() {
       </div>
     );
   }
-
-  // Load data
-  useEffect(() => {
-    function loadData() {
-      const savedEvents = localStorage.getItem(getStorageKey('nciaflux_calendar_events'));
-      if (savedEvents) {
-        setEvents(JSON.parse(savedEvents));
-      }
-
-      const savedTasks = localStorage.getItem(getStorageKey('nciaflux_tasks'));
-      if (savedTasks) {
-        setTasks(JSON.parse(savedTasks));
-      }
-    }
-
-    loadData();
-
-    // Listen for refresh events from chat
-    const handleRefresh = (e: Event) => {
-      const detail = (e as CustomEvent).detail;
-      if (detail.type === 'events' || detail.type === 'tasks' || detail.type === 'all') {
-        loadData();
-      }
-    };
-    window.addEventListener('nciaflux-data-refresh', handleRefresh);
-    return () => window.removeEventListener('nciaflux-data-refresh', handleRefresh);
-  }, []);
 
   // Save events
   function saveEvents(newEvents: CalendarEvent[]) {
